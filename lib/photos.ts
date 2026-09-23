@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 
@@ -36,6 +37,15 @@ function natural(a: string, b: string) {
   return a.localeCompare(b, "es", { numeric: true, sensitivity: "base" });
 }
 
+const photoDates = JSON.parse(
+  readFileSync(join(process.cwd(), "lib/photo-dates.json"), "utf8"),
+) as Record<string, string>;
+
+function captureTime(relDir: string, name: string) {
+  const stamp = photoDates[`${relDir}/${name}`];
+  return stamp ? Date.parse(stamp) : 0;
+}
+
 async function listImages(relDir: string, alt: string): Promise<Photo[]> {
   const dir = join(process.cwd(), "public", relDir);
   const entries = await readdir(dir, { withFileTypes: true });
@@ -43,12 +53,15 @@ async function listImages(relDir: string, alt: string): Promise<Photo[]> {
   const names = entries
     .filter((entry) => entry.isFile() && IMAGE.test(entry.name))
     .map((entry) => entry.name)
-    .sort(natural)
     .filter((name) => {
       const key = name.replace(/\.[^.]+$/, "").toLowerCase();
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
+    })
+    .sort((a, b) => {
+      const diff = captureTime(relDir, b) - captureTime(relDir, a);
+      return diff !== 0 ? diff : natural(a, b);
     });
 
   return names.map((name) => ({
