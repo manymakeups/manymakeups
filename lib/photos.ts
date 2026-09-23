@@ -28,8 +28,18 @@ const FEATURED_MAIN = [
 function publicSrc(relativeFromPublic: string) {
   return `/${relativeFromPublic
     .split("/")
-    .map((segment) => encodeURIComponent(segment))
+    .map((segment) => encodeURI(segment))
     .join("/")}`;
+}
+
+function uniqueByName(photos: Photo[]) {
+  const seen = new Set<string>();
+  return photos.filter((photo) => {
+    const key = photo.name.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function natural(a: string, b: string) {
@@ -65,7 +75,7 @@ async function listImages(relDir: string, alt: string): Promise<Photo[]> {
     .map((entry) => entry.name)
     .sort(natural)
     .filter((name) => {
-      const key = name.toLowerCase();
+      const key = name.replace(/\.[^.]+$/, "").toLowerCase();
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
@@ -137,11 +147,8 @@ export async function getPhotos() {
   );
 
   const featured = FEATURED_MAIN.map((name) =>
-    main.find((photo) => photo.name === name),
+    main.find((photo) => photo.name.toLowerCase() === name.toLowerCase()),
   ).filter((photo): photo is Photo => Boolean(photo));
-
-  const featuredSrc = new Set(featured.map((photo) => photo.src));
-  const mainRest = main.filter((photo) => !featuredSrc.has(photo.src));
 
   const pairs = pairBeforeAfter(beforeAfter);
   const featuredPairNames = new Set(
@@ -160,7 +167,10 @@ export async function getPhotos() {
     },
     featured,
     gallery: {
-      parejas: [...pinned, ...weave([...mainRest, ...bridalOlder], newlyAdded)],
+      parejas: uniqueByName([
+        ...pinned,
+        ...weave([...main, ...bridalOlder], newlyAdded),
+      ]),
       peinado: hair,
       maquillaje: makeup,
       eventos: glitter,
