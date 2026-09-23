@@ -63,6 +63,13 @@ export async function generateMetadata(): Promise<Metadata> {
       title: messages.meta.ogTitle,
       description: messages.meta.homeDescription,
     },
+    icons: {
+      icon: [
+        { url: "/favicon.ico", sizes: "32x32" },
+        { url: "/icon.png", type: "image/png", sizes: "512x512" },
+      ],
+      apple: [{ url: "/apple-icon.png", sizes: "180x180" }],
+    },
     twitter: {
       card: "summary_large_image",
       title: messages.meta.ogTitle,
