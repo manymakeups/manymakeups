@@ -59,19 +59,19 @@ function weave<T>(base: T[], extras: T[]): T[] {
 async function listImages(relDir: string, alt: string): Promise<Photo[]> {
   const dir = join(process.cwd(), "public", relDir);
   const entries = await readdir(dir, { withFileTypes: true });
+  const seen = new Set<string>();
   const names = entries
     .filter((entry) => entry.isFile() && IMAGE.test(entry.name))
     .map((entry) => entry.name)
-    .sort(natural);
+    .sort(natural)
+    .filter((name) => {
+      const key = name.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 
-  const nameSet = new Set(names.map((name) => name.toLowerCase()));
-  const unique = names.filter((name) => {
-    const copy = name.match(/^(.*) \((\d+)\)(\.[^.]+)$/);
-    if (!copy) return true;
-    return !nameSet.has(`${copy[1]}${copy[3]}`.toLowerCase());
-  });
-
-  return unique.map((name) => ({
+  return names.map((name) => ({
     name,
     src: publicSrc(`${relDir}/${name}`),
     alt,
