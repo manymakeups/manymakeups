@@ -3,7 +3,7 @@
 import { CalendlyEmbed } from "./CalendlyEmbed";
 import { contactKinds, site } from "@/lib/site";
 import { useI18n } from "@/lib/i18n/context";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type InvalidEvent } from "react";
 
 function readForm(form: HTMLFormElement) {
   const data = new FormData(form);
@@ -18,8 +18,60 @@ function readForm(form: HTMLFormElement) {
   };
 }
 
+function isField(
+  target: EventTarget | null,
+): target is HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement {
+  return (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLSelectElement ||
+    target instanceof HTMLTextAreaElement
+  );
+}
+
+function isActivating(message?: string) {
+  return (message ?? "").toLowerCase().includes("activat");
+}
+
+function formAccepted(payload: { success?: string | boolean; message?: string } | null) {
+  if (!payload) return false;
+  return (
+    payload.success === true ||
+    payload.success === "true" ||
+    isActivating(payload.message)
+  );
+}
+
+function submitPayload(fields: ReturnType<typeof readForm>) {
+  const text = [
+    "Nueva consulta desde manymakeups.com",
+    "",
+    `Nombre: ${fields.nombre}`,
+    `Email: ${fields.email}`,
+    `Teléfono: ${fields.telefono}`,
+    `Servicio: ${fields.tipo}`,
+    fields.fecha && `Fecha del evento: ${fields.fecha}`,
+    fields.mensaje && `Consulta: ${fields.mensaje}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  return {
+    _subject: `Consulta Many Makeups · ${fields.tipo}`,
+    _captcha: "false",
+    _template: "table",
+    _replyto: fields.email,
+    name: fields.nombre,
+    email: fields.email,
+    telefono: fields.telefono,
+    servicio: fields.tipo,
+    fecha_evento: fields.fecha || "No indicada",
+    consulta: fields.mensaje || "Sin texto",
+    message: text,
+  };
+}
+
 export function ContactForm() {
-  const { messages: t } = useI18n();
+  const { locale, messages: t } = useI18n();
   const formRef = useRef<HTMLFormElement>(null);
   const [tipo, setTipo] = useState<(typeof contactKinds)[number]>(
     contactKinds[0],
@@ -47,6 +99,25 @@ export function ContactForm() {
     };
   }, [calendlyOpen, notice]);
 
+  function localizeValidity(event: InvalidEvent<HTMLFormElement>) {
+    const field = event.target;
+    if (!isField(field)) return;
+    if (field.validity.valueMissing) {
+      field.setCustomValidity(t.contact.requiredField);
+      return;
+    }
+    if (field.validity.typeMismatch) {
+      field.setCustomValidity(t.contact.invalidEmail);
+      return;
+    }
+    field.setCustomValidity("");
+  }
+
+  function clearValidity(event: FormEvent<HTMLFormElement>) {
+    const field = event.target;
+    if (isField(field)) field.setCustomValidity("");
+  }
+
   function openWhatsApp() {
     const form = formRef.current;
     if (!form || !form.reportValidity()) return;
@@ -73,30 +144,61 @@ export function ContactForm() {
     });
   }
 
+  async function sendDirect(fields: ReturnType<typeof readForm>) {
+    const response = await fetch(`https://formsubmit.co/ajax/${site.email}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(submitPayload(fields)),
+    });
+    const payload = (await response.json().catch(() => null)) as {
+      success?: string | boolean;
+      message?: string;
+    } | null;
+    if (!formAccepted(payload)) return null;
+    return { activating: isActivating(payload?.message) };
+  }
+
+  async function sendViaApi(fields: ReturnType<typeof readForm>) {
+    const response = await fetch("/api/contacto", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(fields),
+    });
+    const payload = (await response.json().catch(() => null)) as {
+      ok?: boolean;
+      activating?: boolean;
+    } | null;
+    if (!response.ok || !payload?.ok) return null;
+    return { activating: Boolean(payload.activating) };
+  }
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setNotice(null);
     setSending(true);
+    const fields = readForm(event.currentTarget);
     try {
-      const response = await fetch("/api/contacto", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(readForm(event.currentTarget)),
-      });
-      const payload = (await response.json()) as {
-        error?: string;
-        activating?: boolean;
-      };
-      if (!response.ok) {
+      if (fields.honey) {
+        setNotice({
+          title: t.contact.sentTitle,
+          body: t.contact.sentBody,
+        });
+        return;
+      }
+      const result = (await sendDirect(fields).catch(() => null)) ?? (await sendViaApi(fields));
+      if (!result) {
         setNotice({
           title: t.contact.errorTitle,
-          body: payload.error || t.contact.errorBody,
+          body: t.contact.errorBody,
         });
         return;
       }
       setNotice({
         title: t.contact.sentTitle,
-        body: payload.activating ? t.contact.sentActivate : t.contact.sentBody,
+        body: result.activating ? t.contact.sentActivate : t.contact.sentBody,
       });
     } catch {
       setNotice({
@@ -112,8 +214,12 @@ export function ContactForm() {
     <>
       <form
         ref={formRef}
+        lang={locale}
         className="flex flex-col gap-4"
         onSubmit={onSubmit}
+        onInvalid={localizeValidity}
+        onInput={clearValidity}
+        onChange={clearValidity}
       >
         <label className="field-label">
           {t.contact.name}

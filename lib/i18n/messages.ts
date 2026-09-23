@@ -99,6 +99,8 @@ export type Messages = {
     sentTitle: string;
     sentBody: string;
     sentActivate: string;
+    requiredField: string;
+    invalidEmail: string;
   };
   reviews: {
     kicker: string;
@@ -281,6 +283,8 @@ export const es: Messages = {
       "He recibido tu consulta. Te contesto lo antes posible en el correo o el teléfono que me has dejado.",
     sentActivate:
       "Para recibir las consultas en info@manymakeups.com, abre el correo de activación (mira también spam) y pulsa el enlace. A partir de entonces te llegarán solas.",
+    requiredField: "Rellena este campo.",
+    invalidEmail: "Introduce un email válido.",
   },
   reviews: {
     kicker: "Reseñas de Google",
@@ -614,6 +618,8 @@ export const en: Messages = {
       "I have received your enquiry. I will reply as soon as I can on the email or phone you left.",
     sentActivate:
       "To receive enquiries at info@manymakeups.com, open the activation email (check spam too) and tap the link. After that they will arrive on their own.",
+    requiredField: "Please fill in this field.",
+    invalidEmail: "Enter a valid email address.",
   },
   reviews: {
     kicker: "Google reviews",
@@ -946,6 +952,8 @@ export const fr: Messages = {
       "J’ai bien reçu ta demande. Je te réponds dès que possible sur l’email ou le téléphone que tu m’as laissés.",
     sentActivate:
       "Pour recevoir les demandes sur info@manymakeups.com, ouvre l’email d’activation (regarde aussi les indésirables) et clique sur le lien. Ensuite, elles arriveront toutes seules.",
+    requiredField: "Remplis ce champ.",
+    invalidEmail: "Saisis une adresse email valide.",
   },
   reviews: {
     kicker: "Avis Google",
