@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 const prefixed = new Set(["en", "fr"]);
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const segment = pathname.split("/")[1];
   const locale = prefixed.has(segment) ? segment : "es";
@@ -22,5 +22,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next|.*\\..*).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|.*\\..*).*)"],
 };
