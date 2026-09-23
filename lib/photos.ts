@@ -32,38 +32,8 @@ function publicSrc(relativeFromPublic: string) {
     .join("/")}`;
 }
 
-function uniqueByName(photos: Photo[]) {
-  const seen = new Set<string>();
-  return photos.filter((photo) => {
-    const key = photo.name.toLowerCase();
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
 function natural(a: string, b: string) {
   return a.localeCompare(b, "es", { numeric: true, sensitivity: "base" });
-}
-
-function weave<T>(base: T[], extras: T[]): T[] {
-  if (!extras.length) return base;
-  if (!base.length) return extras;
-  const out: T[] = [];
-  const stride = Math.max(2, Math.floor(base.length / extras.length));
-  let extraIndex = 0;
-  base.forEach((item, index) => {
-    out.push(item);
-    if (extraIndex < extras.length && (index + 1) % stride === 0) {
-      out.push(extras[extraIndex]);
-      extraIndex += 1;
-    }
-  });
-  while (extraIndex < extras.length) {
-    out.push(extras[extraIndex]);
-    extraIndex += 1;
-  }
-  return out;
 }
 
 async function listImages(relDir: string, alt: string): Promise<Photo[]> {
@@ -113,12 +83,6 @@ function pairBeforeAfter(files: Photo[]): BeforeAfterPair[] {
   return pairs;
 }
 
-const LOOKBOOK_NEW = [
-  "PHOTO-2026-08-26-13-47-10.jpg",
-  "PHOTO-2026-08-26-08-02-46.jpg",
-  "PHOTO-2026-08-26-08-02-47.jpg",
-];
-
 export async function getPhotos() {
   const [main, bridal, hair, makeup, beforeAfter, glitter] = await Promise.all([
     listImages("photos/bridal/main", "Look de pareja, Many Makeups"),
@@ -128,23 +92,6 @@ export async function getPhotos() {
     listImages("photos/before-after", "Antes y después, Many Makeups"),
     listImages("photos/glitter-bar", "Glitter Bar y beauty corner, Many Makeups"),
   ]);
-
-  const mainNames = new Set(main.map((photo) => photo.name.toLowerCase()));
-  const bridalRest = bridal.filter(
-    (photo) => !mainNames.has(photo.name.toLowerCase()),
-  );
-  const pinnedNames = new Set(LOOKBOOK_NEW.map((name) => name.toLowerCase()));
-  const pinned = LOOKBOOK_NEW.map((name) =>
-    bridalRest.find((photo) => photo.name.toLowerCase() === name.toLowerCase()),
-  ).filter((photo): photo is Photo => Boolean(photo));
-  const newlyAdded = bridalRest.filter(
-    (photo) =>
-      /^nyp_/i.test(photo.name) && !pinnedNames.has(photo.name.toLowerCase()),
-  );
-  const bridalOlder = bridalRest.filter(
-    (photo) =>
-      !/^nyp_/i.test(photo.name) && !pinnedNames.has(photo.name.toLowerCase()),
-  );
 
   const featured = FEATURED_MAIN.map((name) =>
     main.find((photo) => photo.name.toLowerCase() === name.toLowerCase()),
@@ -159,7 +106,7 @@ export async function getPhotos() {
   );
 
   return {
-    hero: featured[0] ?? main[0],
+    hero: featured[0] ?? main[0] ?? bridal[0],
     portrait: {
       name: "corporativa.jpg",
       src: "/photos/ana/corporativa.jpg",
@@ -167,10 +114,7 @@ export async function getPhotos() {
     },
     featured,
     gallery: {
-      parejas: uniqueByName([
-        ...pinned,
-        ...weave([...main, ...bridalOlder], newlyAdded),
-      ]),
+      parejas: bridal,
       peinado: hair,
       maquillaje: makeup,
       eventos: glitter,
