@@ -10,7 +10,6 @@ const PRELUDE_MS = 700;
 const HOLD_MS = 750;
 const SEEN_KEY = "mm-intro-seen";
 
-const dirs = ["ne", "nw", "sw", "se"] as const;
 
 const beats = [
   {
@@ -171,7 +170,7 @@ export function IntroSplash() {
           return (
             <div
               key={beat.n}
-              className={`intro-slide is-play is-${dirs[beatIndex % dirs.length]}`}
+              className="intro-slide is-play"
               style={{ animationDuration: `${WORD_MS}ms` }}
             >
               <span className="intro-mark" aria-hidden>

@@ -406,6 +406,7 @@ html.intro-flying .intro-skip {
   place-items: center;
   padding: 1.5rem 2rem;
   opacity: 0;
+  transform-origin: center center;
   will-change: transform, opacity;
 }
 
@@ -430,77 +431,25 @@ html.intro-flying .intro-skip {
 }
 
 .intro-slide.is-play {
-  animation-fill-mode: both;
+  animation: intro-bloom 2.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.intro-slide.is-ne {
-  animation-name: intro-fade, intro-drift-ne;
-  animation-timing-function: ease-in-out, linear;
-}
-
-.intro-slide.is-nw {
-  animation-name: intro-fade, intro-drift-nw;
-  animation-timing-function: ease-in-out, linear;
-}
-
-.intro-slide.is-sw {
-  animation-name: intro-fade, intro-drift-sw;
-  animation-timing-function: ease-in-out, linear;
-}
-
-.intro-slide.is-se {
-  animation-name: intro-fade, intro-drift-se;
-  animation-timing-function: ease-in-out, linear;
-}
-
-@keyframes intro-fade {
+@keyframes intro-bloom {
   0% {
     opacity: 0;
+    transform: scale(0.72);
   }
-  10% {
+  16% {
     opacity: 1;
+    transform: scale(0.94);
   }
-  78% {
+  52% {
     opacity: 1;
+    transform: scale(1);
   }
   100% {
     opacity: 0;
-  }
-}
-
-@keyframes intro-drift-ne {
-  from {
-    transform: translate(-28vw, 24vh);
-  }
-  to {
-    transform: translate(28vw, -24vh);
-  }
-}
-
-@keyframes intro-drift-nw {
-  from {
-    transform: translate(28vw, 24vh);
-  }
-  to {
-    transform: translate(-28vw, -24vh);
-  }
-}
-
-@keyframes intro-drift-sw {
-  from {
-    transform: translate(28vw, -24vh);
-  }
-  to {
-    transform: translate(-28vw, 24vh);
-  }
-}
-
-@keyframes intro-drift-se {
-  from {
-    transform: translate(-28vw, -24vh);
-  }
-  to {
-    transform: translate(28vw, 24vh);
+    transform: scale(1.16);
   }
 }
 
