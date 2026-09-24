@@ -3,9 +3,8 @@
 import { BrandLogo } from "./BrandLogo";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
-const STORAGE_KEY = "manymakeups-intro";
-const WORD_MS = 2100;
-const LOGO_MS = 950;
+const WORD_MS = 3400;
+const LOGO_MS = 1600;
 
 const beats = [
   {
@@ -41,11 +40,6 @@ export function IntroSplash() {
 
   const close = useCallback(() => {
     clearTimers();
-    try {
-      window.localStorage.setItem(STORAGE_KEY, "1");
-    } catch {
-      /* ignore */
-    }
     document.documentElement.classList.remove("intro-active", "intro-flying");
     setOpen(false);
   }, []);
@@ -70,18 +64,10 @@ export function IntroSplash() {
     const scale = to.width / from.width;
     source.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
     document.documentElement.classList.add("intro-flying");
-    timers.current.push(window.setTimeout(() => close(), 1150));
+    timers.current.push(window.setTimeout(() => close(), 1900));
   }, [close]);
 
   useLayoutEffect(() => {
-    try {
-      if (localStorage.getItem(STORAGE_KEY)) {
-        setOpen(false);
-        return;
-      }
-    } catch {
-      /* show anyway */
-    }
     document.documentElement.classList.remove("intro-flying");
     document.documentElement.classList.add("intro-active");
   }, []);
@@ -98,7 +84,7 @@ export function IntroSplash() {
     document.body.style.overflow = "hidden";
 
     if (reduced) {
-      timers.current.push(window.setTimeout(() => close(), 2400));
+      timers.current.push(window.setTimeout(() => close(), 4000));
     } else {
       let delay = 0;
       beats.forEach((beat, i) => {
@@ -107,7 +93,7 @@ export function IntroSplash() {
           timers.current.push(
             window.setTimeout(() => {
               requestAnimationFrame(() => flyToHeader());
-            }, delay + 420),
+            }, delay + 700),
           );
         }
         delay += beat.type === "word" ? WORD_MS : LOGO_MS;

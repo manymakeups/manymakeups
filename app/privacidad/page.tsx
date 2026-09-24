@@ -56,7 +56,8 @@ export default async function PrivacidadPage() {
         <p>
           No vendo tus datos. Pueden acceder a ellos, solo para prestar su
           servicio: el proveedor de correo del formulario (FormSubmit), el
-          calendario de citas (Calendly) y, si eliges WhatsApp, Meta Platforms
+          calendario de citas (Calendly), el alojamiento y la analítica de
+          visitas (Vercel) y, si eliges WhatsApp, Meta Platforms
           Ireland según las condiciones de WhatsApp. Estos encargados o
           destinos pueden estar fuera del Espacio Económico Europeo; en ese
           caso se aplican las salvaguardas que ofrezca cada proveedor

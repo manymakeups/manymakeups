@@ -18,17 +18,16 @@ export default async function CookiesPage() {
     <LegalDoc
       kicker={t.legal.kicker}
       title={t.legal.cookiesTitle}
-      updated="23 de septiembre de 2026"
+      updated="24 de septiembre de 2026"
     >
       <section>
         <h2>1. Qué uso</h2>
         <p>
-          Este Sitio no instala cookies de publicidad ni de analítica
-          propia. Sí utiliza almacenamiento técnico en tu navegador
-          (localStorage) para recordar que ya has visto la intro de
-          bienvenida, y así no repetirla en cada visita. Ese dato no te
-          identifica y no se envía a un servidor de {site.name} para
-          perfilarte.
+          Este Sitio no instala cookies de publicidad. Las visitas se
+          miden con Vercel Web Analytics, un recuento agregado que no usa
+          cookies de seguimiento ni te identifica. También hay cookies
+          técnicas de idioma para mostrar el Sitio en español, inglés o
+          francés.
         </p>
       </section>
       <section>
@@ -37,7 +36,8 @@ export default async function CookiesPage() {
           Si abres el calendario de cita telefónica, Calendly puede fijar
           cookies propias en su iframe, según su política. Si envías el
           formulario, la petición viaja a FormSubmit. Si eliges WhatsApp,
-          sales a un servicio de Meta. Esos tratamientos se rigen por las
+          sales a un servicio de Meta. El alojamiento y la analítica de
+          visitas los presta Vercel. Esos tratamientos se rigen por las
           condiciones de cada proveedor. No controlo las cookies que ellos
           puedan colocar una vez cargas o abandonas el Sitio hacia sus
           dominios.
@@ -46,11 +46,10 @@ export default async function CookiesPage() {
       <section>
         <h2>3. Cómo gestionarlas</h2>
         <p>
-          Puedes borrar el almacenamiento local y las cookies desde la
-          configuración de tu navegador. Si eliminas la clave de la intro,
-          volverás a ver la animación de entrada. Bloquear cookies de
-          terceros puede impedir que el calendario de Calendly funcione con
-          normalidad.
+          Puedes borrar las cookies desde la configuración de tu
+          navegador. Bloquear cookies de terceros puede impedir que el
+          calendario de Calendly funcione con normalidad. Un bloqueador de
+          anuncios también puede impedir que se cuenten las visitas.
         </p>
       </section>
       <section>

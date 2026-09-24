@@ -357,7 +357,7 @@ html.intro-flying #site-header-logo {
 
 html.intro-flying .intro-overlay {
   background: transparent;
-  transition: background 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.45s;
+  transition: background 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.7s;
   pointer-events: none;
 }
 
@@ -402,7 +402,7 @@ html.intro-flying .intro-skip {
 }
 
 .intro-slide {
-  animation: intro-slide 2.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: intro-slide 3.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .intro-kicker {
@@ -432,8 +432,8 @@ html.intro-flying .intro-skip {
   will-change: transform, opacity;
   opacity: 0;
   transition:
-    opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 1.15s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity 1.45s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 1.85s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .intro-logo.is-in {
