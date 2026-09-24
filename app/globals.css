@@ -342,7 +342,10 @@ html.intro-active .site-jump {
 }
 
 .header-logo img {
-  filter: contrast(1.15);
+  filter:
+    drop-shadow(0 1px 0 rgb(157 125 82 / 0.75))
+    drop-shadow(0 2px 0 rgb(125 98 64 / 0.4))
+    drop-shadow(1px 4px 6px rgb(26 22 19 / 0.2));
 }
 
 html.intro-active #site-header-logo,

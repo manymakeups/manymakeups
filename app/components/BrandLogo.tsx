@@ -20,7 +20,7 @@ export function BrandLogo({
 }) {
   return (
     <Image
-      src={site.logo}
+      src={size === "header" ? "/brand/logo-mark.png" : site.logo}
       alt=""
       width={1024}
       height={1024}
