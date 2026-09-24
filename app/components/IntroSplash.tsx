@@ -178,22 +178,24 @@ export function IntroSplash() {
                   src={beat.mark}
                   alt=""
                   fill
-                  sizes="(min-width: 768px) 22rem, 52vw"
+                  sizes="100vw"
                   className="object-cover"
                   priority={beatIndex === 0}
                 />
               </span>
-              <p className="intro-kicker">{beat.n}</p>
-              <p
-                id={beatIndex === index ? "intro-heading" : undefined}
-                className="intro-word-stack"
-              >
-                {beat.words.map((word) => (
-                  <span key={word} className="intro-word">
-                    {word}
-                  </span>
-                ))}
-              </p>
+              <div className="intro-copy">
+                <p className="intro-kicker">{beat.n}</p>
+                <p
+                  id={beatIndex === index ? "intro-heading" : undefined}
+                  className="intro-word-stack"
+                >
+                  {beat.words.map((word) => (
+                    <span key={word} className="intro-word">
+                      {word}
+                    </span>
+                  ))}
+                </p>
+              </div>
             </div>
           );
         })}
