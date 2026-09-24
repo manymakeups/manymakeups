@@ -407,146 +407,80 @@ html.intro-flying .intro-skip {
 
 .intro-slide.is-play,
 .intro-logo.is-play {
-  animation-timing-function: cubic-bezier(0.45, 0.05, 0.55, 0.95);
   animation-fill-mode: both;
 }
 
 .intro-slide.is-ne,
 .intro-logo.is-ne {
-  animation-name: intro-drift-ne;
+  animation-name: intro-fade, intro-drift-ne;
+  animation-timing-function: ease-in-out, linear;
 }
 
 .intro-slide.is-nw,
 .intro-logo.is-nw {
-  animation-name: intro-drift-nw;
+  animation-name: intro-fade, intro-drift-nw;
+  animation-timing-function: ease-in-out, linear;
 }
 
 .intro-slide.is-sw,
 .intro-logo.is-sw {
-  animation-name: intro-drift-sw;
+  animation-name: intro-fade, intro-drift-sw;
+  animation-timing-function: ease-in-out, linear;
 }
 
 .intro-slide.is-se,
 .intro-logo.is-se {
-  animation-name: intro-drift-se;
+  animation-name: intro-fade, intro-drift-se;
+  animation-timing-function: ease-in-out, linear;
 }
 
-@keyframes intro-drift-ne {
+@keyframes intro-fade {
   0% {
-    opacity: 0.18;
-    transform: translate(-26vw, 22vh);
+    opacity: 0;
   }
-  14% {
-    opacity: 0.72;
-  }
-  28% {
-    opacity: 0.4;
-    transform: translate(-12vw, 10vh);
-  }
-  46% {
+  20% {
     opacity: 1;
-    transform: translate(-2vw, 1vh);
   }
-  58% {
-    opacity: 0.48;
-    transform: translate(6vw, -6vh);
-  }
-  74% {
-    opacity: 0.92;
-    transform: translate(14vw, -12vh);
+  80% {
+    opacity: 1;
   }
   100% {
     opacity: 0;
+  }
+}
+
+@keyframes intro-drift-ne {
+  from {
+    transform: translate(-28vw, 24vh);
+  }
+  to {
     transform: translate(28vw, -24vh);
   }
 }
 
 @keyframes intro-drift-nw {
-  0% {
-    opacity: 0.18;
-    transform: translate(26vw, 22vh);
+  from {
+    transform: translate(28vw, 24vh);
   }
-  14% {
-    opacity: 0.72;
-  }
-  28% {
-    opacity: 0.4;
-    transform: translate(12vw, 10vh);
-  }
-  46% {
-    opacity: 1;
-    transform: translate(2vw, 1vh);
-  }
-  58% {
-    opacity: 0.48;
-    transform: translate(-6vw, -6vh);
-  }
-  74% {
-    opacity: 0.92;
-    transform: translate(-14vw, -12vh);
-  }
-  100% {
-    opacity: 0;
+  to {
     transform: translate(-28vw, -24vh);
   }
 }
 
 @keyframes intro-drift-sw {
-  0% {
-    opacity: 0.18;
-    transform: translate(26vw, -22vh);
+  from {
+    transform: translate(28vw, -24vh);
   }
-  14% {
-    opacity: 0.72;
-  }
-  28% {
-    opacity: 0.4;
-    transform: translate(12vw, -10vh);
-  }
-  46% {
-    opacity: 1;
-    transform: translate(2vw, -1vh);
-  }
-  58% {
-    opacity: 0.48;
-    transform: translate(-6vw, 6vh);
-  }
-  74% {
-    opacity: 0.92;
-    transform: translate(-14vw, 12vh);
-  }
-  100% {
-    opacity: 0;
+  to {
     transform: translate(-28vw, 24vh);
   }
 }
 
 @keyframes intro-drift-se {
-  0% {
-    opacity: 0.18;
-    transform: translate(-26vw, -22vh);
+  from {
+    transform: translate(-28vw, -24vh);
   }
-  14% {
-    opacity: 0.72;
-  }
-  28% {
-    opacity: 0.4;
-    transform: translate(-12vw, -10vh);
-  }
-  46% {
-    opacity: 1;
-    transform: translate(-2vw, -1vh);
-  }
-  58% {
-    opacity: 0.48;
-    transform: translate(6vw, 6vh);
-  }
-  74% {
-    opacity: 0.92;
-    transform: translate(14vw, 12vh);
-  }
-  100% {
-    opacity: 0;
+  to {
     transform: translate(28vw, 24vh);
   }
 }

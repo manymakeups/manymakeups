@@ -3,9 +3,9 @@
 import { BrandLogo } from "./BrandLogo";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
-const WORD_MS = 4200;
-const LOGO_MS = 2800;
-const OVERLAP_MS = 480;
+const WORD_MS = 4800;
+const LOGO_MS = 3200;
+const OVERLAP_MS = 1200;
 
 const dirs = ["ne", "nw", "sw", "se"] as const;
 
@@ -99,7 +99,7 @@ export function IntroSplash() {
             if (i > 0) setLeaving(i - 1);
             setIndex(i);
             timers.current.push(
-              window.setTimeout(() => setLeaving(null), OVERLAP_MS + 200),
+              window.setTimeout(() => setLeaving(null), OVERLAP_MS),
             );
           }, delay),
         );
@@ -107,7 +107,7 @@ export function IntroSplash() {
           timers.current.push(
             window.setTimeout(() => {
               requestAnimationFrame(() => flyToHeader());
-            }, delay + Math.round(duration * 0.52)),
+            }, delay + Math.round(duration * 0.72)),
           );
         }
         delay += duration - OVERLAP_MS;
