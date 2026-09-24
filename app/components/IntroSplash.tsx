@@ -126,8 +126,11 @@ export function IntroSplash() {
   const current = beats[index];
   const logoIn = current.type === "logo";
   const leavingBeat = leaving !== null ? beats[leaving] : null;
-  const logoLeaving = leavingBeat?.type === "logo";
-  const logoIndex = logoIn ? index : logoLeaving ? leaving : -1;
+  const logoIndex = logoIn
+    ? index
+    : leavingBeat?.type === "logo" && leaving !== null
+      ? leaving
+      : -1;
   const skip = "Saltar · Skip · Passer";
   const visible = [leaving, index].filter(
     (value, i, all): value is number =>
