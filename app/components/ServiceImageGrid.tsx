@@ -6,26 +6,32 @@ import { PhotoLightbox } from "./PhotoLightbox";
 import type { Photo } from "@/lib/photos";
 import { useI18n } from "@/lib/i18n/context";
 
+const PAGE = 6;
+
 export function ServiceImageGrid({
   images,
   wideHero = false,
   imageFrame = "portrait",
+  paginate = false,
 }: {
   images: Photo[];
   wideHero?: boolean;
   imageFrame?: "portrait" | "landscape";
+  paginate?: boolean;
 }) {
   const { messages: t } = useI18n();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [limit, setLimit] = useState(PAGE);
   const cellAspect =
     imageFrame === "landscape" ? "aspect-[3/2]" : "aspect-[4/5]";
+  const shown = paginate ? images.slice(0, limit) : images;
 
   if (!images.length) return null;
 
   return (
     <>
       <div className="mt-10 grid grid-cols-2 gap-3">
-        {images.map((photo, i) => {
+        {shown.map((photo, i) => {
           const gif = /\.gif$/i.test(photo.name);
           const hero = wideHero && i === 0;
           return (
@@ -65,6 +71,15 @@ export function ServiceImageGrid({
           );
         })}
       </div>
+      {paginate && images.length > limit ? (
+        <button
+          type="button"
+          className="btn-atelier mt-10"
+          onClick={() => setLimit((n) => n + PAGE)}
+        >
+          {t.common.moreLooks}
+        </button>
+      ) : null}
       <PhotoLightbox
         photos={images}
         openIndex={openIndex}

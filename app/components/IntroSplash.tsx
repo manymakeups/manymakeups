@@ -2,10 +2,12 @@
 
 import { BrandLogo } from "./BrandLogo";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import Image from "next/image";
 
 const WORD_MS = 4800;
 const LOGO_MS = 3200;
 const OVERLAP = 0.55;
+const SEEN_KEY = "mm-intro-seen";
 
 const dirs = ["ne", "nw", "sw", "se"] as const;
 
@@ -14,18 +16,21 @@ const beats = [
     type: "word" as const,
     n: "I",
     words: ["Estilismo", "Styling", "Stylisme"],
+    mark: "/photos/bridal/19.jpg",
   },
   { type: "logo" as const },
   {
     type: "word" as const,
     n: "II",
     words: ["Formación", "Training", "Formation"],
+    mark: "/photos/hair/01.jpg",
   },
   { type: "logo" as const },
   {
     type: "word" as const,
     n: "III",
     words: ["Estética", "Aesthetics", "Esthétique"],
+    mark: "/photos/makeup/IMG_0826.jpg",
   },
   { type: "logo" as const, fly: true },
 ];
@@ -44,6 +49,11 @@ export function IntroSplash() {
 
   const close = useCallback(() => {
     clearTimers();
+    try {
+      window.sessionStorage.setItem(SEEN_KEY, "1");
+    } catch {
+      /* ignore private-mode quota */
+    }
     document.documentElement.classList.remove("intro-active", "intro-flying");
     setOpen(false);
   }, []);
@@ -73,6 +83,17 @@ export function IntroSplash() {
   }, [close]);
 
   useLayoutEffect(() => {
+    let seen = false;
+    try {
+      seen = window.sessionStorage.getItem(SEEN_KEY) === "1";
+    } catch {
+      seen = false;
+    }
+    if (seen) {
+      document.documentElement.classList.remove("intro-active", "intro-flying");
+      setOpen(false);
+      return;
+    }
     document.documentElement.classList.remove("intro-flying");
     document.documentElement.classList.add("intro-active");
   }, []);
@@ -169,6 +190,18 @@ export function IntroSplash() {
               className={`intro-slide is-play is-${dirs[beatIndex % dirs.length]}`}
               style={{ animationDuration: `${WORD_MS}ms` }}
             >
+              {"mark" in beat && beat.mark ? (
+                <span className="intro-mark" aria-hidden>
+                  <Image
+                    src={beat.mark}
+                    alt=""
+                    fill
+                    sizes="(min-width: 768px) 22rem, 52vw"
+                    className="object-cover"
+                    priority={beatIndex === 0}
+                  />
+                </span>
+              ) : null}
               <p className="intro-kicker">{beat.n}</p>
               <p
                 id={beatIndex === index ? "intro-heading" : undefined}

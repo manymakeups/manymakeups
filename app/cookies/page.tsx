@@ -27,7 +27,9 @@ export default async function CookiesPage() {
           miden con Vercel Web Analytics, un recuento agregado que no usa
           cookies de seguimiento ni te identifica. También hay cookies
           técnicas de idioma para mostrar el Sitio en español, inglés o
-          francés.
+          francés. La presentación inicial se recuerda solo durante la
+          visita, en el almacenamiento de sesión del navegador, para no
+          repetirla al cambiar de página.
         </p>
       </section>
       <section>

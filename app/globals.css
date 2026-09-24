@@ -405,6 +405,33 @@ html.intro-flying .intro-skip {
   will-change: transform, opacity;
 }
 
+.intro-slide {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem 2rem;
+}
+
+.intro-mark {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  z-index: 0;
+  width: min(58vw, 20rem);
+  height: min(70vw, 24rem);
+  translate: -50% -50%;
+  overflow: hidden;
+  opacity: 0.2;
+  pointer-events: none;
+  filter: grayscale(0.12) contrast(0.92);
+}
+
+.intro-kicker,
+.intro-word-stack {
+  position: relative;
+  z-index: 1;
+}
+
 .intro-slide.is-play,
 .intro-logo.is-play {
   animation-fill-mode: both;

@@ -44,9 +44,6 @@ export async function ServiceView({
     ctaHref.startsWith("http") || ctaHref.startsWith("mailto:")
       ? ctaHref
       : localePath(locale, ctaHref);
-  const visible = showAllImages
-    ? images
-    : images.slice(0, wideHero ? 5 : 4);
   return (
     <div className="min-h-full bg-porcelain text-ink">
       <SiteHeader />
@@ -79,9 +76,12 @@ export async function ServiceView({
             </div>
           ) : null}
           <ServiceImageGrid
-            images={visible}
+            images={
+              showAllImages ? images : images.slice(0, wideHero ? 5 : 4)
+            }
             wideHero={wideHero}
             imageFrame={imageFrame}
+            paginate={showAllImages}
           />
           <div
             className={
