@@ -342,8 +342,7 @@ html.intro-active .site-jump {
 }
 
 .header-logo img {
-  mix-blend-mode: multiply;
-  filter: contrast(1.55) saturate(1.28);
+  filter: contrast(1.15);
 }
 
 html.intro-active #site-header-logo,

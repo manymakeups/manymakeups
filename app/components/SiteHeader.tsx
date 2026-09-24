@@ -18,7 +18,7 @@ export async function SiteHeader() {
   ];
 
   return (
-    <header className="sticky top-0 z-40 isolate border-b border-ink/5 bg-porcelain/95">
+    <header className="sticky top-0 z-40 border-b border-ink/5 bg-porcelain/95">
       <div className="mx-auto flex max-w-[1120px] items-center justify-between gap-3 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-6 md:px-10 md:py-4 md:pt-4">
         <a
           href={localePath(locale, "/")}
@@ -28,7 +28,7 @@ export async function SiteHeader() {
         >
           <BrandLogo
             size="header"
-            className="size-[6.75rem] sm:size-[8.25rem] md:size-[8.5rem] lg:size-[9.25rem]"
+            className="size-[6.25rem] sm:size-[7.75rem] md:size-[7.75rem] lg:size-[8.5rem]"
           />
         </a>
         <div className="flex min-w-0 items-center gap-3 sm:gap-6 md:gap-10">
