@@ -4,10 +4,10 @@ import { BrandLogo } from "./BrandLogo";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import Image from "next/image";
 
-const WORD_MS = 4800;
-const OVERLAP = 0.55;
-const PRELUDE_MS = 900;
-const HOLD_MS = 1100;
+const WORD_MS = 2500;
+const GAP_MS = 700;
+const PRELUDE_MS = 700;
+const HOLD_MS = 750;
 const SEEN_KEY = "mm-intro-seen";
 
 const dirs = ["ne", "nw", "sw", "se"] as const;
@@ -112,8 +112,7 @@ export function IntroSplash() {
       timers.current.push(window.setTimeout(() => close(), 4000));
     } else {
       let delay = PRELUDE_MS;
-      beats.forEach((beat, i) => {
-        const overlap = Math.round(WORD_MS * OVERLAP);
+      beats.forEach((_, i) => {
         timers.current.push(
           window.setTimeout(() => {
             setIndex(i);
@@ -125,12 +124,12 @@ export function IntroSplash() {
             setActive((prev) => prev.filter((item) => item !== i));
           }, delay + WORD_MS),
         );
-        delay += WORD_MS - overlap;
+        delay += WORD_MS + GAP_MS;
       });
       timers.current.push(
         window.setTimeout(() => {
           requestAnimationFrame(() => flyToHeader());
-        }, delay + OVERLAP * WORD_MS + HOLD_MS),
+        }, delay - GAP_MS + HOLD_MS),
       );
     }
 
