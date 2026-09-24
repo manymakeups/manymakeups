@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Outfit } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { IntroSplash } from "./components/IntroSplash";
 import { JsonLd } from "./components/JsonLd";
 import { ScrollJump } from "./components/ScrollJump";
@@ -112,6 +113,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           {children}
           <ScrollJump />
         </I18nProvider>
+        <Analytics />
       </body>
     </html>
   );
