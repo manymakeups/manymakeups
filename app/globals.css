@@ -398,18 +398,15 @@ html.intro-flying .intro-skip {
   text-align: center;
 }
 
-.intro-slide,
-.intro-logo {
-  grid-area: 1 / 1;
-  opacity: 0;
-  will-change: transform, opacity;
-}
-
 .intro-slide {
+  grid-area: 1 / 1;
   position: relative;
+  z-index: 1;
   display: grid;
   place-items: center;
   padding: 1.5rem 2rem;
+  opacity: 0;
+  will-change: transform, opacity;
 }
 
 .intro-mark {
@@ -421,9 +418,9 @@ html.intro-flying .intro-skip {
   height: min(70vw, 24rem);
   translate: -50% -50%;
   overflow: hidden;
-  opacity: 0.2;
+  opacity: 0.28;
   pointer-events: none;
-  filter: grayscale(0.12) contrast(0.92);
+  filter: grayscale(0.08) contrast(0.94);
 }
 
 .intro-kicker,
@@ -432,31 +429,26 @@ html.intro-flying .intro-skip {
   z-index: 1;
 }
 
-.intro-slide.is-play,
-.intro-logo.is-play {
+.intro-slide.is-play {
   animation-fill-mode: both;
 }
 
-.intro-slide.is-ne,
-.intro-logo.is-ne {
+.intro-slide.is-ne {
   animation-name: intro-fade, intro-drift-ne;
   animation-timing-function: ease-in-out, linear;
 }
 
-.intro-slide.is-nw,
-.intro-logo.is-nw {
+.intro-slide.is-nw {
   animation-name: intro-fade, intro-drift-nw;
   animation-timing-function: ease-in-out, linear;
 }
 
-.intro-slide.is-sw,
-.intro-logo.is-sw {
+.intro-slide.is-sw {
   animation-name: intro-fade, intro-drift-sw;
   animation-timing-function: ease-in-out, linear;
 }
 
-.intro-slide.is-se,
-.intro-logo.is-se {
+.intro-slide.is-se {
   animation-name: intro-fade, intro-drift-se;
   animation-timing-function: ease-in-out, linear;
 }
@@ -535,11 +527,18 @@ html.intro-flying .intro-skip {
 }
 
 .intro-logo {
+  grid-area: 1 / 1;
+  z-index: 0;
+  opacity: 1;
   transform-origin: center center;
+  transition: opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.intro-logo.is-dim {
+  opacity: 0.16;
 }
 
 html.intro-flying .intro-logo {
-  animation: none !important;
   opacity: 1;
   transition:
     opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),

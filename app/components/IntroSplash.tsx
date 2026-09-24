@@ -5,40 +5,40 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import Image from "next/image";
 
 const WORD_MS = 4800;
-const LOGO_MS = 3200;
 const OVERLAP = 0.55;
+const PRELUDE_MS = 900;
+const HOLD_MS = 1100;
 const SEEN_KEY = "mm-intro-seen";
 
 const dirs = ["ne", "nw", "sw", "se"] as const;
 
 const beats = [
   {
-    type: "word" as const,
     n: "I",
     words: ["Estilismo", "Styling", "Stylisme"],
     mark: "/photos/bridal/19.jpg",
   },
-  { type: "logo" as const },
   {
-    type: "word" as const,
     n: "II",
     words: ["Formación", "Training", "Formation"],
-    mark: "/photos/hair/01.jpg",
+    mark: "/photos/atelier/profesionales.jpg",
   },
-  { type: "logo" as const },
   {
-    type: "word" as const,
     n: "III",
     words: ["Estética", "Aesthetics", "Esthétique"],
-    mark: "/photos/makeup/IMG_0826.jpg",
+    mark: "/photos/atelier/piel.jpg",
   },
-  { type: "logo" as const, fly: true },
+  {
+    n: "IV",
+    words: ["Eventos", "Events", "Événements"],
+    mark: "/photos/atelier/eventos.jpg",
+  },
 ];
 
 export function IntroSplash() {
   const [open, setOpen] = useState(true);
   const [index, setIndex] = useState(0);
-  const [active, setActive] = useState<number[]>([0]);
+  const [active, setActive] = useState<number[]>([]);
   const logoRef = useRef<HTMLDivElement>(null);
   const timers = useRef<number[]>([]);
 
@@ -76,7 +76,6 @@ export function IntroSplash() {
     const dx = to.left + to.width / 2 - (from.left + from.width / 2);
     const dy = to.top + to.height / 2 - (from.top + from.height / 2);
     const scale = to.width / from.width;
-    source.style.animation = "none";
     source.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
     document.documentElement.classList.add("intro-flying");
     timers.current.push(window.setTimeout(() => close(), 1900));
@@ -112,10 +111,9 @@ export function IntroSplash() {
     if (reduced) {
       timers.current.push(window.setTimeout(() => close(), 4000));
     } else {
-      let delay = 0;
+      let delay = PRELUDE_MS;
       beats.forEach((beat, i) => {
-        const duration = beat.type === "word" ? WORD_MS : LOGO_MS;
-        const overlap = Math.round(duration * OVERLAP);
+        const overlap = Math.round(WORD_MS * OVERLAP);
         timers.current.push(
           window.setTimeout(() => {
             setIndex(i);
@@ -125,17 +123,15 @@ export function IntroSplash() {
         timers.current.push(
           window.setTimeout(() => {
             setActive((prev) => prev.filter((item) => item !== i));
-          }, delay + duration),
+          }, delay + WORD_MS),
         );
-        if ("fly" in beat && beat.fly) {
-          timers.current.push(
-            window.setTimeout(() => {
-              requestAnimationFrame(() => flyToHeader());
-            }, delay + Math.round(duration * 0.72)),
-          );
-        }
-        delay += duration - overlap;
+        delay += WORD_MS - overlap;
       });
+      timers.current.push(
+        window.setTimeout(() => {
+          requestAnimationFrame(() => flyToHeader());
+        }, delay + OVERLAP * WORD_MS + HOLD_MS),
+      );
     }
 
     return () => {
@@ -147,11 +143,8 @@ export function IntroSplash() {
 
   if (!open) return null;
 
-  const current = beats[index];
-  const logoIndex =
-    [...active].reverse().find((item) => beats[item].type === "logo") ?? -1;
   const skip = "Saltar · Skip · Passer";
-  const visibleWords = active.filter((item) => beats[item].type === "word");
+  const wordsOn = active.length > 0;
 
   return (
     <div
@@ -166,14 +159,7 @@ export function IntroSplash() {
       <div className="intro-stage">
         <div
           ref={logoRef}
-          className={
-            logoIndex >= 0
-              ? `intro-logo is-play is-${dirs[logoIndex % dirs.length]}`
-              : "intro-logo"
-          }
-          style={
-            logoIndex >= 0 ? { animationDuration: `${LOGO_MS}ms` } : undefined
-          }
+          className={`intro-logo${wordsOn ? " is-dim" : ""}`}
         >
           <BrandLogo
             size="block"
@@ -181,27 +167,24 @@ export function IntroSplash() {
             className="size-[min(52vw,11.5rem)] md:size-[16rem] xl:size-[18rem]"
           />
         </div>
-        {visibleWords.map((beatIndex) => {
+        {active.map((beatIndex) => {
           const beat = beats[beatIndex];
-          if (beat.type !== "word") return null;
           return (
             <div
               key={beat.n}
               className={`intro-slide is-play is-${dirs[beatIndex % dirs.length]}`}
               style={{ animationDuration: `${WORD_MS}ms` }}
             >
-              {"mark" in beat && beat.mark ? (
-                <span className="intro-mark" aria-hidden>
-                  <Image
-                    src={beat.mark}
-                    alt=""
-                    fill
-                    sizes="(min-width: 768px) 22rem, 52vw"
-                    className="object-cover"
-                    priority={beatIndex === 0}
-                  />
-                </span>
-              ) : null}
+              <span className="intro-mark" aria-hidden>
+                <Image
+                  src={beat.mark}
+                  alt=""
+                  fill
+                  sizes="(min-width: 768px) 22rem, 52vw"
+                  className="object-cover"
+                  priority={beatIndex === 0}
+                />
+              </span>
               <p className="intro-kicker">{beat.n}</p>
               <p
                 id={beatIndex === index ? "intro-heading" : undefined}
@@ -216,7 +199,7 @@ export function IntroSplash() {
             </div>
           );
         })}
-        {current.type === "logo" ? (
+        {!wordsOn ? (
           <p id="intro-heading" className="sr-only">
             Many Makeups
           </p>
