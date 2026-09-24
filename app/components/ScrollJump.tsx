@@ -4,10 +4,18 @@ import { useEffect, useState } from "react";
 import { useI18n } from "@/lib/i18n/context";
 
 const btnClass =
-  "inline-flex items-center gap-2 border border-ink bg-porcelain px-3.5 py-3 text-[0.65rem] uppercase tracking-[0.18em] text-ink shadow-[0_10px_30px_rgba(26,22,19,0.08)] transition-[background,color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-ink hover:text-porcelain";
+  "inline-flex min-h-11 min-w-11 items-center justify-center gap-2 border border-ink bg-porcelain px-3 py-3 text-[0.65rem] uppercase tracking-[0.18em] text-ink shadow-[0_10px_30px_rgba(26,22,19,0.08)] transition-[background,color] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-ink hover:text-porcelain md:min-w-0 md:px-3.5";
 
 function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function viewport() {
+  const view = window.visualViewport;
+  return {
+    y: view?.pageTop ?? window.scrollY,
+    height: view?.height ?? window.innerHeight,
+  };
 }
 
 export function ScrollJump() {
@@ -17,39 +25,42 @@ export function ScrollJump() {
 
   useEffect(() => {
     const update = () => {
-      const y = window.scrollY;
-      const view = window.innerHeight;
+      const { y, height } = viewport();
       const max = Math.max(
         document.documentElement.scrollHeight,
         document.body.scrollHeight,
       );
-      setShowUp(y > 420);
-      setShowDown(y + view < max - 80);
+      setShowUp(y > Math.min(220, height * 0.3));
+      setShowDown(y + height < max - 64);
     };
     update();
     window.addEventListener("scroll", update, { passive: true });
     window.addEventListener("resize", update);
+    window.visualViewport?.addEventListener("resize", update);
+    window.visualViewport?.addEventListener("scroll", update);
     return () => {
       window.removeEventListener("scroll", update);
       window.removeEventListener("resize", update);
+      window.visualViewport?.removeEventListener("resize", update);
+      window.visualViewport?.removeEventListener("scroll", update);
     };
   }, []);
 
   return (
-    <div className="site-jump fixed right-5 bottom-[max(1.25rem,env(safe-area-inset-bottom))] z-40 hidden flex-col gap-2 md:flex">
+    <div className="site-jump pointer-events-none fixed right-[max(1rem,env(safe-area-inset-right))] bottom-[max(1.25rem,env(safe-area-inset-bottom))] z-30 flex flex-col items-end gap-2">
       {showDown ? (
         <button
           type="button"
           aria-label={t.common.scrollDown}
-          className={btnClass}
+          className={`pointer-events-auto ${btnClass}`}
           onClick={() => {
             window.scrollBy({
-              top: window.innerHeight * 0.9,
+              top: viewport().height * 0.9,
               behavior: prefersReducedMotion() ? "auto" : "smooth",
             });
           }}
         >
-          {t.common.scrollDown}
+          <span className="hidden md:inline">{t.common.scrollDown}</span>
           <svg
             viewBox="0 0 24 24"
             className="size-4"
@@ -66,7 +77,7 @@ export function ScrollJump() {
         <button
           type="button"
           aria-label={t.common.scrollUp}
-          className={btnClass}
+          className={`pointer-events-auto ${btnClass}`}
           onClick={() => {
             window.scrollTo({
               top: 0,
@@ -84,7 +95,7 @@ export function ScrollJump() {
           >
             <path d="M5 15l7-7 7 7" />
           </svg>
-          {t.common.scrollUp}
+          <span className="hidden md:inline">{t.common.scrollUp}</span>
         </button>
       ) : null}
     </div>
