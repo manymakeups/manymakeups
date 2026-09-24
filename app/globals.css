@@ -341,6 +341,11 @@ html.intro-active .site-jump {
   display: none;
 }
 
+.header-logo img {
+  mix-blend-mode: multiply;
+  filter: contrast(1.55) saturate(1.28);
+}
+
 html.intro-active #site-header-logo,
 html.intro-flying #site-header-logo {
   visibility: hidden;
