@@ -3,8 +3,11 @@
 import { BrandLogo } from "./BrandLogo";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
-const WORD_MS = 3400;
-const LOGO_MS = 1600;
+const WORD_MS = 4200;
+const LOGO_MS = 2800;
+const OVERLAP_MS = 480;
+
+const dirs = ["ne", "nw", "sw", "se"] as const;
 
 const beats = [
   {
@@ -30,6 +33,7 @@ const beats = [
 export function IntroSplash() {
   const [open, setOpen] = useState(true);
   const [index, setIndex] = useState(0);
+  const [leaving, setLeaving] = useState<number | null>(null);
   const logoRef = useRef<HTMLDivElement>(null);
   const timers = useRef<number[]>([]);
 
@@ -62,6 +66,7 @@ export function IntroSplash() {
     const dx = to.left + to.width / 2 - (from.left + from.width / 2);
     const dy = to.top + to.height / 2 - (from.top + from.height / 2);
     const scale = to.width / from.width;
+    source.style.animation = "none";
     source.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
     document.documentElement.classList.add("intro-flying");
     timers.current.push(window.setTimeout(() => close(), 1900));
@@ -88,15 +93,24 @@ export function IntroSplash() {
     } else {
       let delay = 0;
       beats.forEach((beat, i) => {
-        timers.current.push(window.setTimeout(() => setIndex(i), delay));
+        const duration = beat.type === "word" ? WORD_MS : LOGO_MS;
+        timers.current.push(
+          window.setTimeout(() => {
+            if (i > 0) setLeaving(i - 1);
+            setIndex(i);
+            timers.current.push(
+              window.setTimeout(() => setLeaving(null), OVERLAP_MS + 200),
+            );
+          }, delay),
+        );
         if ("fly" in beat && beat.fly) {
           timers.current.push(
             window.setTimeout(() => {
               requestAnimationFrame(() => flyToHeader());
-            }, delay + 700),
+            }, delay + Math.round(duration * 0.52)),
           );
         }
-        delay += beat.type === "word" ? WORD_MS : LOGO_MS;
+        delay += duration - OVERLAP_MS;
       });
     }
 
@@ -109,9 +123,16 @@ export function IntroSplash() {
 
   if (!open) return null;
 
-  const beat = beats[index];
-  const showWord = beat.type === "word";
+  const current = beats[index];
+  const logoIn = current.type === "logo";
+  const leavingBeat = leaving !== null ? beats[leaving] : null;
+  const logoLeaving = leavingBeat?.type === "logo";
+  const logoIndex = logoIn ? index : logoLeaving ? leaving : -1;
   const skip = "Saltar · Skip · Passer";
+  const visible = [leaving, index].filter(
+    (value, i, all): value is number =>
+      value !== null && all.indexOf(value) === i,
+  );
 
   return (
     <div
@@ -126,7 +147,14 @@ export function IntroSplash() {
       <div className="intro-stage">
         <div
           ref={logoRef}
-          className={`intro-logo ${showWord ? "" : "is-in"}`}
+          className={
+            logoIndex >= 0
+              ? `intro-logo is-play is-${dirs[logoIndex % dirs.length]}`
+              : "intro-logo"
+          }
+          style={
+            logoIndex >= 0 ? { animationDuration: `${LOGO_MS}ms` } : undefined
+          }
         >
           <BrandLogo
             size="block"
@@ -134,22 +162,34 @@ export function IntroSplash() {
             className="size-[min(52vw,11.5rem)] md:size-[16rem] xl:size-[18rem]"
           />
         </div>
-        {showWord ? (
-          <div key={beat.n} className="intro-slide">
-            <p className="intro-kicker">{beat.n}</p>
-            <p id="intro-heading" className="intro-word-stack">
-              {beat.words.map((word) => (
-                <span key={word} className="intro-word">
-                  {word}
-                </span>
-              ))}
-            </p>
-          </div>
-        ) : (
+        {visible.map((beatIndex) => {
+          const beat = beats[beatIndex];
+          if (beat.type !== "word") return null;
+          return (
+            <div
+              key={beat.n}
+              className={`intro-slide is-play is-${dirs[beatIndex % dirs.length]}`}
+              style={{ animationDuration: `${WORD_MS}ms` }}
+            >
+              <p className="intro-kicker">{beat.n}</p>
+              <p
+                id={beatIndex === index ? "intro-heading" : undefined}
+                className="intro-word-stack"
+              >
+                {beat.words.map((word) => (
+                  <span key={word} className="intro-word">
+                    {word}
+                  </span>
+                ))}
+              </p>
+            </div>
+          );
+        })}
+        {current.type === "logo" ? (
           <p id="intro-heading" className="sr-only">
             Many Makeups
           </p>
-        )}
+        ) : null}
       </div>
     </div>
   );

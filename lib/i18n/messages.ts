@@ -196,7 +196,7 @@ export const es: Messages = {
     methodCopy:
       "Poco ruido, tres pasos. Así se trabaja cuando el maquillaje y el peinado tienen que durar de verdad, de la prueba al último baile.",
     lookbookCopy:
-      "Mi trabajo en acción. Bodas reales, personas reales y estilismos creados para vivirse. Diseño looks de autor que traspasan la cámara y aguantan hasta el último baile, para que el recuerdo de tu día refleje exactamente quién eres.",
+      "Mi trabajo en acción. Bodas reales, personas reales y estilismos creados para vivirse. Estas imágenes reflejan la esencia de mi estilo, pero mi técnica se adapta cien por cien a ti. Desde la naturalidad más absoluta hasta estilos muy concretos o menos convencionales; diseño looks de autor a medida que traspasan la cámara y aguantan hasta el último baile, para que el recuerdo de tu día refleje exactamente quién eres.",
     faqTitle: "Preguntas frecuentes",
     contactTitle: "Hablemos de tu fecha.",
     contactCopy:
@@ -531,7 +531,7 @@ export const en: Messages = {
     methodCopy:
       "Little noise, three steps. This is how the work is done when makeup and hair have to last — from the trial to the last dance.",
     lookbookCopy:
-      "My work in action. Real weddings, real people, styling made to be lived in. Author looks that hold on camera and until the last dance, so the memory of your day reflects exactly who you are.",
+      "My work in action. Real weddings, real people, and styling made to be lived in. These images reflect the essence of my style, but my technique adapts one hundred percent to you. From the most absolute naturalness to very specific or less conventional looks; I design custom author looks that hold on camera and until the last dance, so the memory of your day reflects exactly who you are.",
     faqTitle: "Frequently asked questions",
     contactTitle: "Let's talk about your date.",
     contactCopy:
@@ -865,7 +865,7 @@ export const fr: Messages = {
     methodCopy:
       "Peu de bruit, trois étapes. Ainsi se travaille quand le maquillage et la coiffure doivent vraiment tenir, de l’essayage au dernier bal.",
     lookbookCopy:
-      "Mon travail en action. Mariages réels, personnes réelles, stylismes faits pour être vécus. Des looks d’auteur qui tiennent à la caméra et jusqu’au dernier bal, pour que le souvenir de ton jour reflète exactement qui tu es.",
+      "Mon travail en action. Mariages réels, personnes réelles et stylismes faits pour être vécus. Ces images reflètent l’essence de mon style, mais ma technique s’adapte à cent pour cent à toi. Du naturel le plus absolu aux styles très précis ou moins conventionnels ; je dessine des looks d’auteur sur mesure qui tiennent à la caméra et jusqu’au dernier bal, pour que le souvenir de ton jour reflète exactement qui tu es.",
     faqTitle: "Questions fréquentes",
     contactTitle: "Parlons de ta date.",
     contactCopy:
