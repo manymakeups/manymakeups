@@ -5,7 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 
 const WORD_MS = 4800;
 const LOGO_MS = 3200;
-const OVERLAP_MS = 1200;
+const OVERLAP = 0.55;
 
 const dirs = ["ne", "nw", "sw", "se"] as const;
 
@@ -33,7 +33,7 @@ const beats = [
 export function IntroSplash() {
   const [open, setOpen] = useState(true);
   const [index, setIndex] = useState(0);
-  const [leaving, setLeaving] = useState<number | null>(null);
+  const [active, setActive] = useState<number[]>([0]);
   const logoRef = useRef<HTMLDivElement>(null);
   const timers = useRef<number[]>([]);
 
@@ -94,14 +94,17 @@ export function IntroSplash() {
       let delay = 0;
       beats.forEach((beat, i) => {
         const duration = beat.type === "word" ? WORD_MS : LOGO_MS;
+        const overlap = Math.round(duration * OVERLAP);
         timers.current.push(
           window.setTimeout(() => {
-            if (i > 0) setLeaving(i - 1);
             setIndex(i);
-            timers.current.push(
-              window.setTimeout(() => setLeaving(null), OVERLAP_MS),
-            );
+            setActive((prev) => (prev.includes(i) ? prev : [...prev, i]));
           }, delay),
+        );
+        timers.current.push(
+          window.setTimeout(() => {
+            setActive((prev) => prev.filter((item) => item !== i));
+          }, delay + duration),
         );
         if ("fly" in beat && beat.fly) {
           timers.current.push(
@@ -110,7 +113,7 @@ export function IntroSplash() {
             }, delay + Math.round(duration * 0.72)),
           );
         }
-        delay += duration - OVERLAP_MS;
+        delay += duration - overlap;
       });
     }
 
@@ -124,18 +127,10 @@ export function IntroSplash() {
   if (!open) return null;
 
   const current = beats[index];
-  const logoIn = current.type === "logo";
-  const leavingBeat = leaving !== null ? beats[leaving] : null;
-  const logoIndex = logoIn
-    ? index
-    : leavingBeat?.type === "logo" && leaving !== null
-      ? leaving
-      : -1;
+  const logoIndex =
+    [...active].reverse().find((item) => beats[item].type === "logo") ?? -1;
   const skip = "Saltar · Skip · Passer";
-  const visible = [leaving, index].filter(
-    (value, i, all): value is number =>
-      value !== null && all.indexOf(value) === i,
-  );
+  const visibleWords = active.filter((item) => beats[item].type === "word");
 
   return (
     <div
@@ -165,7 +160,7 @@ export function IntroSplash() {
             className="size-[min(52vw,11.5rem)] md:size-[16rem] xl:size-[18rem]"
           />
         </div>
-        {visible.map((beatIndex) => {
+        {visibleWords.map((beatIndex) => {
           const beat = beats[beatIndex];
           if (beat.type !== "word") return null;
           return (

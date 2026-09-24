@@ -18,8 +18,8 @@ export async function SiteHeader() {
   ];
 
   return (
-    <header className="mx-auto max-w-[1120px] px-4 py-3 sm:px-6 md:px-10 md:py-5">
-      <div className="flex items-center justify-between gap-3">
+    <header className="sticky top-0 z-40 bg-porcelain/95 md:static md:bg-transparent">
+      <div className="mx-auto flex max-w-[1120px] items-center justify-between gap-3 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-6 md:px-10 md:py-5 md:pt-5">
         <a
           href={localePath(locale, "/")}
           id="site-header-logo"
