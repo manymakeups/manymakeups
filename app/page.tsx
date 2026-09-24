@@ -281,7 +281,7 @@ export default async function Home() {
                     <h3 className="font-serif text-2xl leading-snug">
                       {item.q}
                     </h3>
-                    <p className="mt-3 text-sm leading-relaxed text-ash">
+                    <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-ash">
                       {item.a}
                     </p>
                   </div>

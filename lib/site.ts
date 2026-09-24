@@ -169,7 +169,7 @@ export const faqs = [
   },
   {
     q: "¿Te desplazas el día de la boda o debo ir al estudio?",
-    a: "El día de tu boda me desplazo a tu domicilio, hotel o finca (principalmente en las zonas de Castellón y Valencia) para que te prepares con total tranquilidad. Las pruebas de diseño previas sí las realizamos siempre en mi estudio, donde dispongo de la luz y el material óptimo para trabajar los detalles aunque también tienes la opción de venir tú al estudio, como sea más cómodo para ti.",
+    a: "Tú decides la logística que te dé más tranquilidad. Tanto para la prueba de diseño como para el día de la boda, puedes venir a mi estudio o solicitar que me desplace donde me necesites.\n\nMi zona de trabajo habitual es Castellón y Valencia, pero tengo plena disponibilidad a nivel nacional e internacional. Ten en cuenta que la tarifa nupcial cubre el servicio de la prueba en el estudio y el estilismo en tu ubicación el gran día. Al presupuesto base se le añadirá únicamente el coste logístico (kilometraje o transporte) de ese día, así como el de la prueba, en caso de que prefieras que también la realice a domicilio.",
   },
   {
     q: "¿En qué consiste exactamente la prueba de novia?",

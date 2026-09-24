@@ -8,6 +8,7 @@ import { site } from "@/lib/site";
 import { getLocale } from "@/lib/i18n/server";
 import { getMessages } from "@/lib/i18n/messages";
 import { I18nProvider } from "@/lib/i18n/context";
+import { Analytics } from "@vercel/analytics/next";
 
 const sans = Outfit({
   variable: "--font-outfit",
@@ -112,6 +113,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           {children}
           <ScrollJump />
         </I18nProvider>
+        <Analytics />
       </body>
     </html>
   );

@@ -235,7 +235,7 @@ export const es: Messages = {
     },
     {
       q: "¿Te desplazas el día de la boda o debo ir al estudio?",
-      a: "El día de tu boda me desplazo a tu domicilio, hotel o finca (principalmente en las zonas de Castellón y Valencia) para que te prepares con total tranquilidad. Las pruebas de diseño previas sí las realizamos siempre en mi estudio, donde dispongo de la luz y el material óptimo para trabajar los detalles aunque también tienes la opción de venir tú al estudio, como sea más cómodo para ti.",
+      a: "Tú decides la logística que te dé más tranquilidad. Tanto para la prueba de diseño como para el día de la boda, puedes venir a mi estudio o solicitar que me desplace donde me necesites.\n\nMi zona de trabajo habitual es Castellón y Valencia, pero tengo plena disponibilidad a nivel nacional e internacional. Ten en cuenta que la tarifa nupcial cubre el servicio de la prueba en el estudio y el estilismo en tu ubicación el gran día. Al presupuesto base se le añadirá únicamente el coste logístico (kilometraje o transporte) de ese día, así como el de la prueba, en caso de que prefieras que también la realice a domicilio.",
     },
     {
       q: "¿En qué consiste exactamente la prueba de novia?",
@@ -570,7 +570,7 @@ export const en: Messages = {
     },
     {
       q: "Do you come to me on the wedding day, or do I come to the studio?",
-      a: "On your wedding day I come to your home, hotel or venue (mainly in Castellón and Valencia) so you can get ready in complete calm. Design trials take place in my studio, where I have the right light and kit — though you can also come to the studio on the day if that is more comfortable.",
+      a: "You decide the logistics that give you most peace of mind. For both the design trial and the wedding day, you can come to my studio or ask me to come to you.\n\nMy usual working area is Castellón and Valencia, but I am fully available nationally and internationally. The bridal fee covers the studio trial and styling at your location on the day. Only the logistics cost (mileage or travel) for that day is added to the base quote — and the same for the trial, if you would rather have that at home too.",
     },
     {
       q: "What exactly is the bridal trial?",
@@ -904,7 +904,7 @@ export const fr: Messages = {
     },
     {
       q: "Te déplaces-tu le jour du mariage, ou dois-je venir au studio ?",
-      a: "Le jour de ton mariage, je me déplace à ton domicile, hôtel ou domaine (surtout Castellón et Valence) pour que tu te prépares en toute tranquillité. Les essayages de création ont lieu dans mon studio, où j’ai la lumière et le matériel justes — tu peux aussi venir au studio le jour J si c’est plus confortable.",
+      a: "C’est toi qui choisis la logistique qui te donne le plus de tranquillité. Pour l’essayage comme pour le jour du mariage, tu peux venir à mon studio ou me demander de me déplacer.\n\nMa zone de travail habituelle est Castellón et Valence, mais je suis pleinement disponible au niveau national et international. Le tarif nuptial couvre l’essayage en studio et le stylisme sur place le grand jour. Au devis de base s’ajoute uniquement le coût logistique (kilométrage ou transport) de ce jour-là, ainsi que celui de l’essayage si tu préfères que je le fasse aussi à domicile.",
     },
     {
       q: "En quoi consiste exactement l’essayage de mariée ?",

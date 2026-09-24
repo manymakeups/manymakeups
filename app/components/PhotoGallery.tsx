@@ -24,12 +24,15 @@ export function PhotoGallery({
   const tabs = tabIds.map((id) => ({ id, label: t.gallery[id] }));
   const [tab, setTab] = useState<(typeof tabIds)[number]>("parejas");
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [limit, setLimit] = useState(12);
 
   const photos = useMemo(() => {
     if (tab === "peinado") return peinado;
     if (tab === "maquillaje") return maquillaje;
     return parejas;
   }, [tab, parejas, peinado, maquillaje]);
+
+  const visible = photos.slice(0, limit);
 
   return (
     <div>
@@ -43,6 +46,7 @@ export function PhotoGallery({
             className={`nav-link ${tab === item.id ? "text-ink" : "text-ash"}`}
             onClick={() => {
               setTab(item.id);
+              setLimit(12);
               setOpenIndex(null);
             }}
           >
@@ -51,7 +55,7 @@ export function PhotoGallery({
         ))}
       </div>
       <div className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
-        {photos.map((photo, index) => (
+        {visible.map((photo, index) => (
           <button
             key={photo.src}
             type="button"
@@ -68,6 +72,15 @@ export function PhotoGallery({
           </button>
         ))}
       </div>
+      {photos.length > limit ? (
+        <button
+          type="button"
+          className="btn-atelier mt-10"
+          onClick={() => setLimit((n) => n + 12)}
+        >
+          {t.common.moreLooks}
+        </button>
+      ) : null}
       <PhotoLightbox
         photos={photos}
         openIndex={openIndex}
