@@ -20,7 +20,7 @@ const beats = [
   {
     n: "II",
     words: ["Formación", "Training", "Formation"],
-    mark: "/photos/atelier/profesionales.jpg",
+    mark: "/photos/atelier/formacion.jpg",
   },
   {
     n: "III",
@@ -171,7 +171,7 @@ export function IntroSplash() {
             <div
               key={beat.n}
               className="intro-slide is-play"
-              style={{ animationDuration: `${WORD_MS}ms` }}
+              style={{ animationDuration: `${WORD_MS}ms`, ["--intro-ms" as string]: `${WORD_MS}ms` }}
             >
               <span className="intro-mark" aria-hidden>
                 <Image

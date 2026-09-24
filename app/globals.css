@@ -431,25 +431,29 @@ html.intro-flying .intro-skip {
 }
 
 .intro-slide.is-play {
-  animation: intro-bloom 2.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation:
+    intro-bloom-scale var(--intro-ms, 2.5s) linear both,
+    intro-bloom-fade var(--intro-ms, 2.5s) linear both;
 }
 
-@keyframes intro-bloom {
+@keyframes intro-bloom-scale {
+  from {
+    transform: scale(0.84);
+  }
+  to {
+    transform: scale(1.14);
+  }
+}
+
+@keyframes intro-bloom-fade {
   0% {
     opacity: 0;
-    transform: scale(0.72);
   }
-  16% {
+  22% {
     opacity: 1;
-    transform: scale(0.94);
-  }
-  52% {
-    opacity: 1;
-    transform: scale(1);
   }
   100% {
     opacity: 0;
-    transform: scale(1.16);
   }
 }
 
@@ -480,7 +484,7 @@ html.intro-flying .intro-skip {
   z-index: 0;
   opacity: 1;
   transform-origin: center center;
-  transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 0.7s linear;
 }
 
 .intro-logo.is-dim {
