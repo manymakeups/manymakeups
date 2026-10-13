@@ -26,6 +26,8 @@ export async function POST(request: Request) {
     payments: emptyPayments(),
     inspiration: [],
     documents: [],
+    workPhotos: [],
+    appointments: [],
   };
   await saveClient(client);
   const invite = `${site.url}/area-novia/activar?token=${encodeURIComponent(token)}`;

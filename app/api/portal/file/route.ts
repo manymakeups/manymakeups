@@ -15,7 +15,8 @@ export async function GET(request: Request) {
   if (!client) return new NextResponse("Not found", { status: 404 });
   const file =
     client.inspiration.find((item) => item.id === fileId) ??
-    client.documents.find((item) => item.id === fileId);
+    client.documents.find((item) => item.id === fileId) ??
+    client.workPhotos.find((item) => item.id === fileId);
   if (!file) return new NextResponse("Not found", { status: 404 });
   const payload = await readPortalFile(file);
   if (!payload) return new NextResponse("Not found", { status: 404 });

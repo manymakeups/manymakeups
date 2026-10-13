@@ -24,10 +24,28 @@ export const PERSON_SERVICE_OPTIONS = [
   "Sólo peinado",
 ] as const;
 
+export const APPOINTMENT_TITLES = ["Prueba", "Evento", "Reserva", "Otra"] as const;
+export const APPOINTMENT_STATUSES = ["planificada", "confirmada", "hecha"] as const;
+export type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];
+
 export const CONTRACTOR_INSPIRATION = "contratante";
+export const CONTRACTOR_TRIAL_PHOTOS = "prueba-contratante";
 
 export function personInspirationKey(index: number) {
   return `persona-${index}`;
+}
+
+export function personTrialPhotoKey(index: number) {
+  return `prueba-persona-${index}`;
+}
+
+export function filesFor(files: PortalFile[], key: string) {
+  if (key === CONTRACTOR_INSPIRATION) {
+    return files.filter(
+      (file) => file.label === CONTRACTOR_INSPIRATION || file.label === "Inspiración",
+    );
+  }
+  return files.filter((file) => file.label === key);
 }
 
 export function normalizePersonService(value: string) {
@@ -45,6 +63,21 @@ export const DOCUMENT_KINDS = [
   "Otro",
 ] as const;
 
+export const PORTAL_TABS = [
+  { id: "contratante", label: "Contratante" },
+  { id: "acompanantes", label: "Acompañantes" },
+  { id: "facturacion", label: "Facturación" },
+  { id: "documentacion", label: "Documentación" },
+  { id: "agenda", label: "Agenda" },
+] as const;
+
+export type PortalTab = (typeof PORTAL_TABS)[number]["id"];
+
+export function portalTab(value: string | undefined): PortalTab {
+  if (PORTAL_TABS.some((tab) => tab.id === value)) return value as PortalTab;
+  return "contratante";
+}
+
 export type Attendee = {
   who: string;
   service: string;
@@ -52,6 +85,7 @@ export type Attendee = {
   trialNotes: string;
   skinNotes: string;
   notes: string;
+  productsUsed: string;
   budgetAmount: string;
   budgetNumber: string;
 };
@@ -61,9 +95,25 @@ export type PaymentSlice = {
   paid: boolean;
 };
 
-export type Payments = {
+export type PersonPayments = {
+  deposit: PaymentSlice;
   trial: PaymentSlice;
   event: PaymentSlice;
+};
+
+export type Payments = {
+  contractor: PersonPayments;
+  guests: PersonPayments[];
+};
+
+export type Appointment = {
+  id: string;
+  title: string;
+  date: string;
+  time: string;
+  place: string;
+  notes: string;
+  status: AppointmentStatus;
 };
 
 export type EventDetails = {
@@ -85,7 +135,10 @@ export type EventDetails = {
   trialNotes: string;
   skinNotes: string;
   notes: string;
+  productsUsed: string;
 };
+
+export type FileKind = "inspiration" | "document" | "work";
 
 export type PortalFile = {
   id: string;
@@ -94,7 +147,7 @@ export type PortalFile = {
   mime: string;
   size: number;
   uploadedAt: string;
-  kind: "inspiration" | "document";
+  kind: FileKind;
   label: string;
 };
 
@@ -110,6 +163,8 @@ export type ClientRecord = {
   payments: Payments;
   inspiration: PortalFile[];
   documents: PortalFile[];
+  workPhotos: PortalFile[];
+  appointments: Appointment[];
 };
 
 export type PortalDb = {
@@ -124,15 +179,28 @@ export function emptyAttendee(who = ""): Attendee {
     trialNotes: "",
     skinNotes: "",
     notes: "",
+    productsUsed: "",
     budgetAmount: "",
     budgetNumber: "",
   };
 }
 
+export function emptySlice(): PaymentSlice {
+  return { amount: 0, paid: false };
+}
+
+export function emptyPersonPayments(): PersonPayments {
+  return {
+    deposit: emptySlice(),
+    trial: emptySlice(),
+    event: emptySlice(),
+  };
+}
+
 export function emptyPayments(): Payments {
   return {
-    trial: { amount: 0, paid: false },
-    event: { amount: 0, paid: false },
+    contractor: emptyPersonPayments(),
+    guests: [],
   };
 }
 
@@ -147,8 +215,8 @@ export function emptyEvent(name = ""): EventDetails {
     gettingReadyPlace: "",
     gettingReadyTime: "",
     ceremonyTime: "",
-    peopleCount: 1,
-    people: [emptyAttendee()],
+    peopleCount: 0,
+    people: [],
     makeup: true,
     hair: true,
     glitterBar: false,
@@ -156,6 +224,7 @@ export function emptyEvent(name = ""): EventDetails {
     trialNotes: "",
     skinNotes: "",
     notes: "",
+    productsUsed: "",
   };
 }
 
@@ -175,8 +244,57 @@ export function euros(value: number) {
   }).format(value || 0);
 }
 
+function asSlice(value: unknown): PaymentSlice {
+  const row = value && typeof value === "object" ? (value as PaymentSlice) : emptySlice();
+  return {
+    amount: Number(row.amount) || 0,
+    paid: Boolean(row.paid),
+  };
+}
+
+function asPersonPayments(value: unknown): PersonPayments {
+  const row = value && typeof value === "object" ? (value as PersonPayments) : emptyPersonPayments();
+  return {
+    deposit: asSlice(row.deposit),
+    trial: asSlice(row.trial),
+    event: asSlice(row.event),
+  };
+}
+
+function migratePayments(raw: unknown, guestCount: number): Payments {
+  const data = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const contractor = data.contractor
+    ? asPersonPayments(data.contractor)
+    : {
+        deposit: asSlice(data.deposit),
+        trial: asSlice(data.trial),
+        event: asSlice(data.event),
+      };
+  const guestsRaw = Array.isArray(data.guests) ? data.guests : [];
+  const guests = Array.from({ length: guestCount }, (_, i) =>
+    guestsRaw[i] ? asPersonPayments(guestsRaw[i]) : emptyPersonPayments(),
+  );
+  return { contractor, guests };
+}
+
+function asAppointment(value: unknown): Appointment | null {
+  if (!value || typeof value !== "object") return null;
+  const row = value as Appointment;
+  if (!row.id) return null;
+  const status = APPOINTMENT_STATUSES.includes(row.status) ? row.status : "planificada";
+  return {
+    id: String(row.id),
+    title: row.title ?? "",
+    date: row.date ?? "",
+    time: row.time ?? "",
+    place: row.place ?? "",
+    notes: row.notes ?? "",
+    status,
+  };
+}
+
 export function normalizeClient(client: ClientRecord): ClientRecord {
-  const count = Math.min(20, Math.max(1, client.event?.peopleCount || 1));
+  const count = Math.min(20, Math.max(0, Number(client.event?.peopleCount) || 0));
   const existing = Array.isArray(client.event?.people) ? client.event.people : [];
   const people = Array.from({ length: count }, (_, i) => {
     const row = existing[i];
@@ -188,6 +306,7 @@ export function normalizeClient(client: ClientRecord): ClientRecord {
       trialNotes: row.trialNotes ?? "",
       skinNotes: row.skinNotes ?? "",
       notes: row.notes ?? "",
+      productsUsed: row.productsUsed ?? "",
       budgetAmount: row.budgetAmount ?? "",
       budgetNumber: row.budgetNumber ?? "",
     };
@@ -199,18 +318,12 @@ export function normalizeClient(client: ClientRecord): ClientRecord {
       ...client.event,
       peopleCount: count,
       people,
+      productsUsed: client.event?.productsUsed ?? "",
     },
-    payments: {
-      trial: {
-        amount: Number(client.payments?.trial?.amount) || 0,
-        paid: Boolean(client.payments?.trial?.paid),
-      },
-      event: {
-        amount: Number(client.payments?.event?.amount) || 0,
-        paid: Boolean(client.payments?.event?.paid),
-      },
-    },
+    payments: migratePayments(client.payments, count),
     inspiration: client.inspiration ?? [],
     documents: client.documents ?? [],
+    workPhotos: client.workPhotos ?? [],
+    appointments: (client.appointments ?? []).map(asAppointment).filter(Boolean) as Appointment[],
   };
 }

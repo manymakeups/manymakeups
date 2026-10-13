@@ -34,7 +34,7 @@ export async function POST(request: Request) {
   await putPortalFile(record, Buffer.from(await upload.arrayBuffer()));
   client.documents.push(record);
   await saveClient(client);
-  return go(request, `/privado/novias/${client.id}?ok=doc`);
+  return go(request, `/privado/novias/${client.id}?tab=documentacion&ok=doc`);
 }
 
 export async function DELETE(request: Request) {

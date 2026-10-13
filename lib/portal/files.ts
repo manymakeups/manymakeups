@@ -19,12 +19,17 @@ export function isImageType(mime: string) {
   return IMAGE_TYPES.has(mime);
 }
 
-export function allowedType(kind: "inspiration" | "document", mime: string) {
-  return kind === "inspiration" ? IMAGE_TYPES.has(mime) : DOC_TYPES.has(mime);
+export function allowedType(kind: "inspiration" | "document" | "work", mime: string) {
+  return kind === "document" ? DOC_TYPES.has(mime) : IMAGE_TYPES.has(mime);
 }
 
-export function maxBytes(kind: "inspiration" | "document") {
-  return kind === "inspiration" ? INSPIRATION_BYTES : DOCUMENT_BYTES;
+export function maxBytes(kind: "inspiration" | "document" | "work") {
+  return kind === "document" ? DOCUMENT_BYTES : INSPIRATION_BYTES;
+}
+
+export function portalFileHref(clientId: string, id: string, download = false) {
+  const extra = download ? "&download=1" : "";
+  return `/api/portal/file?client=${clientId}&id=${id}${extra}`;
 }
 
 export function safeFileName(name: string) {

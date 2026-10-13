@@ -59,7 +59,8 @@ export async function POST(request: Request) {
       `${added.length} foto(s): ${added.join(", ")}`,
     ]);
   }
-  return go(request, "/area-novia/panel?ok=fotos");
+  const tab = typeof form.get("tab") === "string" && form.get("tab") ? String(form.get("tab")) : "contratante";
+  return go(request, `/area-novia/panel?tab=${encodeURIComponent(tab)}&ok=fotos`);
 }
 
 export async function DELETE(request: Request) {

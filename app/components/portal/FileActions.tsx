@@ -8,12 +8,17 @@ export function DeleteFileButton({
 }: {
   id: string;
   clientId?: string;
-  kind: "inspiration" | "document";
+  kind: "inspiration" | "document" | "work";
   label: string;
 }) {
   async function onClick() {
     if (!confirm("¿Quitar este archivo?")) return;
-    const url = kind === "document" ? "/api/admin/documents" : "/api/portal/inspiration";
+    const url =
+      kind === "document"
+        ? "/api/admin/documents"
+        : kind === "work"
+          ? "/api/admin/work"
+          : "/api/portal/inspiration";
     await fetch(url, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },

@@ -22,23 +22,24 @@ function eventType(value: string): EventType {
 function peopleFromForm(form: FormData, count: number, fallback: Attendee[]): Attendee[] {
   return Array.from({ length: count }, (_, i) => {
     const prev = fallback[i] ?? emptyAttendee();
+    const wantsTrial = flag(form.get(`people.${i}.wantsTrial`));
     return {
       who: text(form.get(`people.${i}.who`)),
       service: normalizePersonService(text(form.get(`people.${i}.service`)) || prev.service),
-      wantsTrial: flag(form.get(`people.${i}.wantsTrial`)),
-      trialNotes: text(form.get(`people.${i}.trialNotes`)),
+      wantsTrial,
+      trialNotes: wantsTrial ? text(form.get(`people.${i}.trialNotes`)) : prev.trialNotes,
       skinNotes: text(form.get(`people.${i}.skinNotes`)),
       notes: text(form.get(`people.${i}.notes`)),
+      productsUsed: prev.productsUsed,
       budgetAmount: prev.budgetAmount,
       budgetNumber: prev.budgetNumber,
     };
   });
 }
 
-export function eventFromForm(form: FormData, fallback: EventDetails): EventDetails {
-  const peopleRaw = Number.parseInt(text(form.get("peopleCount")), 10);
-  const peopleCount = Number.isFinite(peopleRaw) && peopleRaw > 0 ? Math.min(20, peopleRaw) : 1;
+export function contractorFromForm(form: FormData, fallback: EventDetails): EventDetails {
   return {
+    ...fallback,
     clientName: text(form.get("clientName")) || fallback.clientName,
     partnerName: text(form.get("partnerName")),
     phone: text(form.get("phone")),
@@ -48,8 +49,6 @@ export function eventFromForm(form: FormData, fallback: EventDetails): EventDeta
     gettingReadyPlace: text(form.get("gettingReadyPlace")),
     gettingReadyTime: text(form.get("gettingReadyTime")),
     ceremonyTime: text(form.get("ceremonyTime")),
-    peopleCount,
-    people: peopleFromForm(form, peopleCount, fallback.people ?? []),
     makeup: flag(form.get("makeup")),
     hair: flag(form.get("hair")),
     glitterBar: flag(form.get("glitterBar")),
@@ -57,5 +56,15 @@ export function eventFromForm(form: FormData, fallback: EventDetails): EventDeta
     trialNotes: text(form.get("trialNotes")),
     skinNotes: text(form.get("skinNotes")),
     notes: text(form.get("notes")),
+  };
+}
+
+export function companionsFromForm(form: FormData, fallback: EventDetails): EventDetails {
+  const peopleRaw = Number.parseInt(text(form.get("peopleCount")), 10);
+  const peopleCount = Number.isFinite(peopleRaw) && peopleRaw >= 0 ? Math.min(20, peopleRaw) : 0;
+  return {
+    ...fallback,
+    peopleCount,
+    people: peopleFromForm(form, peopleCount, fallback.people ?? []),
   };
 }
