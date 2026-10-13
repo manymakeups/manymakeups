@@ -2,6 +2,7 @@ import { defaultLocale, isLocale, type Locale } from "@/lib/i18n/config";
 import { getPortalCopy, interpolate } from "@/lib/i18n/portal-messages";
 import { localePath } from "@/lib/i18n/path";
 import { site } from "@/lib/site";
+import { brandedClientEmail } from "./mail-html";
 import { notifyEmail } from "./notify";
 import type { ClientRecord } from "./types";
 
@@ -20,13 +21,25 @@ export async function mailClient(
   kind: "reply" | "update",
   extra: { reply?: string; original?: string; tab?: string },
 ) {
-  const t = getPortalCopy(clientLocale(client));
+  const locale = clientLocale(client);
+  const t = getPortalCopy(locale);
   const name = client.event.clientName || client.name;
-  const hello = interpolate(t.mailHello, { name });
   const link = clientPanelUrl(client, extra.tab);
-  const body =
-    kind === "reply"
-      ? [hello, "", t.replyMailAbout, extra.original || "—", "", t.replyMailAnswer, extra.reply || "", "", t.mailSignoff, site.legalName].join("\n")
-      : [hello, "", t.updateMailBody, link, "", t.mailSignoff, site.legalName].join("\n");
-  return notifyEmail(client.email, kind === "reply" ? t.replyMailSubject : t.updateMailSubject, body);
+  if (kind === "update") {
+    const mail = brandedClientEmail({
+      lang: locale,
+      blocks: [
+        { text: interpolate(t.updateMailHello, { name }) },
+        { text: t.updateMailIntro },
+        { text: t.updateMailBody },
+        { href: link, label: t.updateMailLink },
+        { text: t.updateMailClose },
+      ],
+      signoff: [t.updateMailSignoff],
+    });
+    return notifyEmail(client.email, t.updateMailSubject, mail.text, mail.html);
+  }
+  const hello = interpolate(t.mailHello, { name });
+  const body = [hello, "", t.replyMailAbout, extra.original || "—", "", t.replyMailAnswer, extra.reply || "", "", t.mailSignoff, site.legalName].join("\n");
+  return notifyEmail(client.email, t.replyMailSubject, body);
 }

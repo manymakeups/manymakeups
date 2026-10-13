@@ -139,7 +139,12 @@ export type PortalCopy = {
   replyMailAbout: string;
   replyMailAnswer: string;
   updateMailSubject: string;
+  updateMailHello: string;
+  updateMailIntro: string;
   updateMailBody: string;
+  updateMailLink: string;
+  updateMailClose: string;
+  updateMailSignoff: string;
 };
 
 export const portalEs: PortalCopy = {
@@ -290,7 +295,7 @@ export const portalEs: PortalCopy = {
     Otro: "Otro",
   },
   recoverMailSubject: "Restablece tu contraseña de acceso | Many Makeups by Ana Zarza",
-  recoverMailHello: "Hola, {name}:",
+  recoverMailHello: "Hola {name}:",
   recoverMailIntro:
     "He recibido una solicitud para restablecer la contraseña de tu área privada en Many Makeups.",
   recoverMailBody:
@@ -314,8 +319,15 @@ export const portalEs: PortalCopy = {
   replyMailSubject: "Respuesta del estudio · Área clientes Many Makeups",
   replyMailAbout: "Sobre tu aviso:",
   replyMailAnswer: "Respuesta del estudio:",
-  updateMailSubject: "He actualizado tu ficha · Many Makeups",
-  updateMailBody: "He guardado un cambio en tu Área clientes. Entra para verlo:",
+  updateMailSubject: "He actualizado la ficha de tu evento | Many Makeups by Ana Zarza",
+  updateMailHello: "Hola {name}:",
+  updateMailIntro:
+    "Te escribo para avisarte de que he realizado una actualización en la ficha de tu evento en tu área privada (he añadido nuevos detalles, documentos o ajustes en tu planificación tal y como me has solicitado).",
+  updateMailBody: "Puedes revisar las novedades directamente desde tu panel de acceso:",
+  updateMailLink: "Acceder a mi ficha de cliente",
+  updateMailClose:
+    "Así me aseguro de que todo esté perfectamente alineado para tu gran día. Si ves cualquier detalle que quieras ajustar, solo dímelo.",
+  updateMailSignoff: "Un saludo,",
 };
 
 export const portalEn: PortalCopy = {
@@ -486,8 +498,15 @@ export const portalEn: PortalCopy = {
   replyMailSubject: "A note from the studio · Many Makeups client area",
   replyMailAbout: "About your message:",
   replyMailAnswer: "Reply from the studio:",
-  updateMailSubject: "I have updated your details · Many Makeups",
-  updateMailBody: "I have saved a change in your client area. Open it here:",
+  updateMailSubject: "I have updated your event details | Many Makeups by Ana Zarza",
+  updateMailHello: "Hello {name}:",
+  updateMailIntro:
+    "I am writing to let you know that I have updated your event details in your private area (I have added new details, documents or adjustments to your plan, as you asked).",
+  updateMailBody: "You can review what is new directly from your access panel:",
+  updateMailLink: "Open my client details",
+  updateMailClose:
+    "This way I can make sure everything is lined up for your big day. If you see anything you would like to adjust, just tell me.",
+  updateMailSignoff: "Best regards,",
 };
 
 export const portalFr: PortalCopy = {
@@ -663,8 +682,15 @@ export const portalFr: PortalCopy = {
   replyMailSubject: "Réponse de l’atelier · Espace clientes Many Makeups",
   replyMailAbout: "À propos de ton message :",
   replyMailAnswer: "Réponse de l’atelier :",
-  updateMailSubject: "J’ai mis à jour ta fiche · Many Makeups",
-  updateMailBody: "J’ai enregistré un changement dans ton espace clientes. Ouvre-le ici :",
+  updateMailSubject: "J’ai mis à jour la fiche de ton événement | Many Makeups by Ana Zarza",
+  updateMailHello: "Bonjour {name} :",
+  updateMailIntro:
+    "Je t’écris pour te dire que j’ai mis à jour la fiche de ton événement dans ton espace privé (j’ai ajouté de nouveaux détails, des documents ou des ajustements à ta planification, comme tu me l’as demandé).",
+  updateMailBody: "Tu peux voir les nouveautés directement depuis ton espace :",
+  updateMailLink: "Accéder à ma fiche",
+  updateMailClose:
+    "Comme ça, je m’assure que tout est aligné pour ton grand jour. Si tu vois un détail à ajuster, dis-le-moi.",
+  updateMailSignoff: "Bien à toi,",
 };
 
 const catalog: Record<Locale, PortalCopy> = {
