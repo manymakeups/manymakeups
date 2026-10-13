@@ -88,10 +88,10 @@ export function StudioInbox({
           Todos
         </label>
         <button className="btn-atelier" type="submit" name="intent" value="read" disabled={!selected.length}>
-          Marcados como leídos
+          Leídos
         </button>
         <button className="btn-atelier" type="submit" name="intent" value="unread" disabled={!selected.length}>
-          Marcados como no leídos
+          No leídos
         </button>
         <button
           className="btn-atelier"
@@ -104,9 +104,6 @@ export function StudioInbox({
           }}
         >
           Eliminar seleccionados
-        </button>
-        <button className="btn-atelier" type="submit" name="intent" value="readAll">
-          Marcar todos como leídos
         </button>
       </form>
 
