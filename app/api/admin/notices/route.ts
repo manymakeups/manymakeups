@@ -1,9 +1,8 @@
+import { mailClient } from "@/lib/portal/client-mail";
 import { newId } from "@/lib/portal/crypto";
 import { go } from "@/lib/portal/http";
-import { notifyEmail } from "@/lib/portal/notify";
 import { requireAdmin } from "@/lib/portal/session";
 import { getClient, mutateNotices } from "@/lib/portal/store";
-import { site } from "@/lib/site";
 
 function idsFrom(form: FormData) {
   const listed = form.getAll("ids").map((value) => String(value)).filter(Boolean);
@@ -72,18 +71,7 @@ export async function POST(request: Request) {
     if (clientId) {
       const client = await getClient(clientId);
       if (client) {
-        const body = [
-          `Hola${client.event.clientName ? `, ${client.event.clientName}` : ","}`,
-          "",
-          "Sobre tu aviso en el Área clientes:",
-          original,
-          "",
-          "Respuesta del estudio:",
-          text,
-          "",
-          site.legalName,
-        ].join("\n");
-        await notifyEmail(client.email, "Respuesta · Área clientes Many Makeups", body);
+        await mailClient(client, "reply", { reply: text, original });
       }
     }
     return go(request, `${safeNext}?ok=respuesta`);

@@ -44,7 +44,9 @@ export default async function StudioInboxPage({
         />
       }
     >
-      {ok === "respuesta" ? <PortalNotice>Respuesta enviada.</PortalNotice> : null}
+      {ok === "respuesta" ? (
+        <PortalNotice>Respuesta enviada a su correo.</PortalNotice>
+      ) : null}
       {error === "respuesta" ? <PortalNotice>Escribe un texto para responder.</PortalNotice> : null}
       {notices.length ? (
         <StudioInbox

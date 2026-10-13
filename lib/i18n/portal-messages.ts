@@ -129,6 +129,13 @@ export type PortalCopy = {
   changeError: string;
   trialYes: string;
   trialNo: string;
+  mailHello: string;
+  mailSignoff: string;
+  replyMailSubject: string;
+  replyMailAbout: string;
+  replyMailAnswer: string;
+  updateMailSubject: string;
+  updateMailBody: string;
 };
 
 export const portalEs: PortalCopy = {
@@ -291,6 +298,13 @@ export const portalEs: PortalCopy = {
   changeError: "Escribe al menos unas palabras para que sepa qué cambiar.",
   trialYes: "Quiere prueba",
   trialNo: "Sin prueba",
+  mailHello: "Hola, {name}.",
+  mailSignoff: "Un abrazo,",
+  replyMailSubject: "Respuesta del estudio · Área clientes Many Makeups",
+  replyMailAbout: "Sobre tu aviso:",
+  replyMailAnswer: "Respuesta del estudio:",
+  updateMailSubject: "He actualizado tu ficha · Many Makeups",
+  updateMailBody: "He guardado un cambio en tu Área clientes. Entra para verlo:",
 };
 
 export const portalEn: PortalCopy = {
@@ -452,6 +466,13 @@ export const portalEn: PortalCopy = {
   changeError: "Please write a few words so I know what to change.",
   trialYes: "Wants a trial",
   trialNo: "No trial",
+  mailHello: "Hello, {name}.",
+  mailSignoff: "With love,",
+  replyMailSubject: "A note from the studio · Many Makeups client area",
+  replyMailAbout: "About your message:",
+  replyMailAnswer: "Reply from the studio:",
+  updateMailSubject: "I have updated your details · Many Makeups",
+  updateMailBody: "I have saved a change in your client area. Open it here:",
 };
 
 export const portalFr: PortalCopy = {
@@ -615,6 +636,13 @@ export const portalFr: PortalCopy = {
   changeError: "Écris quelques mots pour que je sache quoi changer.",
   trialYes: "Souhaite un essai",
   trialNo: "Sans essai",
+  mailHello: "Bonjour, {name}.",
+  mailSignoff: "Je t’embrasse,",
+  replyMailSubject: "Réponse de l’atelier · Espace clientes Many Makeups",
+  replyMailAbout: "À propos de ton message :",
+  replyMailAnswer: "Réponse de l’atelier :",
+  updateMailSubject: "J’ai mis à jour ta fiche · Many Makeups",
+  updateMailBody: "J’ai enregistré un changement dans ton espace clientes. Ouvre-le ici :",
 };
 
 const catalog: Record<Locale, PortalCopy> = {

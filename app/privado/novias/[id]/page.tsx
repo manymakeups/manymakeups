@@ -68,7 +68,7 @@ export default async function StudioClientPage({
       {ok === "estudio" ? <PortalNotice>Productos guardados.</PortalNotice> : null}
       {ok === "fotos" ? <PortalNotice>Fotos de la prueba colgadas.</PortalNotice> : null}
       {ok === "ficha" ? (
-        <PortalNotice>Ficha actualizada. Ella ya ve los cambios en su área.</PortalNotice>
+        <PortalNotice>Ficha actualizada. Ella ya ve los cambios y le he enviado un correo.</PortalNotice>
       ) : null}
       {error === "archivo" ? <PortalNotice>Ese archivo no se puede colgar.</PortalNotice> : null}
       {invite ? (

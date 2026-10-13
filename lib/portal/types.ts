@@ -182,6 +182,7 @@ export type ClientRecord = {
   inviteTokenHash: string | null;
   inviteExpiresAt: string | null;
   createdAt: string;
+  locale?: "es" | "en" | "fr";
   event: EventDetails;
   payments: Payments;
   inspiration: PortalFile[];

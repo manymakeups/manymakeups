@@ -1,7 +1,7 @@
 import { checkPassword, isEmail, normalizeEmail } from "@/lib/portal/crypto";
-import { goPortal } from "@/lib/portal/http";
+import { goPortal, requestLocale } from "@/lib/portal/http";
 import { setSessionCookie } from "@/lib/portal/session";
-import { getClientByEmail } from "@/lib/portal/store";
+import { getClientByEmail, saveClient } from "@/lib/portal/store";
 
 export async function POST(request: Request) {
   const form = await request.formData();
@@ -13,6 +13,11 @@ export async function POST(request: Request) {
   const client = await getClientByEmail(email);
   if (!client?.passwordHash || !(await checkPassword(password, client.passwordHash))) {
     return goPortal(request, "/area-novia?error=acceso");
+  }
+  const locale = await requestLocale();
+  if (client.locale !== locale) {
+    client.locale = locale;
+    await saveClient(client);
   }
   await setSessionCookie({
     sub: client.id,

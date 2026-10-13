@@ -1,5 +1,5 @@
 import { hashPassword, hashToken, passwordIssue } from "@/lib/portal/crypto";
-import { goPortal } from "@/lib/portal/http";
+import { goPortal, requestLocale } from "@/lib/portal/http";
 import { setSessionCookie } from "@/lib/portal/session";
 import { getClientByInviteHash, saveClient } from "@/lib/portal/store";
 
@@ -20,6 +20,7 @@ export async function POST(request: Request) {
   client.passwordHash = await hashPassword(password);
   client.inviteTokenHash = null;
   client.inviteExpiresAt = null;
+  client.locale = await requestLocale();
   await saveClient(client);
   await setSessionCookie({
     sub: client.id,

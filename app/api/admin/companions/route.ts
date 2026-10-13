@@ -1,3 +1,4 @@
+import { mailClient } from "@/lib/portal/client-mail";
 import { companionsFromForm } from "@/lib/portal/event-parse";
 import { go } from "@/lib/portal/http";
 import { requireAdmin } from "@/lib/portal/session";
@@ -15,5 +16,6 @@ export async function POST(request: Request) {
     peopleLocked: client.event.peopleLocked,
   };
   await saveClient(client);
+  await mailClient(client, "update", { tab: "acompanantes" });
   return go(request, `/privado/novias/${client.id}?tab=acompanantes&ok=ficha`);
 }
