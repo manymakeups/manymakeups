@@ -3,7 +3,7 @@ import { getPortalCopy, interpolate } from "@/lib/i18n";
 import { hashToken, isEmail, normalizeEmail, randomToken } from "@/lib/portal/crypto";
 import { goPortal, localizedPath, requestLocale } from "@/lib/portal/http";
 import { brandedClientEmail } from "@/lib/portal/mail-html";
-import { clientLabel, notifyEmail, notifyStudio } from "@/lib/portal/notify";
+import { notifyEmail } from "@/lib/portal/notify";
 import { getClientByEmail, saveClient } from "@/lib/portal/store";
 
 export async function POST(request: Request) {
@@ -30,13 +30,9 @@ export async function POST(request: Request) {
         { text: t.recoverMailExpiry, muted: true },
         { text: t.recoverMailIgnore },
       ],
-      signoff: [t.recoverMailSignoff, t.recoverMailFrom],
+      signoff: [t.recoverMailSignoff],
     });
     await notifyEmail(client.email, t.recoverMailSubject, mail.text, mail.html);
-    await notifyStudio(`Recuperar contraseña · ${clientLabel(client)}`, [
-      "Ha pedido un enlace nuevo.",
-      link,
-    ]);
   }
   return goPortal(request, "/area-novia/recuperar?ok=1");
 }

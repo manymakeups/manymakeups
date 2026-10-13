@@ -125,7 +125,6 @@ export type PortalCopy = {
   recoverMailExpiry: string;
   recoverMailIgnore: string;
   recoverMailSignoff: string;
-  recoverMailFrom: string;
   lockedLead: string;
   notifyChanges: string;
   notifyChangesLead: string;
@@ -301,7 +300,6 @@ export const portalEs: PortalCopy = {
   recoverMailIgnore:
     "Si tú no has solicitado este cambio, puedes ignorar este mensaje; tu contraseña seguirá siendo la misma.",
   recoverMailSignoff: "Un abrazo,",
-  recoverMailFrom: "Ana Zarza — Many Makeups",
   lockedLead:
     "Esta ficha ya está guardada y no se puede editar. Si algo cambia, escríbeme aquí y me llegará al estudio.",
   notifyChanges: "Notificar cambios",
@@ -474,7 +472,6 @@ export const portalEn: PortalCopy = {
   recoverMailExpiry: "(This link will expire in 3 weeks for security reasons).",
   recoverMailIgnore: "If you did not request this change, you can ignore this message; your password will stay the same.",
   recoverMailSignoff: "With love,",
-  recoverMailFrom: "Ana Zarza — Many Makeups",
   lockedLead:
     "This form is saved and can no longer be edited. If something changes, write it here and it will reach the studio.",
   notifyChanges: "Request a change",
@@ -652,7 +649,6 @@ export const portalFr: PortalCopy = {
   recoverMailIgnore:
     "Si tu n’as pas demandé ce changement, tu peux ignorer ce message ; ton mot de passe restera le même.",
   recoverMailSignoff: "Je t’embrasse,",
-  recoverMailFrom: "Ana Zarza — Many Makeups",
   lockedLead:
     "Cette fiche est enregistrée et ne peut plus être modifiée. Si quelque chose change, écris-le ici et je le verrai à l’atelier.",
   notifyChanges: "Signaler un changement",
