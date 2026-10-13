@@ -1,3 +1,4 @@
+import { ClientMenu } from "@/app/components/portal/ClientMenu";
 import { MailSetupNotice } from "@/app/components/portal/MailSetupNotice";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { StudioAside } from "@/app/components/portal/StudioAside";
@@ -16,12 +17,12 @@ export const metadata: Metadata = {
 export default async function StudioClientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; ok?: string }>;
 }) {
   const admin = await requireAdmin();
   if (!admin) redirect("/privado");
   const clients = await listClients();
-  const { error } = await searchParams;
+  const { error, ok } = await searchParams;
 
   return (
     <PortalFrame
@@ -39,6 +40,7 @@ export default async function StudioClientsPage({
       ) : null}
       {error === "datos" ? <PortalNotice>Nombre y correo válidos, por favor.</PortalNotice> : null}
       {error === "existe" ? <PortalNotice>Ese correo ya tiene cuenta.</PortalNotice> : null}
+      {ok === "eliminada" ? <PortalNotice>Clienta eliminada.</PortalNotice> : null}
 
       <form action="/api/admin/clients" method="post" className="grid max-w-xl gap-4 sm:grid-cols-2">
         <label className="field-label sm:col-span-1">
@@ -69,9 +71,16 @@ export default async function StudioClientsPage({
                   {client.passwordHash ? " · activa" : " · pendiente de activar"}
                 </p>
               </div>
-              <a className="btn-atelier" href={`/privado/novias/${client.id}`}>
-                Abrir
-              </a>
+              <div className="flex items-center gap-2">
+                <a className="btn-atelier" href={`/privado/novias/${client.id}`}>
+                  Abrir
+                </a>
+                <ClientMenu
+                  id={client.id}
+                  name={client.event.clientName || client.name}
+                  phone={client.event.phone}
+                />
+              </div>
             </li>
           ))
         )}

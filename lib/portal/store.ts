@@ -112,6 +112,18 @@ function pushNotice(db: PortalDb, clientId: string, notice: NewStudioNotice) {
   db.notices = db.notices.slice(0, 200);
 }
 
+export async function deleteClient(id: string) {
+  const db = await readDb();
+  const client = db.clients.find((item) => item.id === id);
+  if (!client) return false;
+  const files = [...client.inspiration, ...client.documents, ...client.workPhotos];
+  db.clients = db.clients.filter((item) => item.id !== id);
+  db.notices = db.notices.filter((notice) => notice.clientId !== id);
+  await writeDb(db);
+  await Promise.all(files.map((file) => deletePortalFile(file).catch(() => undefined)));
+  return true;
+}
+
 export async function saveClient(next: ClientRecord, notice?: NewStudioNotice) {
   const db = await readDb();
   const record = normalizeClient(next);
