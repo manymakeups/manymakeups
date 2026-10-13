@@ -35,12 +35,18 @@ export async function PortalFrame({
             <BrandLogo size="header" className="size-[4.5rem] sm:size-[5.5rem]" />
             <span className="hidden font-serif text-lg sm:block">Many Makeups</span>
           </a>
-          <div className="flex flex-wrap items-center justify-end gap-3">
-            {localize ? <LanguageSwitch current={locale} path={path} enabled /> : null}
-            {aside}
-            <a className="btn-atelier shrink-0" href={localize ? localePath(locale, "/") : "/"}>
-              {localize ? copy.backToSite : "Volver a la web"}
-            </a>
+          <div className="flex flex-wrap items-center justify-end gap-x-6 gap-y-3">
+            {localize ? (
+              <div className="border-ink/10 pr-0 sm:border-r sm:pr-6">
+                <LanguageSwitch current={locale} path={path} enabled />
+              </div>
+            ) : null}
+            <div className="flex flex-wrap items-center justify-end gap-4">
+              {aside}
+              <a className="btn-atelier shrink-0" href={localize ? localePath(locale, "/") : "/"}>
+                {localize ? copy.backToSite : "Volver a la web"}
+              </a>
+            </div>
           </div>
         </div>
       </header>

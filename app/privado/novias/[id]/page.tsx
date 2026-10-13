@@ -1,19 +1,23 @@
 import { AgendaForm } from "@/app/components/portal/AgendaBlock";
 import { CopyInvite, DeleteFileButton } from "@/app/components/portal/FileActions";
 import { PaymentsForm } from "@/app/components/portal/PaymentsBlock";
+import { PhotoGrid } from "@/app/components/portal/PhotoPicker";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { PortalTabs } from "@/app/components/portal/PortalTabs";
-import { StudioNotices } from "@/app/components/portal/StudioNotices";
+import { StudioAside } from "@/app/components/portal/StudioAside";
 import { WorkForm } from "@/app/components/portal/WorkBlock";
 import { portalFileHref } from "@/lib/portal/files";
 import {
+  CONTRACTOR_INSPIRATION,
   CONTRACTOR_TRIAL_PHOTOS,
   DOCUMENT_KINDS,
+  filesFor,
+  personInspirationKey,
   personTrialPhotoKey,
   portalTab,
 } from "@/lib/portal/types";
 import { requireAdmin } from "@/lib/portal/session";
-import { getClient, listNotices } from "@/lib/portal/store";
+import { getClient } from "@/lib/portal/store";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 
@@ -36,7 +40,6 @@ export default async function StudioClientPage({
   const { id } = await params;
   const client = await getClient(id);
   if (!client) notFound();
-  const notices = (await listNotices()).filter((notice) => notice.clientId === client.id);
   const { invite, ok, error, tab: tabRaw } = await searchParams;
   const event = client.event;
   const tab = portalTab(tabRaw);
@@ -47,9 +50,13 @@ export default async function StudioClientPage({
       title={event.clientName || client.name}
       lead={client.email}
       aside={
-        <a className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink" href="/privado/novias">
-          Todas
-        </a>
+        <StudioAside
+          extra={
+            <a className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink" href="/privado/novias">
+              Todas
+            </a>
+          }
+        />
       }
     >
       {ok === "doc" ? <PortalNotice>Documento colgado.</PortalNotice> : null}
@@ -58,11 +65,6 @@ export default async function StudioClientPage({
       {ok === "estudio" ? <PortalNotice>Productos guardados.</PortalNotice> : null}
       {ok === "fotos" ? <PortalNotice>Fotos de la prueba colgadas.</PortalNotice> : null}
       {error === "archivo" ? <PortalNotice>Ese archivo no se puede colgar.</PortalNotice> : null}
-      <StudioNotices
-        notices={notices}
-        clients={[client]}
-        next={`/privado/novias/${client.id}${tabRaw ? `?tab=${tabRaw}` : ""}`}
-      />
       {invite ? (
         <PortalNotice>
           Enlace de activación (21 días, un uso). Envíaselo por WhatsApp o correo:
@@ -143,6 +145,20 @@ export default async function StudioClientPage({
             </div>
           </dl>
           <div className="mt-12 border-t border-ink/10 pt-8">
+            <h3 className="font-serif text-2xl">Inspiraciones</h3>
+            <div className="mt-6">
+              {filesFor(client.inspiration, CONTRACTOR_INSPIRATION).length ? (
+                <PhotoGrid
+                  files={filesFor(client.inspiration, CONTRACTOR_INSPIRATION)}
+                  clientId={client.id}
+                  kind="inspiration"
+                />
+              ) : (
+                <p className="text-sm text-ash">Todavía no ha colgado fotos de inspiración.</p>
+              )}
+            </div>
+          </div>
+          <div className="mt-12 border-t border-ink/10 pt-8">
             <h3 className="font-serif text-3xl">Fotos de la prueba y productos</h3>
             <div className="mt-6">
               <WorkForm
@@ -175,6 +191,20 @@ export default async function StudioClientPage({
                     <p>Notas: {person.notes || "—"}</p>
                     <p>{person.wantsTrial ? "Quiere prueba" : "Sin prueba"}</p>
                     {person.wantsTrial ? <p>Prueba: {person.trialNotes || "—"}</p> : null}
+                  </div>
+                  <div className="mt-6">
+                    <p className="text-[0.68rem] uppercase tracking-[0.16em] text-ash">Inspiraciones</p>
+                    <div className="mt-3">
+                      {filesFor(client.inspiration, personInspirationKey(i)).length ? (
+                        <PhotoGrid
+                          files={filesFor(client.inspiration, personInspirationKey(i))}
+                          clientId={client.id}
+                          kind="inspiration"
+                        />
+                      ) : (
+                        <p className="text-sm text-ash">Todavía no ha colgado fotos de inspiración.</p>
+                      )}
+                    </div>
                   </div>
                   {person.wantsTrial ? (
                     <div className="mt-6 border-t border-ink/10 pt-6">

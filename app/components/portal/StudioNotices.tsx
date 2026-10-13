@@ -27,11 +27,13 @@ export function StudioNotices({
     clients.map((client) => [client.id, client.event.clientName || client.name]),
   );
   return (
-    <section className="mb-10 border border-gilt/30 bg-linen/50 p-5">
-      <h2 className="font-serif text-2xl">Avisos del área clientas</h2>
-      <ul className="mt-4 flex flex-col gap-4">
+    <section>
+      <ul className="flex flex-col gap-6">
         {notices.map((notice) => (
-          <li key={notice.id} className={notice.read ? "opacity-60" : ""}>
+          <li
+            key={notice.id}
+            className={`border border-ink/10 p-5 ${notice.read ? "opacity-60" : "border-gilt/40 bg-linen/50"}`}
+          >
             <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">
               {noticeTitle(notice)}
               {notice.read ? "" : " · nuevo"}
