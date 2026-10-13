@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Tu área de novia",
+  title: "Tu área de clientes",
   robots: { index: false, follow: false },
 };
 
@@ -40,7 +40,7 @@ export default async function BridePanelPage({
 
   return (
     <PortalFrame
-      kicker="Área de novia"
+      kicker="Área clientes"
       title={`Hola, ${client.event.clientName || client.name}.`}
       lead="Aquí va todo lo de tu fecha: cómo queréis el día, las imágenes que os inspiran, y los presupuestos o el contrato cuando los cuelgue."
       aside={

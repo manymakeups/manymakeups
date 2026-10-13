@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Área de novia",
+  title: "Área clientes",
   robots: { index: false, follow: false },
 };
 
@@ -26,9 +26,9 @@ export default async function BrideLoginPage({
 
   return (
     <PortalFrame
-      kicker="Área de novia"
-      title="Tu espacio, solo para el día."
-      lead="Entras con el correo que me diste y la contraseña que creaste al activar la invitación. Aquí queda la ficha del evento, las fotos de inspiración y los documentos que te cuelgue."
+      kicker="Área clientes"
+      title="Tu espacio de inspiración"
+      lead="Inicia sesión con el correo electrónico que me facilitaste y la contraseña que creaste al activar tu invitación. Aquí encontrarás la ficha de tu evento, tus fotos de inspiración y todos los documentos que vayamos compartiendo."
     >
       {message ? <PortalNotice>{message}</PortalNotice> : null}
       <form action="/api/portal/login" method="post" className="flex max-w-md flex-col gap-4">
@@ -46,13 +46,18 @@ export default async function BrideLoginPage({
             autoComplete="current-password"
           />
         </label>
-        <button className="btn-atelier-solid btn-atelier mt-2 self-start" type="submit">
-          Entrar
-        </button>
+        <div className="mt-2 flex flex-wrap gap-3">
+          <button className="btn-atelier-solid btn-atelier" type="submit">
+            Entrar
+          </button>
+          <a className="btn-atelier" href="/area-novia/recuperar">
+            Recuperar contraseña
+          </a>
+        </div>
       </form>
       <p className="mt-8 max-w-md text-sm text-ash">
-        Si aún no tienes acceso, escríbeme y te envío la invitación. No hay alta pública: cada
-        cuenta la abro yo para tu fecha.
+        ¿Aún no tienes acceso? Escríbeme y te enviaré tu invitación. Por seguridad y privacidad,
+        las cuentas son personales y las gestiono yo misma para cada una de vosotras.
       </p>
     </PortalFrame>
   );

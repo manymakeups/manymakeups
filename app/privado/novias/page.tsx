@@ -22,7 +22,7 @@ export default async function StudioClientsPage({
   return (
     <PortalFrame
       kicker="Estudio"
-      title="Área de novia"
+      title="Área clientes"
       lead="Creas la cuenta con su correo, le envías el enlace y ella elige la contraseña. Luego ves la ficha, las fotos y cuelgas los papeles."
       aside={
         <form action="/api/portal/logout?next=/privado" method="post">

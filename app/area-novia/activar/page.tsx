@@ -4,7 +4,7 @@ import { getClientByInviteHash } from "@/lib/portal/store";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Activar área de novia",
+  title: "Activar área clientes",
   robots: { index: false, follow: false },
 };
 
@@ -24,11 +24,13 @@ export default async function ActivatePage({
 
   return (
     <PortalFrame
-      kicker="Invitación"
+      kicker="Área clientes"
       title={client ? `Hola, ${client.name}.` : "Este enlace no sirve."}
       lead={
         client
-          ? `Tu usuario será ${client.email}. Elige una contraseña que solo tú conozcas; la necesitarás cada vez que entres a tu área.`
+          ? client.passwordHash
+            ? `Elige una contraseña nueva para ${client.email}.`
+            : `Tu usuario será ${client.email}. Elige una contraseña que solo tú conozcas; la necesitarás cada vez que entres a tu área.`
           : "Pídeme un enlace nuevo. Caduca a las tres semanas o cuando ya lo hayas usado."
       }
     >
@@ -60,7 +62,7 @@ export default async function ActivatePage({
           </label>
           <p className="text-sm text-ash">Al menos 10 caracteres, con una letra y un número.</p>
           <button className="btn-atelier-solid btn-atelier mt-2 self-start" type="submit">
-            Crear acceso
+            {client.passwordHash ? "Guardar contraseña" : "Crear acceso"}
           </button>
         </form>
       ) : (

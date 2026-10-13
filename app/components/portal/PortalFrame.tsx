@@ -26,7 +26,12 @@ export function PortalFrame({
             />
             <span className="hidden font-serif text-lg sm:block">Many Makeups</span>
           </a>
-          {aside}
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            {aside}
+            <a className="btn-atelier shrink-0" href="/">
+              Volver a la web
+            </a>
+          </div>
         </div>
       </header>
       <main className="mx-auto max-w-[960px] px-5 pb-24 pt-10 md:px-10">
