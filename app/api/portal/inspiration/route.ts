@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { newId } from "@/lib/portal/crypto";
 import { allowedType, INSPIRATION_MAX, maxBytes, safeFileName } from "@/lib/portal/files";
-import { go } from "@/lib/portal/http";
+import { goPortal } from "@/lib/portal/http";
 import { clientLabel, notifyStudio } from "@/lib/portal/notify";
 import { requireClient } from "@/lib/portal/session";
 import { deletePortalFile, getClient, putPortalFile, saveClient } from "@/lib/portal/store";
@@ -23,20 +23,20 @@ function personLabel(value: FormDataEntryValue | null) {
 
 export async function POST(request: Request) {
   const session = await requireClient();
-  if (!session) return go(request, "/area-novia");
+  if (!session) return goPortal(request, "/area-novia");
   const client = await getClient(session.sub);
-  if (!client) return go(request, "/area-novia");
+  if (!client) return goPortal(request, "/area-novia");
   const form = await request.formData();
   const uploads = form
     .getAll("files")
     .filter((item): item is File => item instanceof File && item.size > 0);
   if (client.inspiration.length + uploads.length > INSPIRATION_MAX) {
-    return go(request, "/area-novia/panel?error=limite");
+    return goPortal(request, "/area-novia/panel?error=limite");
   }
   const added: string[] = [];
   for (const upload of uploads) {
     if (!allowedType("inspiration", upload.type) || upload.size > maxBytes("inspiration")) {
-      return go(request, "/area-novia/panel?error=archivo");
+      return goPortal(request, "/area-novia/panel?error=archivo");
     }
     const id = newId();
     const record: PortalFile = {
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     ]);
   }
   const tab = typeof form.get("tab") === "string" && form.get("tab") ? String(form.get("tab")) : "contratante";
-  return go(request, `/area-novia/panel?tab=${encodeURIComponent(tab)}&ok=fotos`);
+  return goPortal(request, `/area-novia/panel?tab=${encodeURIComponent(tab)}&ok=fotos`);
 }
 
 export async function DELETE(request: Request) {

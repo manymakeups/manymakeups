@@ -1,35 +1,45 @@
 import { BrandLogo } from "../BrandLogo";
+import { LanguageSwitch } from "@/app/components/LanguageSwitch";
+import { getLocale, getPortalCopy, getRequestPathname, localePath } from "@/lib/i18n";
 import { site } from "@/lib/site";
 import type { ReactNode } from "react";
 
-export function PortalFrame({
+export async function PortalFrame({
   kicker,
   title,
   lead,
   aside,
   children,
+  localize = false,
 }: {
   kicker: string;
   title: string;
   lead?: string;
   aside?: ReactNode;
   children: ReactNode;
+  localize?: boolean;
 }) {
+  const locale = localize ? await getLocale() : "es";
+  const copy = getPortalCopy(locale);
+  const path = localize ? await getRequestPathname() : "/";
+
   return (
     <div className="min-h-full bg-porcelain text-ink">
       <header className="border-b border-ink/5">
         <div className="mx-auto flex max-w-[960px] items-center justify-between gap-4 px-5 py-4 md:px-10">
-          <a href="/" className="flex items-center gap-3" aria-label={site.legalName}>
-            <BrandLogo
-              size="header"
-              className="size-[4.5rem] sm:size-[5.5rem]"
-            />
+          <a
+            href={localize ? localePath(locale, "/") : "/"}
+            className="flex items-center gap-3"
+            aria-label={site.legalName}
+          >
+            <BrandLogo size="header" className="size-[4.5rem] sm:size-[5.5rem]" />
             <span className="hidden font-serif text-lg sm:block">Many Makeups</span>
           </a>
           <div className="flex flex-wrap items-center justify-end gap-3">
+            {localize ? <LanguageSwitch current={locale} path={path} enabled /> : null}
             {aside}
-            <a className="btn-atelier shrink-0" href="/">
-              Volver a la web
+            <a className="btn-atelier shrink-0" href={localize ? localePath(locale, "/") : "/"}>
+              {localize ? copy.backToSite : "Volver a la web"}
             </a>
           </div>
         </div>

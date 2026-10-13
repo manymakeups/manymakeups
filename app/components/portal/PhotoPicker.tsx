@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { DeleteFileButton } from "@/app/components/portal/FileActions";
+import { usePortalCopy } from "@/app/components/portal/usePortalCopy";
 import { isImageType, portalFileHref } from "@/lib/portal/files";
 import { filesFor, type FileKind, type PortalFile } from "@/lib/portal/types";
 
@@ -10,11 +11,15 @@ export function PhotoGrid({
   clientId,
   canDelete,
   kind,
+  removeLabel,
+  confirmText,
 }: {
   files: PortalFile[];
   clientId: string;
   canDelete?: boolean;
   kind: FileKind;
+  removeLabel?: string;
+  confirmText?: string;
 }) {
   if (!files.length) return null;
   return (
@@ -31,7 +36,13 @@ export function PhotoGrid({
           ) : null}
           <p className="mt-2 truncate text-xs">{file.name}</p>
           {canDelete ? (
-            <DeleteFileButton id={file.id} clientId={clientId} kind={kind} label="Quitar" />
+              <DeleteFileButton
+                id={file.id}
+                clientId={clientId}
+                kind={kind}
+                label={removeLabel || "Quitar"}
+                confirmText={confirmText}
+              />
           ) : null}
         </li>
       ))}
@@ -45,9 +56,10 @@ export function PhotoPicker({
   clientId,
   action,
   fieldName = "person",
-  label = "Inspiraciones",
+  label,
   tab,
   kind = "inspiration",
+  localize = false,
 }: {
   personKey: string;
   files: PortalFile[];
@@ -57,10 +69,17 @@ export function PhotoPicker({
   label?: string;
   tab?: string;
   kind?: FileKind;
+  localize?: boolean;
 }) {
+  const copy = usePortalCopy();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const shown = filesFor(files, personKey);
+  const fieldLabel = label ?? (localize ? copy.inspiration : "Inspiraciones");
+  const attach = localize ? copy.attachPhotos : "Adjuntar fotos";
+  const uploading = localize ? copy.uploading : "Subiendo…";
+  const remove = localize ? copy.remove : "Quitar";
+  const confirmText = localize ? copy.removeConfirm : "¿Quitar este archivo?";
 
   async function upload() {
     const chosen = inputRef.current?.files;
@@ -78,7 +97,7 @@ export function PhotoPicker({
   return (
     <div className="flex flex-col gap-3">
       <label className="field-label">
-        {label}
+        {fieldLabel}
         <input
           ref={inputRef}
           className="field"
@@ -89,9 +108,16 @@ export function PhotoPicker({
         />
       </label>
       <button className="btn-atelier self-start" type="button" disabled={busy} onClick={upload}>
-        {busy ? "Subiendo…" : "Adjuntar fotos"}
+        {busy ? uploading : attach}
       </button>
-      <PhotoGrid files={shown} clientId={clientId} canDelete kind={kind} />
+      <PhotoGrid
+        files={shown}
+        clientId={clientId}
+        canDelete
+        kind={kind}
+        removeLabel={remove}
+        confirmText={confirmText}
+      />
     </div>
   );
 }

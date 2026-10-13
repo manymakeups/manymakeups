@@ -6,6 +6,7 @@ import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { PortalTabs } from "@/app/components/portal/PortalTabs";
 import { WorkView } from "@/app/components/portal/WorkBlock";
 import { INSPIRATION_MAX } from "@/lib/portal/files";
+import { getLocale, getPortalCopy, interpolate, localePath } from "@/lib/i18n";
 import { requireClient } from "@/lib/portal/session";
 import { getClient } from "@/lib/portal/store";
 import {
@@ -17,20 +18,10 @@ import {
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Tu área de clientes",
-  robots: { index: false, follow: false },
-};
-
-const okText: Record<string, string> = {
-  evento: "He guardado la ficha.",
-  fotos: "Las fotos ya están en tu espacio.",
-};
-
-const errorText: Record<string, string> = {
-  limite: `Puedes colgar hasta ${INSPIRATION_MAX} fotos de inspiración.`,
-  archivo: "Ese archivo no sirve (usa JPG, PNG o WebP, máximo 8 MB).",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const copy = getPortalCopy(await getLocale());
+  return { title: copy.metaTitle, robots: { index: false, follow: false } };
+}
 
 function fileHref(clientId: string, id: string, download = false) {
   const extra = download ? "&download=1" : "";
@@ -42,55 +33,64 @@ export default async function BridePanelPage({
 }: {
   searchParams: Promise<{ ok?: string; error?: string; tab?: string }>;
 }) {
+  const locale = await getLocale();
+  const t = getPortalCopy(locale);
   const session = await requireClient();
-  if (!session) redirect("/area-novia");
+  if (!session) redirect(localePath(locale, "/area-novia"));
   const client = await getClient(session.sub);
-  if (!client) redirect("/area-novia");
+  if (!client) redirect(localePath(locale, "/area-novia"));
   const { ok, error, tab: tabRaw } = await searchParams;
   const tab = portalTab(tabRaw);
+  const okText: Record<string, string> = { evento: t.savedEvent, fotos: t.savedPhotos };
+  const errorText: Record<string, string> = {
+    limite: interpolate(t.errorLimit, { max: INSPIRATION_MAX }),
+    archivo: t.errorFile,
+  };
 
   return (
     <PortalFrame
-      kicker="Área clientes"
-      title={`Hola, ${client.event.clientName || client.name}.`}
-      lead="Tu ficha, la de tus acompañantes, los pagos, los papeles y la agenda de citas."
+      localize
+      kicker={t.kicker}
+      title={interpolate(t.hello, { name: client.event.clientName || client.name })}
+      lead={t.panelLead}
       aside={
         <form action="/api/portal/logout" method="post">
           <button className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink" type="submit">
-            Salir
+            {t.logout}
           </button>
         </form>
       }
     >
       {ok && okText[ok] ? <PortalNotice>{okText[ok]}</PortalNotice> : null}
       {error && errorText[error] ? <PortalNotice>{errorText[error]}</PortalNotice> : null}
-      <PortalTabs basePath="/area-novia/panel" active={tab} />
+      <PortalTabs
+        basePath={localePath(locale, "/area-novia/panel")}
+        active={tab}
+        labels={t.tabs}
+      />
 
       {tab === "contratante" ? (
         <section className="pt-10">
-          <h2 className="font-serif text-3xl">Tus datos</h2>
-          <p className="mt-3 max-w-2xl text-sm text-ash">
-            Cuanto más concreto, más fácil organizo horarios y equipo.
-          </p>
+          <h2 className="font-serif text-3xl">{t.yourDetails}</h2>
+          <p className="mt-3 max-w-2xl text-sm text-ash">{t.yourDetailsLead}</p>
           <div className="mt-8">
             <EventForm
               event={client.event}
               clientId={client.id}
               inspiration={client.inspiration}
               action="/api/portal/event"
-              submitLabel="Guardar ficha"
+              submitLabel={t.saveCard}
             />
           </div>
           <div className="mt-14 border-t border-ink/10 pt-10">
-            <h3 className="font-serif text-3xl">Prueba</h3>
-            <p className="mt-3 max-w-2xl text-sm text-ash">
-              Aquí verás las fotos que haga el día de la prueba y los productos que hayamos usado.
-            </p>
+            <h3 className="font-serif text-3xl">{t.trialHeading}</h3>
+            <p className="mt-3 max-w-2xl text-sm text-ash">{t.trialLead}</p>
             <div className="mt-8">
               <WorkView
                 products={client.event.productsUsed}
                 photos={filesFor(client.workPhotos, CONTRACTOR_TRIAL_PHOTOS)}
                 clientId={client.id}
+                copy={t}
               />
             </div>
           </div>
@@ -99,11 +99,8 @@ export default async function BridePanelPage({
 
       {tab === "acompanantes" ? (
         <section className="pt-10">
-          <h2 className="font-serif text-3xl">Acompañantes</h2>
-          <p className="mt-3 max-w-2xl text-sm text-ash">
-            El número de personas abre una ficha por cada una. Alergias y notas van siempre; las
-            notas de la prueba, sólo si la marcan.
-          </p>
+          <h2 className="font-serif text-3xl">{t.companionsTitle}</h2>
+          <p className="mt-3 max-w-2xl text-sm text-ash">{t.companionsLead}</p>
           <div className="mt-8">
             <CompanionsForm
               event={client.event}
@@ -114,15 +111,20 @@ export default async function BridePanelPage({
           </div>
           {client.event.people.some((person) => person.wantsTrial) ? (
             <div className="mt-14 flex flex-col gap-10 border-t border-ink/10 pt-10">
-              <h3 className="font-serif text-3xl">Pruebas de acompañantes</h3>
+              <h3 className="font-serif text-3xl">{t.companionsTrials}</h3>
               {client.event.people.map((person, i) =>
                 person.wantsTrial ? (
                   <WorkView
                     key={i}
-                    title={person.who || `Persona ${i + 1}`}
+                    title={
+                      t.whoOptions[person.who] ||
+                      person.who ||
+                      interpolate(t.personN, { n: i + 1 })
+                    }
                     products={person.productsUsed}
                     photos={filesFor(client.workPhotos, personTrialPhotoKey(i))}
                     clientId={client.id}
+                    copy={t}
                   />
                 ) : null,
               )}
@@ -133,11 +135,8 @@ export default async function BridePanelPage({
 
       {tab === "facturacion" ? (
         <section className="pt-10">
-          <h2 className="font-serif text-3xl">Facturación y pagos</h2>
-          <p className="mt-3 max-w-2xl text-sm text-ash">
-            Reserva, prueba y día del evento. Yo anoto los importes y si están abonados; aquí ves
-            lo pendiente.
-          </p>
+          <h2 className="font-serif text-3xl">{t.billingTitle}</h2>
+          <p className="mt-3 max-w-2xl text-sm text-ash">{t.billingLead}</p>
           <div className="mt-8">
             <PaymentsView payments={client.payments} people={client.event.people} />
           </div>
@@ -146,40 +145,36 @@ export default async function BridePanelPage({
 
       {tab === "documentacion" ? (
         <section className="pt-10">
-          <h2 className="font-serif text-3xl">Presupuestos, contratos y papeles</h2>
-          <p className="mt-3 max-w-2xl text-sm text-ash">
-            Aquí cuelgo presupuestos, contratos y el resto de documentación.
-          </p>
+          <h2 className="font-serif text-3xl">{t.docsTitle}</h2>
+          <p className="mt-3 max-w-2xl text-sm text-ash">{t.docsLead}</p>
           {client.documents.length ? (
             <ul className="mt-8 divide-y divide-ink/10 border border-ink/10">
               {client.documents.map((file) => (
                 <li key={file.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-4">
                   <div>
-                    <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">{file.label}</p>
+                    <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">
+                      {t.documentKinds[file.label] || file.label}
+                    </p>
                     <p className="mt-1">{file.name}</p>
                   </div>
                   <a className="btn-atelier" href={fileHref(client.id, file.id, true)}>
-                    Descargar
+                    {t.download}
                   </a>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="mt-6 text-sm text-ash">
-              Aún no hay documentos. Cuando haya presupuesto o contrato, aparecerá aquí.
-            </p>
+            <p className="mt-6 text-sm text-ash">{t.docsEmpty}</p>
           )}
         </section>
       ) : null}
 
       {tab === "agenda" ? (
         <section className="pt-10">
-          <h2 className="font-serif text-3xl">Agenda</h2>
-          <p className="mt-3 max-w-2xl text-sm text-ash">
-            Las citas que tenemos planificadas: prueba, evento y lo que vayamos sumando.
-          </p>
+          <h2 className="font-serif text-3xl">{t.agendaTitle}</h2>
+          <p className="mt-3 max-w-2xl text-sm text-ash">{t.agendaLead}</p>
           <div className="mt-8">
-            <AgendaView appointments={client.appointments} />
+            <AgendaView appointments={client.appointments} copy={t} locale={locale} />
           </div>
         </section>
       ) : null}

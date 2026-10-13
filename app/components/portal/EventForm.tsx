@@ -1,6 +1,7 @@
 "use client";
 
 import { PhotoPicker } from "@/app/components/portal/PhotoPicker";
+import { usePortalCopy } from "@/app/components/portal/usePortalCopy";
 import { CONTRACTOR_INSPIRATION, type EventDetails, type PortalFile } from "@/lib/portal/types";
 
 export function EventForm({
@@ -16,86 +17,87 @@ export function EventForm({
   clientId: string;
   inspiration: PortalFile[];
 }) {
+  const t = usePortalCopy();
   return (
     <form action={action} method="post" className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="field-label">
-          Tu nombre
+          {t.yourName}
           <input className="field" name="clientName" defaultValue={event.clientName} required />
         </label>
         <label className="field-label">
-          Nombre de tu pareja
+          {t.partnerName}
           <input className="field" name="partnerName" defaultValue={event.partnerName} />
         </label>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="field-label">
-          Teléfono
+          {t.phone}
           <input className="field" name="phone" type="tel" defaultValue={event.phone} />
         </label>
         <label className="field-label">
-          Tipo de evento
+          {t.eventType}
           <select className="field" name="eventType" defaultValue={event.eventType}>
-            <option value="boda">Boda</option>
-            <option value="evento">Evento</option>
-            <option value="otro">Otro</option>
+            <option value="boda">{t.eventTypes.boda}</option>
+            <option value="evento">{t.eventTypes.evento}</option>
+            <option value="otro">{t.eventTypes.otro}</option>
           </select>
         </label>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="field-label">
-          Fecha
+          {t.date}
           <input className="field" name="eventDate" type="date" defaultValue={event.eventDate} />
         </label>
         <label className="field-label">
-          Lugar de la celebración
+          {t.venue}
           <input className="field" name="venue" defaultValue={event.venue} />
         </label>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="field-label">
-          Dónde os preparáis
+          {t.gettingReadyPlace}
           <input className="field" name="gettingReadyPlace" defaultValue={event.gettingReadyPlace} />
         </label>
         <label className="field-label">
-          Hora de prepararos
+          {t.gettingReadyTime}
           <input className="field" name="gettingReadyTime" type="time" defaultValue={event.gettingReadyTime} />
         </label>
       </div>
       <label className="field-label">
-        Hora de ceremonia o inicio
+        {t.ceremonyTime}
         <input className="field" name="ceremonyTime" type="time" defaultValue={event.ceremonyTime} />
       </label>
 
       <fieldset className="grid gap-3 sm:grid-cols-2">
-        <legend className="field-label mb-1">Servicios</legend>
+        <legend className="field-label mb-1">{t.services}</legend>
         <label className="flex items-center gap-2 text-sm normal-case tracking-normal text-ink">
           <input type="checkbox" name="makeup" defaultChecked={event.makeup} />
-          Maquillaje
+          {t.makeup}
         </label>
         <label className="flex items-center gap-2 text-sm normal-case tracking-normal text-ink">
           <input type="checkbox" name="hair" defaultChecked={event.hair} />
-          Peinado
+          {t.hair}
         </label>
         <label className="flex items-center gap-2 text-sm normal-case tracking-normal text-ink">
           <input type="checkbox" name="glitterBar" defaultChecked={event.glitterBar} />
-          Glitter Bar
+          {t.glitterBar}
         </label>
         <label className="flex items-center gap-2 text-sm normal-case tracking-normal text-ink">
           <input type="checkbox" name="beautyCorner" defaultChecked={event.beautyCorner} />
-          Beauty Corner
+          {t.beautyCorner}
         </label>
       </fieldset>
       <label className="field-label">
-        Notas para la prueba
+        {t.trialNotes}
         <textarea className="field min-h-24" name="trialNotes" defaultValue={event.trialNotes} />
       </label>
       <label className="field-label">
-        Piel, alergias o sensibilidad
+        {t.skinNotes}
         <textarea className="field min-h-24" name="skinNotes" defaultValue={event.skinNotes} />
       </label>
       <label className="field-label">
-        Lo que quieras que sepa
+        {t.extraNotes}
         <textarea className="field min-h-28" name="notes" defaultValue={event.notes} />
       </label>
       <PhotoPicker
@@ -104,6 +106,7 @@ export function EventForm({
         clientId={clientId}
         action="/api/portal/inspiration"
         tab="contratante"
+        localize
       />
       <button className="btn-atelier-solid btn-atelier mt-2 self-start" type="submit">
         {submitLabel}

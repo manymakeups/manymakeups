@@ -10,15 +10,20 @@ export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const locale = localeFromPath(pathname);
 
-  const response =
-    locale === "es"
-      ? NextResponse.next()
-      : NextResponse.rewrite(
-          new URL(pathname.slice(`/${locale}`.length) || "/", request.url),
-        );
+  let response: NextResponse;
+  if (locale === "es") {
+    response = NextResponse.next();
+  } else {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname.slice(`/${locale}`.length) || "/";
+    response = NextResponse.rewrite(url);
+  }
 
   response.cookies.set("NEXT_LOCALE", locale, { path: "/", sameSite: "lax" });
-  response.cookies.set("x-pathname", pathname, { path: "/", sameSite: "lax" });
+  response.cookies.set("x-pathname", `${pathname}${request.nextUrl.search}`, {
+    path: "/",
+    sameSite: "lax",
+  });
   return response;
 }
 

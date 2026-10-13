@@ -1,4 +1,5 @@
 import { PhotoGrid, PhotoPicker } from "@/app/components/portal/PhotoPicker";
+import { portalEs, type PortalCopy } from "@/lib/i18n/portal-messages";
 import { filesFor, type PortalFile } from "@/lib/portal/types";
 
 export function WorkView({
@@ -6,11 +7,13 @@ export function WorkView({
   products,
   photos,
   clientId,
+  copy = portalEs,
 }: {
   title?: string;
   products: string;
   photos: PortalFile[];
   clientId: string;
+  copy?: PortalCopy;
 }) {
   return (
     <div className="flex flex-col gap-4">
@@ -18,16 +21,16 @@ export function WorkView({
         <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">{title}</p>
       ) : null}
       <div>
-        <p className="text-[0.68rem] uppercase tracking-[0.16em] text-ash">Productos utilizados</p>
-        <p className="mt-2 whitespace-pre-wrap text-sm">{products || "Aún no hay productos anotados."}</p>
+        <p className="text-[0.68rem] uppercase tracking-[0.16em] text-ash">{copy.productsUsed}</p>
+        <p className="mt-2 whitespace-pre-wrap text-sm">{products || copy.productsEmpty}</p>
       </div>
       <div>
-        <p className="text-[0.68rem] uppercase tracking-[0.16em] text-ash">Fotos de la prueba</p>
+        <p className="text-[0.68rem] uppercase tracking-[0.16em] text-ash">{copy.trialPhotos}</p>
         <div className="mt-3">
           {photos.length ? (
             <PhotoGrid files={photos} clientId={clientId} kind="work" />
           ) : (
-            <p className="text-sm text-ash">Todavía no hay fotos de la prueba.</p>
+            <p className="text-sm text-ash">{copy.trialPhotosEmpty}</p>
           )}
         </div>
       </div>

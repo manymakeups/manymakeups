@@ -1,3 +1,7 @@
+"use client";
+
+import { usePortalCopy } from "@/app/components/portal/usePortalCopy";
+import { interpolate } from "@/lib/i18n/portal-messages";
 import {
   emptyPersonPayments,
   euros,
@@ -9,13 +13,14 @@ import {
 } from "@/lib/portal/types";
 
 function SliceView({ title, slice }: { title: string; slice: PaymentSlice }) {
+  const t = usePortalCopy();
   return (
     <article className="border border-ink/10 bg-linen/40 p-5">
       <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">{title}</p>
       <p className="mt-3 font-serif text-3xl">{euros(slice.amount)}</p>
-      <p className="mt-2 text-sm text-ash">{slice.paid ? "Abonado" : "Pendiente de pagar"}</p>
+      <p className="mt-2 text-sm text-ash">{slice.paid ? t.paid : t.unpaid}</p>
       <p className="mt-4 text-sm">
-        Pendiente de pagar: <strong>{euros(pendingAmount(slice))}</strong>
+        {interpolate(t.pending, { amount: euros(pendingAmount(slice)) })}
       </p>
     </article>
   );
@@ -30,13 +35,14 @@ function PersonPayView({
   payments: PersonPayments;
   showTrial: boolean;
 }) {
+  const t = usePortalCopy();
   return (
     <div>
       <h3 className="font-serif text-2xl">{title}</h3>
       <div className="mt-4 grid gap-4 sm:grid-cols-3">
-        <SliceView title="Reserva" slice={payments.deposit} />
-        {showTrial ? <SliceView title="Día de la prueba" slice={payments.trial} /> : null}
-        <SliceView title="Día del evento" slice={payments.event} />
+        <SliceView title={t.deposit} slice={payments.deposit} />
+        {showTrial ? <SliceView title={t.trialDay} slice={payments.trial} /> : null}
+        <SliceView title={t.eventDay} slice={payments.event} />
       </div>
     </div>
   );
@@ -49,13 +55,14 @@ export function PaymentsView({
   payments: Payments;
   people: Attendee[];
 }) {
+  const t = usePortalCopy();
   return (
     <div className="flex flex-col gap-12">
-      <PersonPayView title="Contratante" payments={payments.contractor} showTrial />
+      <PersonPayView title={t.contractor} payments={payments.contractor} showTrial />
       {people.map((person, i) => (
         <PersonPayView
           key={i}
-          title={person.who || `Acompañante ${i + 1}`}
+          title={t.whoOptions[person.who] || person.who || interpolate(t.guestN, { n: i + 1 })}
           payments={payments.guests[i] ?? emptyPersonPayments()}
           showTrial={person.wantsTrial}
         />

@@ -3,9 +3,11 @@ import { PORTAL_TABS, type PortalTab } from "@/lib/portal/types";
 export function PortalTabs({
   basePath,
   active,
+  labels,
 }: {
   basePath: string;
   active: PortalTab;
+  labels?: Record<PortalTab, string>;
 }) {
   return (
     <nav className="mt-8 flex flex-wrap gap-x-1 border-b border-ink/10">
@@ -21,7 +23,7 @@ export function PortalTabs({
                 : "border-b-2 border-transparent px-3 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ash hover:text-ink"
             }
           >
-            {tab.label}
+            {labels?.[tab.id] ?? tab.label}
           </a>
         );
       })}

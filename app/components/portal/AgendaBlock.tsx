@@ -1,41 +1,53 @@
+import { dateLocale } from "@/lib/i18n/portal-messages";
+import { portalEs, type PortalCopy } from "@/lib/i18n/portal-messages";
+import type { Locale } from "@/lib/i18n/config";
 import {
   APPOINTMENT_STATUSES,
   APPOINTMENT_TITLES,
   type Appointment,
 } from "@/lib/portal/types";
 
-const statusLabel: Record<Appointment["status"], string> = {
+const statusLabelEs: Record<Appointment["status"], string> = {
   planificada: "Planificada",
   confirmada: "Confirmada",
   hecha: "Hecha",
 };
 
-function formatWhen(item: Appointment) {
+function formatWhen(item: Appointment, locale: Locale, copy: PortalCopy) {
   const date = item.date
-    ? new Date(`${item.date}T00:00:00`).toLocaleDateString("es-ES", {
+    ? new Date(`${item.date}T00:00:00`).toLocaleDateString(dateLocale(locale), {
         weekday: "long",
         day: "numeric",
         month: "long",
       })
-    : "Sin fecha";
+    : copy.noDate;
   return item.time ? `${date} · ${item.time}` : date;
 }
 
-export function AgendaView({ appointments }: { appointments: Appointment[] }) {
+export function AgendaView({
+  appointments,
+  copy = portalEs,
+  locale = "es",
+}: {
+  appointments: Appointment[];
+  copy?: PortalCopy;
+  locale?: Locale;
+}) {
   const ordered = [...appointments].sort((a, b) =>
     `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`),
   );
   if (!ordered.length) {
-    return <p className="text-sm text-ash">Todavía no hay citas en la agenda.</p>;
+    return <p className="text-sm text-ash">{copy.agendaEmpty}</p>;
   }
   return (
     <ul className="divide-y divide-ink/10 border border-ink/10">
       {ordered.map((item) => (
         <li key={item.id} className="px-4 py-4">
           <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">
-            {item.title || "Cita"} · {statusLabel[item.status]}
+            {copy.appointmentTitles[item.title] || item.title || copy.appointment} ·{" "}
+            {copy.statuses[item.status] ?? statusLabelEs[item.status]}
           </p>
-          <p className="mt-1 font-serif text-2xl capitalize">{formatWhen(item)}</p>
+          <p className="mt-1 font-serif text-2xl capitalize">{formatWhen(item, locale, copy)}</p>
           {item.place ? <p className="mt-1 text-sm text-ash">{item.place}</p> : null}
           {item.notes ? (
             <p className="mt-2 whitespace-pre-wrap text-sm">{item.notes}</p>
@@ -87,7 +99,7 @@ export function AgendaForm({
           <select className="field" name="status" defaultValue="planificada">
             {APPOINTMENT_STATUSES.map((status) => (
               <option key={status} value={status}>
-                {statusLabel[status]}
+                {statusLabelEs[status]}
               </option>
             ))}
           </select>

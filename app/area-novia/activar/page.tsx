@@ -1,37 +1,37 @@
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
+import { getLocale, getPortalCopy, interpolate, localePath } from "@/lib/i18n";
 import { hashToken } from "@/lib/portal/crypto";
 import { getClientByInviteHash } from "@/lib/portal/store";
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Activar área clientes",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const copy = getPortalCopy(await getLocale());
+  return { title: copy.activateTitle, robots: { index: false, follow: false } };
+}
 
 export default async function ActivatePage({
   searchParams,
 }: {
   searchParams: Promise<{ token?: string; error?: string }>;
 }) {
+  const locale = await getLocale();
+  const t = getPortalCopy(locale);
   const { token = "", error } = await searchParams;
   const client = token ? await getClientByInviteHash(hashToken(token)) : null;
   const errorText =
-    error === "clave"
-      ? "Las dos contraseñas no coinciden."
-      : error === "requisito"
-        ? "Mínimo 10 caracteres, con letra y número."
-        : null;
+    error === "clave" ? t.errorMismatch : error === "requisito" ? t.errorRequirement : null;
 
   return (
     <PortalFrame
-      kicker="Área clientes"
-      title={client ? `Hola, ${client.name}.` : "Este enlace no sirve."}
+      localize
+      kicker={t.kicker}
+      title={client ? interpolate(t.hello, { name: client.name }) : t.activateBadLink}
       lead={
         client
           ? client.passwordHash
-            ? `Elige una contraseña nueva para ${client.email}.`
-            : `Tu usuario será ${client.email}. Elige una contraseña que solo tú conozcas; la necesitarás cada vez que entres a tu área.`
-          : "Pídeme un enlace nuevo. Caduca a las tres semanas o cuando ya lo hayas usado."
+            ? interpolate(t.activateNewPassword, { email: client.email })
+            : interpolate(t.activateCreateLead, { email: client.email })
+          : t.activateBadLead
       }
     >
       {errorText ? <PortalNotice>{errorText}</PortalNotice> : null}
@@ -39,7 +39,7 @@ export default async function ActivatePage({
         <form action="/api/portal/activate" method="post" className="flex max-w-md flex-col gap-4">
           <input type="hidden" name="token" value={token} />
           <label className="field-label">
-            Contraseña
+            {t.password}
             <input
               className="field"
               name="password"
@@ -50,7 +50,7 @@ export default async function ActivatePage({
             />
           </label>
           <label className="field-label">
-            Repite la contraseña
+            {t.confirmPassword}
             <input
               className="field"
               name="confirm"
@@ -60,14 +60,14 @@ export default async function ActivatePage({
               autoComplete="new-password"
             />
           </label>
-          <p className="text-sm text-ash">Al menos 10 caracteres, con una letra y un número.</p>
+          <p className="text-sm text-ash">{t.activateRule}</p>
           <button className="btn-atelier-solid btn-atelier mt-2 self-start" type="submit">
-            {client.passwordHash ? "Guardar contraseña" : "Crear acceso"}
+            {client.passwordHash ? t.activateSave : t.activateCreate}
           </button>
         </form>
       ) : (
-        <a className="btn-atelier inline-flex" href="/area-novia">
-          Ir al acceso
+        <a className="btn-atelier inline-flex" href={localePath(locale, "/area-novia")}>
+          {t.activateGoLogin}
         </a>
       )}
     </PortalFrame>

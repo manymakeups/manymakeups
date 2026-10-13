@@ -5,14 +5,16 @@ export function DeleteFileButton({
   clientId,
   kind,
   label,
+  confirmText,
 }: {
   id: string;
   clientId?: string;
   kind: "inspiration" | "document" | "work";
   label: string;
+  confirmText?: string;
 }) {
   async function onClick() {
-    if (!confirm("¿Quitar este archivo?")) return;
+    if (!confirm(confirmText || "¿Quitar este archivo?")) return;
     const url =
       kind === "document"
         ? "/api/admin/documents"

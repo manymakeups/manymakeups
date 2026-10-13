@@ -1,14 +1,14 @@
 import { contractorFromForm } from "@/lib/portal/event-parse";
-import { go } from "@/lib/portal/http";
+import { goPortal } from "@/lib/portal/http";
 import { clientLabel, notifyStudio } from "@/lib/portal/notify";
 import { requireClient } from "@/lib/portal/session";
 import { getClient, saveClient } from "@/lib/portal/store";
 
 export async function POST(request: Request) {
   const session = await requireClient();
-  if (!session) return go(request, "/area-novia");
+  if (!session) return goPortal(request, "/area-novia");
   const client = await getClient(session.sub);
-  if (!client) return go(request, "/area-novia");
+  if (!client) return goPortal(request, "/area-novia");
   client.event = contractorFromForm(await request.formData(), client.event);
   await saveClient(client);
   await notifyStudio(`Ficha de evento · ${clientLabel(client)}`, [
@@ -19,5 +19,5 @@ export async function POST(request: Request) {
     `Fecha: ${client.event.eventDate || "—"}`,
     `Lugar: ${client.event.venue || "—"}`,
   ]);
-  return go(request, "/area-novia/panel?tab=contratante&ok=evento");
+  return goPortal(request, "/area-novia/panel?tab=contratante&ok=evento");
 }

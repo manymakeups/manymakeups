@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { PhotoPicker } from "@/app/components/portal/PhotoPicker";
+import { usePortalCopy } from "@/app/components/portal/usePortalCopy";
+import { interpolate } from "@/lib/i18n/portal-messages";
 import {
   PERSON_SERVICE_OPTIONS,
   WHO_OPTIONS,
@@ -21,29 +23,30 @@ function PersonCard({
   clientId: string;
   inspiration: PortalFile[];
 }) {
+  const t = usePortalCopy();
   const [wantsTrial, setWantsTrial] = useState(Boolean(person.wantsTrial));
   const knownWho = (WHO_OPTIONS as readonly string[]).includes(person.who);
 
   return (
     <fieldset className="border border-ink/10 bg-linen/30 p-4">
       <legend className="px-1 text-[0.68rem] uppercase tracking-[0.18em] text-gilt">
-        Persona {index + 1}
+        {interpolate(t.personN, { n: index + 1 })}
       </legend>
       <div className="mt-3 grid gap-4 sm:grid-cols-2">
         <label className="field-label">
-          Quién es
+          {t.who}
           <select className="field" name={`people.${index}.who`} defaultValue={person.who} required>
-            <option value="">Elige…</option>
+            <option value="">{t.choose}</option>
             {!knownWho && person.who ? <option value={person.who}>{person.who}</option> : null}
             {WHO_OPTIONS.map((option) => (
               <option key={option} value={option}>
-                {option}
+                {t.whoOptions[option] ?? option}
               </option>
             ))}
           </select>
         </label>
         <label className="field-label">
-          Servicio
+          {t.service}
           <select
             className="field"
             name={`people.${index}.service`}
@@ -51,14 +54,14 @@ function PersonCard({
           >
             {PERSON_SERVICE_OPTIONS.map((option) => (
               <option key={option} value={option}>
-                {option}
+                {t.serviceOptions[option] ?? option}
               </option>
             ))}
           </select>
         </label>
       </div>
       <label className="mt-4 field-label">
-        Alergias o sensibilidad
+        {t.allergies}
         <textarea
           className="field min-h-24"
           name={`people.${index}.skinNotes`}
@@ -66,7 +69,7 @@ function PersonCard({
         />
       </label>
       <label className="field-label">
-        Lo que quieras que sepa
+        {t.extraNotes}
         <textarea
           className="field min-h-24"
           name={`people.${index}.notes`}
@@ -80,11 +83,11 @@ function PersonCard({
           checked={wantsTrial}
           onChange={(event) => setWantsTrial(event.target.checked)}
         />
-        Quiere prueba
+        {t.wantsTrial}
       </label>
       {wantsTrial ? (
         <label className="mt-4 field-label">
-          Notas para la prueba
+          {t.trialNotes}
           <textarea
             className="field min-h-24"
             name={`people.${index}.trialNotes`}
@@ -99,6 +102,7 @@ function PersonCard({
           clientId={clientId}
           action="/api/portal/inspiration"
           tab="acompanantes"
+          localize
         />
       </div>
     </fieldset>
@@ -116,6 +120,7 @@ export function CompanionsForm({
   clientId: string;
   inspiration: PortalFile[];
 }) {
+  const t = usePortalCopy();
   const initial = Math.min(20, Math.max(0, event.peopleCount || 0));
   const [count, setCount] = useState(initial);
   const people = useMemo(() => {
@@ -135,7 +140,7 @@ export function CompanionsForm({
   return (
     <form action={action} method="post" className="flex flex-col gap-4">
       <label className="field-label max-w-xs">
-        Nº de personas a atender
+        {t.peopleCount}
         <input
           className="field"
           name="peopleCount"
@@ -158,11 +163,9 @@ export function CompanionsForm({
           />
         ))}
       </div>
-      {count === 0 ? (
-        <p className="text-sm text-ash">Si no hay acompañantes, deja este número en 0.</p>
-      ) : null}
+      {count === 0 ? <p className="text-sm text-ash">{t.noCompanions}</p> : null}
       <button className="btn-atelier-solid btn-atelier mt-2 self-start" type="submit">
-        Guardar acompañantes
+        {t.saveCompanions}
       </button>
     </form>
   );
