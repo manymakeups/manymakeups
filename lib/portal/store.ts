@@ -1,6 +1,7 @@
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { del, get, put } from "@vercel/blob";
+import { defaultStudioCalendarUrl } from "./calendar";
 import { newId } from "./crypto";
 import {
   asStudioNotice,
@@ -34,6 +35,7 @@ async function readDb(): Promise<PortalDb> {
       clients: (parsed.clients ?? []).map((client) => normalizeClient(client)),
       notices: (parsed.notices ?? []).map(asStudioNotice).filter(Boolean) as StudioNotice[],
       studioCalendarUrl: typeof parsed.studioCalendarUrl === "string" ? parsed.studioCalendarUrl : "",
+      studioCalendarExtra: typeof parsed.studioCalendarExtra === "string" ? parsed.studioCalendarExtra : "",
     };
   }
   try {
@@ -43,6 +45,7 @@ async function readDb(): Promise<PortalDb> {
       clients: (parsed.clients ?? []).map((client) => normalizeClient(client)),
       notices: (parsed.notices ?? []).map(asStudioNotice).filter(Boolean) as StudioNotice[],
       studioCalendarUrl: typeof parsed.studioCalendarUrl === "string" ? parsed.studioCalendarUrl : "",
+      studioCalendarExtra: typeof parsed.studioCalendarExtra === "string" ? parsed.studioCalendarExtra : "",
     };
   } catch {
     return emptyDb();
@@ -65,14 +68,16 @@ async function writeDb(db: PortalDb) {
   await writeFile(file, body, "utf8");
 }
 
-export async function getStudioCalendarUrl() {
+export async function getStudioCalendars() {
   const db = await readDb();
-  return db.studioCalendarUrl;
+  const primary = db.studioCalendarUrl === "off" ? "" : db.studioCalendarUrl || defaultStudioCalendarUrl();
+  return { primary, extra: db.studioCalendarExtra || "" };
 }
 
-export async function setStudioCalendarUrl(url: string) {
+export async function setStudioCalendars(primary: string, extra: string) {
   const db = await readDb();
-  db.studioCalendarUrl = url;
+  db.studioCalendarUrl = primary || "off";
+  db.studioCalendarExtra = extra;
   await writeDb(db);
 }
 

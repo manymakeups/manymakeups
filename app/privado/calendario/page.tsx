@@ -12,7 +12,7 @@ import {
   type RemoteEvent,
 } from "@/lib/portal/calendar";
 import { requireAdmin } from "@/lib/portal/session";
-import { getStudioCalendarUrl } from "@/lib/portal/store";
+import { getStudioCalendars } from "@/lib/portal/store";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
@@ -23,18 +23,22 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-function CalendarLinkForm({ url }: { url: string }) {
+function CalendarLinkForm({ primary, extra }: { primary: string; extra: string }) {
   return (
-    <form action="/api/admin/calendar" method="post" className="mt-5 flex flex-col gap-3">
+    <form action="/api/admin/calendar" method="post" className="mt-5 flex flex-col gap-4">
       <label className="field-label">
-        Enlace del calendario
-        <input className="field" name="url" type="text" inputMode="url" defaultValue={url} placeholder="webcal:// o https://" autoComplete="off" />
+        Enlace del iPhone
+        <input className="field" name="url" type="text" inputMode="url" defaultValue={primary} placeholder="webcal:// o https://" autoComplete="off" />
+      </label>
+      <label className="field-label">
+        Enlace de Calendly
+        <input className="field" name="extra" type="text" inputMode="url" defaultValue={extra} placeholder="webcal:// o https://" autoComplete="off" />
       </label>
       <div className="flex flex-wrap gap-3">
         <button className="btn-atelier btn-atelier-solid" type="submit">
           Guardar
         </button>
-        {url ? (
+        {primary || extra ? (
           <button className="btn-atelier" type="submit" name="clear" value="1">
             Quitar
           </button>
@@ -52,8 +56,22 @@ export default async function StudioCalendarPage({
   const admin = await requireAdmin();
   if (!admin) redirect("/privado");
   const { mes, dia, ok, error } = await searchParams;
-  const url = await getStudioCalendarUrl();
-  const loaded = url ? await fetchCalendarEvents(url) : { events: [] as RemoteEvent[], error: "" };
+  const { primary, extra } = await getStudioCalendars();
+  const [primaryLoaded, extraLoaded] = await Promise.all([
+    primary ? fetchCalendarEvents(primary) : Promise.resolve({ events: [] as RemoteEvent[], error: "" }),
+    extra ? fetchCalendarEvents(extra) : Promise.resolve({ events: [] as RemoteEvent[], error: "" }),
+  ]);
+  const seen = new Set<string>();
+  const loaded = {
+    events: [...primaryLoaded.events, ...extraLoaded.events].filter((event) => {
+      const key = `${event.date}|${event.time}|${event.title}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }),
+    error: primaryLoaded.error || extraLoaded.error,
+  };
+  const url = primary || extra;
   const today = madridToday();
   const { year, month } = parseMonth(mes, today);
   const events = loaded.events;
@@ -80,7 +98,7 @@ export default async function StudioCalendarPage({
     <PortalFrame
       kicker="Estudio"
       title="Agenda"
-      lead="Las citas las creas en el iPhone. Aquí se ven las de ese calendario."
+      lead="Las citas del iPhone y, si lo pegas, las reservas de Calendly."
       aside={
         <StudioAside
           extra={
@@ -109,10 +127,15 @@ export default async function StudioCalendarPage({
           <li>Copia el enlace y pégalo aquí.</li>
         </ol>
         <p className="mt-4 text-sm leading-relaxed text-ash">
-          Las citas las apuntas en ese calendario, desde el móvil. Esta página las lee. Puede tardar unos minutos en
-          aparecer un cambio. Quien tenga el enlace ve las citas, así que mejor un calendario solo del estudio.
+          El enlace del iPhone ya está puesto. Las citas nuevas las apuntas en ese calendario, desde el móvil. Puede
+          tardar unos minutos en aparecer un cambio.
         </p>
-        <CalendarLinkForm url={url} />
+        <p className="mt-3 text-sm leading-relaxed text-ash">
+          Calendly no escribe en un iCloud nuevo. En Calendly conecta un calendario de Google o Outlook, elige ese
+          como el calendario donde se añaden las reservas, y pega aquí su enlace secreto. En Google está en la
+          configuración del calendario, Integrar calendario, Dirección secreta en formato iCal.
+        </p>
+        <CalendarLinkForm primary={primary} extra={extra} />
       </section>
 
       {url && !loaded.error ? (

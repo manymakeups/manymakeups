@@ -89,6 +89,13 @@ function isPrivateHost(hostname: string) {
   return false;
 }
 
+const DEFAULT_STUDIO_CALENDAR =
+  "webcal://p128-caldav.icloud.com/published/2/MTA1MzUyNTkxNjEwNTM1MkCnYjpxMHo6st5glTFw91jQNk4AjggCLK_gtE7OJ8-J";
+
+export function defaultStudioCalendarUrl() {
+  return normalizeCalendarUrl(DEFAULT_STUDIO_CALENDAR) || "";
+}
+
 export function normalizeCalendarUrl(input: string) {
   const trimmed = input.trim();
   if (!trimmed) return "";
