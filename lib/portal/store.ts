@@ -1,7 +1,7 @@
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { del, get, put } from "@vercel/blob";
-import { defaultStudioCalendarUrl } from "./calendar";
+import { defaultGoogleCalendarUrl, defaultStudioCalendarUrl, migrateStudioCalendarUrl } from "./calendar";
 import { newId } from "./crypto";
 import {
   asStudioNotice,
@@ -35,6 +35,7 @@ async function readDb(): Promise<PortalDb> {
       clients: (parsed.clients ?? []).map((client) => normalizeClient(client)),
       notices: (parsed.notices ?? []).map(asStudioNotice).filter(Boolean) as StudioNotice[],
       studioCalendarUrl: typeof parsed.studioCalendarUrl === "string" ? parsed.studioCalendarUrl : "",
+      studioCalendarGoogle: typeof parsed.studioCalendarGoogle === "string" ? parsed.studioCalendarGoogle : "",
       studioCalendarExtra: typeof parsed.studioCalendarExtra === "string" ? parsed.studioCalendarExtra : "",
     };
   }
@@ -45,6 +46,7 @@ async function readDb(): Promise<PortalDb> {
       clients: (parsed.clients ?? []).map((client) => normalizeClient(client)),
       notices: (parsed.notices ?? []).map(asStudioNotice).filter(Boolean) as StudioNotice[],
       studioCalendarUrl: typeof parsed.studioCalendarUrl === "string" ? parsed.studioCalendarUrl : "",
+      studioCalendarGoogle: typeof parsed.studioCalendarGoogle === "string" ? parsed.studioCalendarGoogle : "",
       studioCalendarExtra: typeof parsed.studioCalendarExtra === "string" ? parsed.studioCalendarExtra : "",
     };
   } catch {
@@ -70,13 +72,16 @@ async function writeDb(db: PortalDb) {
 
 export async function getStudioCalendars() {
   const db = await readDb();
-  const primary = db.studioCalendarUrl === "off" ? "" : db.studioCalendarUrl || defaultStudioCalendarUrl();
-  return { primary, extra: db.studioCalendarExtra || "" };
+  const stored = db.studioCalendarUrl === "off" ? "" : db.studioCalendarUrl || defaultStudioCalendarUrl();
+  const primary = migrateStudioCalendarUrl(stored);
+  const google = db.studioCalendarGoogle === "off" ? "" : db.studioCalendarGoogle || defaultGoogleCalendarUrl();
+  return { primary, google, extra: db.studioCalendarExtra || "" };
 }
 
-export async function setStudioCalendars(primary: string, extra: string) {
+export async function setStudioCalendars(primary: string, google: string, extra: string) {
   const db = await readDb();
   db.studioCalendarUrl = primary || "off";
+  db.studioCalendarGoogle = google || "off";
   db.studioCalendarExtra = extra;
   await writeDb(db);
 }

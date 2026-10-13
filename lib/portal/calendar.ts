@@ -5,6 +5,7 @@ export type RemoteEvent = {
   title: string;
   place: string;
   notes: string;
+  source?: string;
 };
 
 const WEEKDAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
@@ -90,10 +91,64 @@ function isPrivateHost(hostname: string) {
 }
 
 const DEFAULT_STUDIO_CALENDAR =
-  "webcal://p128-caldav.icloud.com/published/2/MTA1MzUyNTkxNjEwNTM1MkCnYjpxMHo6st5glTFw91jQNk4AjggCLK_gtE7OJ8-J";
+  "webcal://p170-caldav.icloud.com/published/2/MTA1MzUyNTkxNjEwNTM1MkCnYjpxMHo6st5glTFw91jQNk4AjggCLK_gtE7OJ8-J";
+
+const LEGACY_STUDIO_CALENDAR = "p128-caldav.icloud.com";
+
+const DEFAULT_GOOGLE_CALENDAR =
+  "https://calendar.google.com/calendar/ical/manymakeupscalendar%40gmail.com/public/basic.ics";
 
 export function defaultStudioCalendarUrl() {
   return normalizeCalendarUrl(DEFAULT_STUDIO_CALENDAR) || "";
+}
+
+export function defaultGoogleCalendarUrl() {
+  return DEFAULT_GOOGLE_CALENDAR;
+}
+
+export function migrateStudioCalendarUrl(url: string) {
+  if (!url || url === "off") return url;
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname === LEGACY_STUDIO_CALENDAR) return defaultStudioCalendarUrl();
+  } catch {
+    return url;
+  }
+  return url;
+}
+
+function decodeCalendarId(cid: string) {
+  const normalized = cid.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+  try {
+    const id = Buffer.from(padded, "base64").toString("utf8").trim();
+    if (!id || id.includes("\0") || !/^[\w.+-]+@[\w.-]+$/.test(id)) return "";
+    return id;
+  } catch {
+    return "";
+  }
+}
+
+function googleIcalFromPage(url: URL) {
+  const host = url.hostname.replace(/^www\./, "");
+  if (host !== "calendar.google.com") return "";
+  const cid = url.searchParams.get("cid");
+  if (!cid) return "";
+  const id = decodeCalendarId(cid);
+  if (!id) return "";
+  return `https://calendar.google.com/calendar/ical/${encodeURIComponent(id)}/public/basic.ics`;
+}
+
+export function isCalendlyBookingPage(input: string) {
+  const trimmed = input.trim();
+  if (!trimmed) return false;
+  try {
+    const url = new URL(trimmed);
+    const host = url.hostname.replace(/^www\./, "");
+    return (host === "calendly.com" || host.endsWith(".calendly.com")) && !url.pathname.toLowerCase().endsWith(".ics");
+  } catch {
+    return false;
+  }
 }
 
 export function normalizeCalendarUrl(input: string) {
@@ -106,6 +161,8 @@ export function normalizeCalendarUrl(input: string) {
   } catch {
     return null;
   }
+  const fromCid = googleIcalFromPage(url);
+  if (fromCid) return fromCid;
   if (url.protocol !== "https:" || isPrivateHost(url.hostname)) return null;
   return url.toString();
 }

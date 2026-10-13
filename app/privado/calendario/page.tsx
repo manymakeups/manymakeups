@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-function CalendarLinkForm({ primary, extra }: { primary: string; extra: string }) {
+function CalendarLinkForm({ primary, google, extra }: { primary: string; google: string; extra: string }) {
   return (
     <form action="/api/admin/calendar" method="post" className="mt-5 flex flex-col gap-4">
       <label className="field-label">
@@ -31,14 +31,18 @@ function CalendarLinkForm({ primary, extra }: { primary: string; extra: string }
         <input className="field" name="url" type="text" inputMode="url" defaultValue={primary} placeholder="webcal:// o https://" autoComplete="off" />
       </label>
       <label className="field-label">
-        Enlace de Calendly
+        Enlace de Google
+        <input className="field" name="google" type="text" inputMode="url" defaultValue={google} placeholder="https://calendar.google.com/..." autoComplete="off" />
+      </label>
+      <label className="field-label">
+        Enlace iCal de Calendly, si lo tienes
         <input className="field" name="extra" type="text" inputMode="url" defaultValue={extra} placeholder="webcal:// o https://" autoComplete="off" />
       </label>
       <div className="flex flex-wrap gap-3">
         <button className="btn-atelier btn-atelier-solid" type="submit">
           Guardar
         </button>
-        {primary || extra ? (
+        {primary || google || extra ? (
           <button className="btn-atelier" type="submit" name="clear" value="1">
             Quitar
           </button>
@@ -56,22 +60,36 @@ export default async function StudioCalendarPage({
   const admin = await requireAdmin();
   if (!admin) redirect("/privado");
   const { mes, dia, ok, error } = await searchParams;
-  const { primary, extra } = await getStudioCalendars();
-  const [primaryLoaded, extraLoaded] = await Promise.all([
-    primary ? fetchCalendarEvents(primary) : Promise.resolve({ events: [] as RemoteEvent[], error: "" }),
-    extra ? fetchCalendarEvents(extra) : Promise.resolve({ events: [] as RemoteEvent[], error: "" }),
-  ]);
+  const { primary, google, extra } = await getStudioCalendars();
+  const feeds = [
+    { url: primary, source: "iPhone" },
+    { url: google, source: "Google" },
+    { url: extra, source: "Calendly" },
+  ].filter((feed) => feed.url);
+  const loadedFeeds = await Promise.all(
+    feeds.map(async (feed) => {
+      const result = await fetchCalendarEvents(feed.url);
+      return {
+        source: feed.source,
+        error: result.error,
+        events: result.events.map((event) => ({ ...event, source: feed.source, id: `${feed.source}-${event.id}` })),
+      };
+    }),
+  );
   const seen = new Set<string>();
   const loaded = {
-    events: [...primaryLoaded.events, ...extraLoaded.events].filter((event) => {
+    events: loadedFeeds.flatMap((feed) => feed.events).filter((event) => {
       const key = `${event.date}|${event.time}|${event.title}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
     }),
-    error: primaryLoaded.error || extraLoaded.error,
+    error: loadedFeeds
+      .filter((feed) => feed.error)
+      .map((feed) => feed.source)
+      .join(", "),
   };
-  const url = primary || extra;
+  const ready = loadedFeeds.some((feed) => !feed.error);
   const today = madridToday();
   const { year, month } = parseMonth(mes, today);
   const events = loaded.events;
@@ -98,7 +116,7 @@ export default async function StudioCalendarPage({
     <PortalFrame
       kicker="Estudio"
       title="Agenda"
-      lead="Las citas del iPhone y, si lo pegas, las reservas de Calendly."
+      lead="Las citas del iPhone, de Google y las reservas que Calendly escribe en ese Google."
       aside={
         <StudioAside
           extra={
@@ -115,30 +133,30 @@ export default async function StudioCalendarPage({
         <PortalNotice>Ese enlace no vale. Tiene que ser el de Calendario público, el que empieza por webcal:// o https://.</PortalNotice>
       ) : null}
       {error === "descarga" || loaded.error ? (
-        <PortalNotice>No he podido leer el calendario. Comprueba que sigue activo el calendario público y vuelve a pegar el enlace.</PortalNotice>
+        <PortalNotice>
+          No he podido leer {loaded.error ? loaded.error : "el calendario"}. Comprueba que sigue activo el calendario
+          público y vuelve a pegar el enlace.
+        </PortalNotice>
       ) : null}
 
       <section className="max-w-xl border border-ink/10 px-6 py-6">
-        <h2 className="font-serif text-2xl">El calendario del iPhone</h2>
-        <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-ash">
-          <li>Abre Calendario y toca Calendarios, abajo.</li>
-          <li>Toca la i de un calendario de iCloud. Los de «En mi iPhone» no sirven.</li>
-          <li>Activa Calendario público y toca Compartir enlace.</li>
-          <li>Copia el enlace y pégalo aquí.</li>
-        </ol>
+        <h2 className="font-serif text-2xl">Tres calendarios, una agenda</h2>
+        <ul className="mt-4 space-y-2 text-sm leading-relaxed text-ash">
+          <li>iPhone: el calendario público de iCloud. Las citas nuevas se apuntan ahí, desde el móvil.</li>
+          <li>Google: manymakeupscalendar@gmail.com. Ahí deben caer las reservas de Calendly.</li>
+          <li>
+            Calendly: la cita de estudio ya está en la web. Esta página no lee la página de reserva; lee las citas
+            cuando Calendly las añade al Google. Si Calendly te da un enlace iCal, pégalo en el tercer campo.
+          </li>
+        </ul>
         <p className="mt-4 text-sm leading-relaxed text-ash">
-          El enlace del iPhone ya está puesto. Las citas nuevas las apuntas en ese calendario, desde el móvil. Puede
-          tardar unos minutos en aparecer un cambio.
+          Un cambio puede tardar unos minutos. Si una reserva de Calendly no sale, en Calendly el calendario donde se
+          añaden las reservas tiene que ser ese Google.
         </p>
-        <p className="mt-3 text-sm leading-relaxed text-ash">
-          Calendly no escribe en un iCloud nuevo. En Calendly conecta un calendario de Google o Outlook, elige ese
-          como el calendario donde se añaden las reservas, y pega aquí su enlace secreto. En Google está en la
-          configuración del calendario, Integrar calendario, Dirección secreta en formato iCal.
-        </p>
-        <CalendarLinkForm primary={primary} extra={extra} />
+        <CalendarLinkForm primary={primary} google={google} extra={extra} />
       </section>
 
-      {url && !loaded.error ? (
+      {ready ? (
         <>
           <div className="mt-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <h2 className="font-serif text-4xl">{monthLabel(year, month)}</h2>
@@ -203,6 +221,7 @@ export default async function StudioCalendarPage({
                       {event.time || "Todo el día"}
                     </p>
                     <p className="mt-1 font-serif text-2xl">{event.title}</p>
+                    {event.source ? <p className="mt-1 text-[0.68rem] uppercase tracking-[0.16em] text-ash">{event.source}</p> : null}
                     {event.place ? <p className="mt-1 text-sm text-ash">{event.place}</p> : null}
                     {event.notes ? <p className="mt-2 whitespace-pre-wrap text-sm text-ash">{event.notes}</p> : null}
                   </li>

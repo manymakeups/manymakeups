@@ -196,6 +196,7 @@ export type PortalDb = {
   clients: ClientRecord[];
   notices: StudioNotice[];
   studioCalendarUrl: string;
+  studioCalendarGoogle: string;
   studioCalendarExtra: string;
 };
 
@@ -260,7 +261,7 @@ export function emptyEvent(name = ""): EventDetails {
 }
 
 export function emptyDb(): PortalDb {
-  return { clients: [], notices: [], studioCalendarUrl: "", studioCalendarExtra: "" };
+  return { clients: [], notices: [], studioCalendarUrl: "", studioCalendarGoogle: "", studioCalendarExtra: "" };
 }
 
 export function asStudioNotice(value: unknown): StudioNotice | null {
