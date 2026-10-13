@@ -5,7 +5,21 @@ import { go } from "@/lib/portal/http";
 import { clientLabel, notifyStudio } from "@/lib/portal/notify";
 import { requireClient } from "@/lib/portal/session";
 import { deletePortalFile, getClient, putPortalFile, saveClient } from "@/lib/portal/store";
-import type { PortalFile } from "@/lib/portal/types";
+import {
+  CONTRACTOR_INSPIRATION,
+  personInspirationKey,
+  type PortalFile,
+} from "@/lib/portal/types";
+
+function personLabel(value: FormDataEntryValue | null) {
+  if (typeof value !== "string") return CONTRACTOR_INSPIRATION;
+  if (value === CONTRACTOR_INSPIRATION) return value;
+  const match = /^persona-(\d+)$/.exec(value);
+  if (!match) return CONTRACTOR_INSPIRATION;
+  const index = Number(match[1]);
+  if (!Number.isInteger(index) || index < 0 || index > 19) return CONTRACTOR_INSPIRATION;
+  return personInspirationKey(index);
+}
 
 export async function POST(request: Request) {
   const session = await requireClient();
@@ -33,7 +47,7 @@ export async function POST(request: Request) {
       size: upload.size,
       uploadedAt: new Date().toISOString(),
       kind: "inspiration",
-      label: "Inspiración",
+      label: personLabel(form.get("person")),
     };
     await putPortalFile(record, Buffer.from(await upload.arrayBuffer()));
     client.inspiration.push(record);

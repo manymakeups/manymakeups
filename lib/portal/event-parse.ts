@@ -1,5 +1,6 @@
 import {
   emptyAttendee,
+  normalizePersonService,
   type Attendee,
   type EventDetails,
   type EventType,
@@ -22,10 +23,14 @@ function peopleFromForm(form: FormData, count: number, fallback: Attendee[]): At
   return Array.from({ length: count }, (_, i) => {
     const prev = fallback[i] ?? emptyAttendee();
     return {
-      who: text(form.get(`people.${i}.who`)) || prev.who,
-      service: text(form.get(`people.${i}.service`)) || prev.service,
-      budgetAmount: text(form.get(`people.${i}.budgetAmount`)),
-      budgetNumber: text(form.get(`people.${i}.budgetNumber`)),
+      who: text(form.get(`people.${i}.who`)),
+      service: normalizePersonService(text(form.get(`people.${i}.service`)) || prev.service),
+      wantsTrial: flag(form.get(`people.${i}.wantsTrial`)),
+      trialNotes: text(form.get(`people.${i}.trialNotes`)),
+      skinNotes: text(form.get(`people.${i}.skinNotes`)),
+      notes: text(form.get(`people.${i}.notes`)),
+      budgetAmount: prev.budgetAmount,
+      budgetNumber: prev.budgetNumber,
     };
   });
 }

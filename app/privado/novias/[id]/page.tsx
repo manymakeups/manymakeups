@@ -2,7 +2,7 @@ import { CopyInvite, DeleteFileButton } from "@/app/components/portal/FileAction
 import { PaymentsForm } from "@/app/components/portal/PaymentsBlock";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { isImageType } from "@/lib/portal/files";
-import { DOCUMENT_KINDS, euros } from "@/lib/portal/types";
+import { CONTRACTOR_INSPIRATION, DOCUMENT_KINDS, euros } from "@/lib/portal/types";
 import { requireAdmin } from "@/lib/portal/session";
 import { getClient } from "@/lib/portal/store";
 import { notFound, redirect } from "next/navigation";
@@ -98,7 +98,7 @@ export default async function StudioClientPage({
             <dd>{event.ceremonyTime || "—"}</dd>
           </div>
           <div className="sm:col-span-2">
-            <dt className="text-ash">Extras</dt>
+            <dt className="text-ash">Servicios de la contratante</dt>
             <dd>
               {[
                 event.makeup && "maquillaje",
@@ -111,35 +111,47 @@ export default async function StudioClientPage({
             </dd>
           </div>
           <div className="sm:col-span-2">
-            <dt className="text-ash">Prueba</dt>
+            <dt className="text-ash">Prueba (contratante)</dt>
             <dd className="whitespace-pre-wrap">{event.trialNotes || "—"}</dd>
           </div>
           <div className="sm:col-span-2">
-            <dt className="text-ash">Piel</dt>
+            <dt className="text-ash">Piel (contratante)</dt>
             <dd className="whitespace-pre-wrap">{event.skinNotes || "—"}</dd>
           </div>
           <div className="sm:col-span-2">
-            <dt className="text-ash">Notas</dt>
+            <dt className="text-ash">Notas (contratante)</dt>
             <dd className="whitespace-pre-wrap">{event.notes || "—"}</dd>
           </div>
         </dl>
         {event.people.length ? (
           <ul className="mt-8 divide-y divide-ink/10 border border-ink/10">
             {event.people.map((person, i) => (
-              <li key={i} className="grid gap-2 px-4 py-4 sm:grid-cols-4">
+              <li key={i} className="grid gap-3 px-4 py-4 sm:grid-cols-2">
                 <p>
                   <span className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">
-                    {i === 0 ? "Clienta" : `Acompañante ${i}`}
+                    Persona {i + 1}
                   </span>
                   <span className="mt-1 block">{person.who || "—"}</span>
+                  <span className="mt-1 block text-sm text-ash">{person.service || "—"}</span>
                 </p>
-                <p className="text-sm">{person.service || "—"}</p>
-                <p className="text-sm">
-                  {person.budgetAmount
-                    ? euros(Number(person.budgetAmount) || 0)
-                    : "—"}
-                </p>
-                <p className="text-sm">nº {person.budgetNumber || "—"}</p>
+                <div className="text-sm">
+                  <p>{person.wantsTrial ? "Quiere prueba" : "Sin prueba"}</p>
+                  {person.wantsTrial ? (
+                    <div className="mt-2 space-y-2 whitespace-pre-wrap text-ash">
+                      {person.trialNotes ? <p>Prueba: {person.trialNotes}</p> : null}
+                      {person.skinNotes ? <p>Alergias: {person.skinNotes}</p> : null}
+                      {person.notes ? <p>Notas: {person.notes}</p> : null}
+                    </div>
+                  ) : null}
+                  {person.budgetAmount || person.budgetNumber ? (
+                    <p className="mt-2">
+                      {person.budgetAmount
+                        ? euros(Number(person.budgetAmount) || 0)
+                        : "—"}{" "}
+                      · nº {person.budgetNumber || "—"}
+                    </p>
+                  ) : null}
+                </div>
               </li>
             ))}
           </ul>
@@ -161,17 +173,26 @@ export default async function StudioClientPage({
         <h2 className="font-serif text-3xl">Inspiración</h2>
         {client.inspiration.length ? (
           <ul className="mt-6 grid gap-4 sm:grid-cols-3">
-            {client.inspiration.map((file) => (
-              <li key={file.id}>
-                {isImageType(file.mime) ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={fileHref(client.id, file.id)} alt="" className="aspect-[4/5] w-full object-cover" />
-                ) : null}
-                <a className="mt-2 inline-block text-sm underline" href={fileHref(client.id, file.id, true)}>
-                  {file.name}
-                </a>
-              </li>
-            ))}
+            {client.inspiration.map((file) => {
+              const owner =
+                file.label === CONTRACTOR_INSPIRATION || file.label === "Inspiración"
+                  ? "Contratante"
+                  : file.label.startsWith("persona-")
+                    ? `Persona ${Number(file.label.slice("persona-".length)) + 1}`
+                    : file.label;
+              return (
+                <li key={file.id}>
+                  {isImageType(file.mime) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={fileHref(client.id, file.id)} alt="" className="aspect-[4/5] w-full object-cover" />
+                  ) : null}
+                  <p className="mt-2 text-[0.68rem] uppercase tracking-[0.16em] text-gilt">{owner}</p>
+                  <a className="mt-1 inline-block text-sm underline" href={fileHref(client.id, file.id, true)}>
+                    {file.name}
+                  </a>
+                </li>
+              );
+            })}
           </ul>
         ) : (
           <p className="mt-4 text-sm text-ash">Aún no ha subido fotos.</p>

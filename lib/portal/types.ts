@@ -9,6 +9,33 @@ export const SERVICE_OPTIONS = [
   "Otro",
 ] as const;
 
+export const WHO_OPTIONS = [
+  "Pareja masculina",
+  "Pareja femenina",
+  "Madrina/padrino",
+  "Niñ@",
+  "Invitada",
+  "Invitado",
+] as const;
+
+export const PERSON_SERVICE_OPTIONS = [
+  "Maquillaje y peinado",
+  "Sólo maquillaje",
+  "Sólo peinado",
+] as const;
+
+export const CONTRACTOR_INSPIRATION = "contratante";
+
+export function personInspirationKey(index: number) {
+  return `persona-${index}`;
+}
+
+export function normalizePersonService(value: string) {
+  if (value === "Sólo maquillaje" || value === "Maquillaje") return "Sólo maquillaje";
+  if (value === "Sólo peinado" || value === "Peinado") return "Sólo peinado";
+  return "Maquillaje y peinado";
+}
+
 export const DOCUMENT_KINDS = [
   "Presupuesto",
   "Contrato",
@@ -21,6 +48,10 @@ export const DOCUMENT_KINDS = [
 export type Attendee = {
   who: string;
   service: string;
+  wantsTrial: boolean;
+  trialNotes: string;
+  skinNotes: string;
+  notes: string;
   budgetAmount: string;
   budgetNumber: string;
 };
@@ -89,6 +120,10 @@ export function emptyAttendee(who = ""): Attendee {
   return {
     who,
     service: "Maquillaje y peinado",
+    wantsTrial: false,
+    trialNotes: "",
+    skinNotes: "",
+    notes: "",
     budgetAmount: "",
     budgetNumber: "",
   };
@@ -113,7 +148,7 @@ export function emptyEvent(name = ""): EventDetails {
     gettingReadyTime: "",
     ceremonyTime: "",
     peopleCount: 1,
-    people: [emptyAttendee(name)],
+    people: [emptyAttendee()],
     makeup: true,
     hair: true,
     glitterBar: false,
@@ -145,12 +180,14 @@ export function normalizeClient(client: ClientRecord): ClientRecord {
   const existing = Array.isArray(client.event?.people) ? client.event.people : [];
   const people = Array.from({ length: count }, (_, i) => {
     const row = existing[i];
-    if (!row) {
-      return emptyAttendee(i === 0 ? client.event?.clientName || client.name : "");
-    }
+    if (!row) return emptyAttendee();
     return {
       who: row.who ?? "",
-      service: row.service || "Maquillaje y peinado",
+      service: normalizePersonService(row.service || ""),
+      wantsTrial: Boolean(row.wantsTrial),
+      trialNotes: row.trialNotes ?? "",
+      skinNotes: row.skinNotes ?? "",
+      notes: row.notes ?? "",
       budgetAmount: row.budgetAmount ?? "",
       budgetNumber: row.budgetNumber ?? "",
     };

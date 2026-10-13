@@ -62,7 +62,13 @@ export default async function BridePanelPage({
           Cuanto más concreto, más fácil organizo horarios y equipo. Puedes ir actualizándolo.
         </p>
         <div className="mt-8">
-          <EventForm event={client.event} action="/api/portal/event" submitLabel="Guardar ficha" />
+          <EventForm
+            event={client.event}
+            clientId={client.id}
+            inspiration={client.inspiration}
+            action="/api/portal/event"
+            submitLabel="Guardar ficha"
+          />
         </div>
       </section>
 
@@ -82,23 +88,9 @@ export default async function BridePanelPage({
         <p className="text-[0.68rem] uppercase tracking-[0.32em] text-gilt">III · Inspiración</p>
         <h2 className="mt-3 font-serif text-3xl">Fotos que te gustan</h2>
         <p className="mt-3 max-w-2xl text-sm text-ash">
-          Looks, peinados, bocetos, capturas. No hace falta que sean perfectas: me sirven para
-          entender el gesto.
+          Las fotos se adjuntan en la ficha de arriba: las tuyas con tus notas, y las de cada
+          persona en su recuadro.
         </p>
-        <form
-          action="/api/portal/inspiration"
-          method="post"
-          encType="multipart/form-data"
-          className="mt-8 flex flex-col gap-4"
-        >
-          <label className="field-label">
-            Añadir fotos
-            <input className="field" name="files" type="file" accept="image/*" multiple required />
-          </label>
-          <button className="btn-atelier-solid btn-atelier self-start" type="submit">
-            Subir
-          </button>
-        </form>
         {client.inspiration.length ? (
           <ul className="mt-8 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
             {client.inspiration.map((file) => (

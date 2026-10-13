@@ -19,10 +19,10 @@ export async function POST(request: Request) {
     `Fecha: ${client.event.eventDate || "—"}`,
     `Lugar: ${client.event.venue || "—"}`,
     `Personas a atender: ${client.event.peopleCount}`,
-    ...client.event.people.map(
-      (person, i) =>
-        `${i + 1}. ${person.who || "—"} · ${person.service} · ${person.budgetAmount || "0"} € · nº ${person.budgetNumber || "—"}`,
-    ),
+    ...client.event.people.map((person, i) => {
+      const trial = person.wantsTrial ? "con prueba" : "sin prueba";
+      return `${i + 1}. ${person.who || "—"} · ${person.service} · ${trial}`;
+    }),
   ].filter(Boolean) as string[]);
   return go(request, "/area-novia/panel?ok=evento");
 }
