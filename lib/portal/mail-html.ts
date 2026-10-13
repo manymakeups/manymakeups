@@ -1,0 +1,60 @@
+import { site } from "@/lib/site";
+
+const signatureUrl = `${site.url}/brand/firmas-correo/info.png`;
+
+type MailBlock = { text: string; muted?: boolean } | { href: string; label: string };
+
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+export function brandedClientEmail(input: { blocks: MailBlock[]; signoff: string[]; lang?: string }) {
+  const textLines: string[] = [];
+  for (const block of input.blocks) {
+    if ("href" in block) {
+      textLines.push("", `👉 ${block.label}`, block.href);
+    } else {
+      textLines.push("", block.text);
+    }
+  }
+  textLines.push("", ...input.signoff);
+  const text = textLines.join("\n").replace(/^\n/, "");
+
+  const body = input.blocks
+    .map((block) => {
+      if ("href" in block) {
+        return `<p style="margin:0 0 16px;"><a href="${escapeHtml(block.href)}" style="color:#7d6240;text-decoration:underline;">👉 ${escapeHtml(block.label)}</a></p>`;
+      }
+      const color = block.muted ? "#6d645b" : "#1a1613";
+      return `<p style="margin:0 0 16px;color:${color};">${escapeHtml(block.text)}</p>`;
+    })
+    .join("");
+  const signoff = `<p style="margin:0 0 24px;color:#1a1613;">${input.signoff.map(escapeHtml).join("<br>")}</p>`;
+
+  const html = `<!DOCTYPE html>
+<html lang="${escapeHtml(input.lang || "es")}">
+  <body style="margin:0;padding:0;background:#f4f1ea;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1ea;">
+      <tr>
+        <td align="center" style="padding:32px 16px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+            <tr>
+              <td style="font-family:Georgia,'Times New Roman',serif;font-size:17px;line-height:1.6;color:#1a1613;">
+                ${body}
+                ${signoff}
+                <img src="${signatureUrl}" width="280" alt="Ana Zarza, Makeup Artist. Many Makeups. @m.any_makeups · www.manymakeups.com · +34 645 800 760 · info@manymakeups.com" style="display:block;width:280px;max-width:100%;height:auto;border:0;" />
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+
+  return { text, html };
+}

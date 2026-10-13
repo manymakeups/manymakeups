@@ -1,7 +1,8 @@
 import { site } from "@/lib/site";
-import { getPortalCopy } from "@/lib/i18n";
+import { getPortalCopy, interpolate } from "@/lib/i18n";
 import { hashToken, isEmail, normalizeEmail, randomToken } from "@/lib/portal/crypto";
 import { goPortal, localizedPath, requestLocale } from "@/lib/portal/http";
+import { brandedClientEmail } from "@/lib/portal/mail-html";
 import { clientLabel, notifyEmail, notifyStudio } from "@/lib/portal/notify";
 import { getClientByEmail, saveClient } from "@/lib/portal/store";
 
@@ -18,17 +19,20 @@ export async function POST(request: Request) {
     const locale = await requestLocale();
     const t = getPortalCopy(locale);
     const link = `${site.url}${await localizedPath(`/area-novia/activar?token=${encodeURIComponent(token)}`)}`;
-    const body = [
-      t.recoverMailHello,
-      "",
-      t.recoverMailBody,
-      link,
-      "",
-      t.recoverMailExpiry,
-      "",
-      site.legalName,
-    ].join("\n");
-    await notifyEmail(client.email, t.recoverMailSubject, body);
+    const name = client.event.clientName || client.name;
+    const mail = brandedClientEmail({
+      lang: locale,
+      blocks: [
+        { text: interpolate(t.recoverMailHello, { name }) },
+        { text: t.recoverMailIntro },
+        { text: t.recoverMailBody },
+        { href: link, label: t.recoverMailLink },
+        { text: t.recoverMailExpiry, muted: true },
+        { text: t.recoverMailIgnore },
+      ],
+      signoff: [t.recoverMailSignoff, t.recoverMailFrom],
+    });
+    await notifyEmail(client.email, t.recoverMailSubject, mail.text, mail.html);
     await notifyStudio(`Recuperar contraseña · ${clientLabel(client)}`, [
       "Ha pedido un enlace nuevo.",
       link,

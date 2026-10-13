@@ -119,8 +119,13 @@ export type PortalCopy = {
   documentKinds: Record<string, string>;
   recoverMailSubject: string;
   recoverMailHello: string;
+  recoverMailIntro: string;
   recoverMailBody: string;
+  recoverMailLink: string;
   recoverMailExpiry: string;
+  recoverMailIgnore: string;
+  recoverMailSignoff: string;
+  recoverMailFrom: string;
   lockedLead: string;
   notifyChanges: string;
   notifyChangesLead: string;
@@ -285,10 +290,18 @@ export const portalEs: PortalCopy = {
     Timeline: "Timeline",
     Otro: "Otro",
   },
-  recoverMailSubject: "Recuperar contraseña · Área clientes Many Makeups",
-  recoverMailHello: "Hola,",
-  recoverMailBody: "Para elegir una nueva contraseña en tu Área clientes, abre este enlace:",
-  recoverMailExpiry: "Caduca a las tres semanas. Si no lo has pedido tú, ignóralo.",
+  recoverMailSubject: "Restablece tu contraseña de acceso | Many Makeups by Ana Zarza",
+  recoverMailHello: "Hola, {name}:",
+  recoverMailIntro:
+    "He recibido una solicitud para restablecer la contraseña de tu área privada en Many Makeups.",
+  recoverMailBody:
+    "Para elegir una nueva clave y volver a acceder a tu espacio, solo tienes que hacer clic en el siguiente enlace:",
+  recoverMailLink: "Restablecer mi contraseña",
+  recoverMailExpiry: "(Este enlace caducará en 3 semanas por motivos de seguridad).",
+  recoverMailIgnore:
+    "Si tú no has solicitado este cambio, puedes ignorar este mensaje; tu contraseña seguirá siendo la misma.",
+  recoverMailSignoff: "Un abrazo,",
+  recoverMailFrom: "Ana Zarza — Many Makeups",
   lockedLead:
     "Esta ficha ya está guardada y no se puede editar. Si algo cambia, escríbeme aquí y me llegará al estudio.",
   notifyChanges: "Notificar cambios",
@@ -453,10 +466,15 @@ export const portalEn: PortalCopy = {
     Timeline: "Timeline",
     Otro: "Other",
   },
-  recoverMailSubject: "Reset password · Many Makeups client area",
-  recoverMailHello: "Hello,",
-  recoverMailBody: "To choose a new password for your client area, open this link:",
-  recoverMailExpiry: "It expires after three weeks. If you did not request this, you can ignore it.",
+  recoverMailSubject: "Reset your access password | Many Makeups by Ana Zarza",
+  recoverMailHello: "Hello, {name}:",
+  recoverMailIntro: "I have received a request to reset the password for your private area at Many Makeups.",
+  recoverMailBody: "To choose a new password and get back into your space, just click the link below:",
+  recoverMailLink: "Reset my password",
+  recoverMailExpiry: "(This link will expire in 3 weeks for security reasons).",
+  recoverMailIgnore: "If you did not request this change, you can ignore this message; your password will stay the same.",
+  recoverMailSignoff: "With love,",
+  recoverMailFrom: "Ana Zarza — Many Makeups",
   lockedLead:
     "This form is saved and can no longer be edited. If something changes, write it here and it will reach the studio.",
   notifyChanges: "Request a change",
@@ -623,10 +641,18 @@ export const portalFr: PortalCopy = {
     Timeline: "Planning",
     Otro: "Autre",
   },
-  recoverMailSubject: "Récupérer le mot de passe · Espace clientes Many Makeups",
-  recoverMailHello: "Bonjour,",
-  recoverMailBody: "Pour choisir un nouveau mot de passe dans ton espace clientes, ouvre ce lien :",
-  recoverMailExpiry: "Il expire au bout de trois semaines. Si tu ne l’as pas demandé, ignore-le.",
+  recoverMailSubject: "Réinitialise ton mot de passe d'accès | Many Makeups by Ana Zarza",
+  recoverMailHello: "Bonjour, {name} :",
+  recoverMailIntro:
+    "J’ai reçu une demande pour réinitialiser le mot de passe de ton espace privé chez Many Makeups.",
+  recoverMailBody:
+    "Pour choisir un nouveau mot de passe et retrouver ton espace, il te suffit de cliquer sur le lien suivant :",
+  recoverMailLink: "Réinitialiser mon mot de passe",
+  recoverMailExpiry: "(Ce lien expirera dans 3 semaines pour des raisons de sécurité).",
+  recoverMailIgnore:
+    "Si tu n’as pas demandé ce changement, tu peux ignorer ce message ; ton mot de passe restera le même.",
+  recoverMailSignoff: "Je t’embrasse,",
+  recoverMailFrom: "Ana Zarza — Many Makeups",
   lockedLead:
     "Cette fiche est enregistrée et ne peut plus être modifiée. Si quelque chose change, écris-le ici et je le verrai à l’atelier.",
   notifyChanges: "Signaler un changement",

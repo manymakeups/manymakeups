@@ -5,7 +5,7 @@ export function clientMailReady() {
   return Boolean(process.env.RESEND_API_KEY);
 }
 
-async function sendWithResend(to: string, subject: string, text: string) {
+async function sendWithResend(to: string, subject: string, text: string, html?: string) {
   const key = process.env.RESEND_API_KEY;
   if (!key) return false;
   const from = process.env.MAIL_FROM || `Many Makeups <${site.email}>`;
@@ -15,7 +15,14 @@ async function sendWithResend(to: string, subject: string, text: string) {
       Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ from, to: [to], reply_to: site.email, subject, text }),
+    body: JSON.stringify({
+      from,
+      to: [to],
+      reply_to: site.email,
+      subject,
+      text,
+      ...(html ? { html } : {}),
+    }),
   });
   return response.ok;
 }
@@ -49,13 +56,13 @@ export async function notifyStudio(subject: string, lines: string[]) {
   }
 }
 
-export async function notifyEmail(to: string, subject: string, text: string) {
+export async function notifyEmail(to: string, subject: string, text: string, html?: string) {
   try {
     if (to.toLowerCase() === site.email.toLowerCase()) {
       await notifyStudio(subject, [text]);
       return true;
     }
-    return await sendWithResend(to, subject, text);
+    return await sendWithResend(to, subject, text, html);
   } catch {
     return false;
   }
