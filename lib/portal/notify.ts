@@ -58,11 +58,9 @@ export async function notifyStudio(subject: string, lines: string[]) {
 
 export async function notifyEmail(to: string, subject: string, text: string, html?: string) {
   try {
-    if (to.toLowerCase() === site.email.toLowerCase()) {
-      await notifyStudio(subject, [text]);
-      return true;
-    }
-    return await sendWithResend(to, subject, text, html);
+    if (await sendWithResend(to, subject, text, html)) return true;
+    if (to.toLowerCase() === site.email.toLowerCase()) await sendWithFormSubmit(subject, text);
+    return false;
   } catch {
     return false;
   }
