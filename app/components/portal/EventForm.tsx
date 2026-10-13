@@ -2,6 +2,7 @@
 
 import { PhotoPicker } from "@/app/components/portal/PhotoPicker";
 import { usePortalCopy } from "@/app/components/portal/usePortalCopy";
+import type { PortalCopy } from "@/lib/i18n/portal-messages";
 import { CONTRACTOR_INSPIRATION, type EventDetails, type PortalFile } from "@/lib/portal/types";
 
 export function EventForm({
@@ -10,17 +11,25 @@ export function EventForm({
   submitLabel,
   clientId,
   inspiration,
+  copy,
+  includeClientId = false,
+  showInspiration = true,
 }: {
   event: EventDetails;
   action: string;
   submitLabel: string;
   clientId: string;
   inspiration: PortalFile[];
+  copy?: PortalCopy;
+  includeClientId?: boolean;
+  showInspiration?: boolean;
 }) {
-  const t = usePortalCopy();
+  const hooked = usePortalCopy();
+  const t = copy ?? hooked;
   return (
     <div className="flex flex-col gap-8">
     <form action={action} method="post" className="flex flex-col gap-4">
+      {includeClientId ? <input type="hidden" name="clientId" value={clientId} /> : null}
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="field-label">
           {t.yourName}
@@ -105,14 +114,16 @@ export function EventForm({
         {submitLabel}
       </button>
     </form>
-      <PhotoPicker
-        personKey={CONTRACTOR_INSPIRATION}
-        files={inspiration}
-        clientId={clientId}
-        action="/api/portal/inspiration"
-        tab="contratante"
-        localize
-      />
+      {showInspiration ? (
+        <PhotoPicker
+          personKey={CONTRACTOR_INSPIRATION}
+          files={inspiration}
+          clientId={clientId}
+          action="/api/portal/inspiration"
+          tab="contratante"
+          localize={!copy}
+        />
+      ) : null}
     </div>
   );
 }

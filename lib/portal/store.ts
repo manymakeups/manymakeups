@@ -107,6 +107,7 @@ function pushNotice(db: PortalDb, clientId: string, notice: NewStudioNotice) {
     personIndex: notice.personIndex,
     message: notice.message,
     read: false,
+    replies: [],
   });
   db.notices = db.notices.slice(0, 200);
 }
@@ -133,10 +134,18 @@ export async function listNotices() {
   return db.notices;
 }
 
-export async function markNoticeRead(id: string) {
+export async function mutateNotices(
+  mutator: (notices: StudioNotice[]) => StudioNotice[],
+) {
   const db = await readDb();
-  db.notices = db.notices.map((notice) => (notice.id === id ? { ...notice, read: true } : notice));
+  db.notices = mutator(db.notices);
   await writeDb(db);
+}
+
+export async function markNoticeRead(id: string) {
+  await mutateNotices((notices) =>
+    notices.map((notice) => (notice.id === id ? { ...notice, read: true } : notice)),
+  );
 }
 
 export async function putPortalFile(file: PortalFile, data: Buffer) {

@@ -143,6 +143,12 @@ export type EventDetails = {
 export type StudioNoticeKind = "ficha" | "acompanantes" | "cambio";
 export type StudioNoticeScope = "contratante" | "acompanante";
 
+export type StudioNoticeReply = {
+  id: string;
+  createdAt: string;
+  text: string;
+};
+
 export type StudioNotice = {
   id: string;
   clientId: string;
@@ -152,6 +158,7 @@ export type StudioNotice = {
   personIndex?: number;
   message: string;
   read: boolean;
+  replies: StudioNoticeReply[];
 };
 
 export type FileKind = "inspiration" | "document" | "work";
@@ -266,6 +273,15 @@ export function asStudioNotice(value: unknown): StudioNotice | null {
     personIndex: Number.isFinite(row.personIndex) ? Number(row.personIndex) : undefined,
     message: row.message ?? "",
     read: Boolean(row.read),
+    replies: Array.isArray(row.replies)
+      ? row.replies
+          .filter((item) => item && typeof item === "object" && item.text)
+          .map((item) => ({
+            id: String(item.id || ""),
+            createdAt: item.createdAt || "",
+            text: String(item.text),
+          }))
+      : [],
   };
 }
 

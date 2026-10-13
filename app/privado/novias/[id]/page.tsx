@@ -1,11 +1,14 @@
 import { AgendaForm } from "@/app/components/portal/AgendaBlock";
+import { CompanionsForm } from "@/app/components/portal/CompanionsForm";
 import { CopyInvite, DeleteFileButton } from "@/app/components/portal/FileActions";
+import { EventForm } from "@/app/components/portal/EventForm";
 import { PaymentsForm } from "@/app/components/portal/PaymentsBlock";
 import { PhotoGrid } from "@/app/components/portal/PhotoPicker";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { PortalTabs } from "@/app/components/portal/PortalTabs";
 import { StudioAside } from "@/app/components/portal/StudioAside";
 import { WorkForm } from "@/app/components/portal/WorkBlock";
+import { portalEs } from "@/lib/i18n/portal-messages";
 import { portalFileHref } from "@/lib/portal/files";
 import {
   CONTRACTOR_INSPIRATION,
@@ -64,6 +67,9 @@ export default async function StudioClientPage({
       {ok === "agenda" ? <PortalNotice>Agenda actualizada.</PortalNotice> : null}
       {ok === "estudio" ? <PortalNotice>Productos guardados.</PortalNotice> : null}
       {ok === "fotos" ? <PortalNotice>Fotos de la prueba colgadas.</PortalNotice> : null}
+      {ok === "ficha" ? (
+        <PortalNotice>Ficha actualizada. Ella ya ve los cambios en su área.</PortalNotice>
+      ) : null}
       {error === "archivo" ? <PortalNotice>Ese archivo no se puede colgar.</PortalNotice> : null}
       {invite ? (
         <PortalNotice>
@@ -87,63 +93,21 @@ export default async function StudioClientPage({
       {tab === "contratante" ? (
         <section className="pt-10">
           <h2 className="font-serif text-3xl">Ficha de la contratante</h2>
-          <dl className="mt-6 grid gap-4 text-sm sm:grid-cols-2">
-            <div>
-              <dt className="text-ash">Pareja</dt>
-              <dd>{event.partnerName || "—"}</dd>
-            </div>
-            <div>
-              <dt className="text-ash">Teléfono</dt>
-              <dd>{event.phone || "—"}</dd>
-            </div>
-            <div>
-              <dt className="text-ash">Tipo</dt>
-              <dd>{event.eventType}</dd>
-            </div>
-            <div>
-              <dt className="text-ash">Fecha</dt>
-              <dd>{event.eventDate || "—"}</dd>
-            </div>
-            <div>
-              <dt className="text-ash">Lugar</dt>
-              <dd>{event.venue || "—"}</dd>
-            </div>
-            <div>
-              <dt className="text-ash">Preparación</dt>
-              <dd>
-                {event.gettingReadyPlace || "—"} {event.gettingReadyTime}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-ash">Ceremonia</dt>
-              <dd>{event.ceremonyTime || "—"}</dd>
-            </div>
-            <div className="sm:col-span-2">
-              <dt className="text-ash">Servicios</dt>
-              <dd>
-                {[
-                  event.makeup && "maquillaje",
-                  event.hair && "peinado",
-                  event.glitterBar && "glitter bar",
-                  event.beautyCorner && "beauty corner",
-                ]
-                  .filter(Boolean)
-                  .join(" · ") || "—"}
-              </dd>
-            </div>
-            <div className="sm:col-span-2">
-              <dt className="text-ash">Prueba</dt>
-              <dd className="whitespace-pre-wrap">{event.trialNotes || "—"}</dd>
-            </div>
-            <div className="sm:col-span-2">
-              <dt className="text-ash">Piel</dt>
-              <dd className="whitespace-pre-wrap">{event.skinNotes || "—"}</dd>
-            </div>
-            <div className="sm:col-span-2">
-              <dt className="text-ash">Notas</dt>
-              <dd className="whitespace-pre-wrap">{event.notes || "—"}</dd>
-            </div>
-          </dl>
+          <p className="mt-3 max-w-2xl text-sm text-ash">
+            Si pide un cambio, corrige aquí y guarda. Ella lo verá en su área, sin poder editarlo.
+          </p>
+          <div className="mt-8">
+            <EventForm
+              event={event}
+              clientId={client.id}
+              inspiration={client.inspiration}
+              action="/api/admin/event"
+              submitLabel="Guardar ficha"
+              copy={portalEs}
+              includeClientId
+              showInspiration={false}
+            />
+          </div>
           <div className="mt-12 border-t border-ink/10 pt-8">
             <h3 className="font-serif text-2xl">Inspiraciones</h3>
             <div className="mt-6">
@@ -177,21 +141,30 @@ export default async function StudioClientPage({
       {tab === "acompanantes" ? (
         <section className="pt-10">
           <h2 className="font-serif text-3xl">Acompañantes</h2>
+          <p className="mt-3 max-w-2xl text-sm text-ash">
+            Corrige quiénes son, servicios y prueba. Al guardar, ella lo ve actualizado en su área.
+          </p>
+          <div className="mt-8">
+            <CompanionsForm
+              event={event}
+              clientId={client.id}
+              inspiration={client.inspiration}
+              workPhotos={client.workPhotos}
+              action="/api/admin/companions"
+              copy={portalEs}
+              includeClientId
+              showInspiration={false}
+              showTrialWork={false}
+              submitLabel="Guardar acompañantes"
+            />
+          </div>
           {event.people.length ? (
-            <div className="mt-8 flex flex-col gap-10">
+            <div className="mt-12 flex flex-col gap-10 border-t border-ink/10 pt-10">
               {event.people.map((person, i) => (
                 <article key={i} className="border border-ink/10 p-5">
                   <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">
-                    Persona {i + 1}
+                    Persona {i + 1} · {person.who || "—"}
                   </p>
-                  <p className="mt-2 font-serif text-2xl">{person.who || "—"}</p>
-                  <p className="mt-1 text-sm text-ash">{person.service}</p>
-                  <div className="mt-4 space-y-2 whitespace-pre-wrap text-sm">
-                    <p>Alergias: {person.skinNotes || "—"}</p>
-                    <p>Notas: {person.notes || "—"}</p>
-                    <p>{person.wantsTrial ? "Quiere prueba" : "Sin prueba"}</p>
-                    {person.wantsTrial ? <p>Prueba: {person.trialNotes || "—"}</p> : null}
-                  </div>
                   <div className="mt-6">
                     <p className="text-[0.68rem] uppercase tracking-[0.16em] text-ash">Inspiraciones</p>
                     <div className="mt-3">
@@ -221,9 +194,7 @@ export default async function StudioClientPage({
                 </article>
               ))}
             </div>
-          ) : (
-            <p className="mt-6 text-sm text-ash">Todavía no ha añadido acompañantes.</p>
-          )}
+          ) : null}
         </section>
       ) : null}
 

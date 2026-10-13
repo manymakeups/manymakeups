@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { PhotoPicker } from "@/app/components/portal/PhotoPicker";
 import { WorkView } from "@/app/components/portal/WorkBlock";
 import { usePortalCopy } from "@/app/components/portal/usePortalCopy";
-import { interpolate } from "@/lib/i18n/portal-messages";
+import { interpolate, type PortalCopy } from "@/lib/i18n/portal-messages";
 import {
   PERSON_SERVICE_OPTIONS,
   WHO_OPTIONS,
@@ -21,14 +21,21 @@ function PersonCard({
   clientId,
   inspiration,
   workPhotos,
+  copy,
+  showInspiration,
+  showTrialWork,
 }: {
   index: number;
   person: EventDetails["people"][number];
   clientId: string;
   inspiration: PortalFile[];
   workPhotos: PortalFile[];
+  copy?: PortalCopy;
+  showInspiration: boolean;
+  showTrialWork: boolean;
 }) {
-  const t = usePortalCopy();
+  const hooked = usePortalCopy();
+  const t = copy ?? hooked;
   const [wantsTrial, setWantsTrial] = useState(Boolean(person.wantsTrial));
   const knownWho = (WHO_OPTIONS as readonly string[]).includes(person.who);
 
@@ -100,7 +107,7 @@ function PersonCard({
           />
         </label>
       ) : null}
-      {wantsTrial ? (
+      {wantsTrial && showTrialWork ? (
         <div className="mt-6 border-t border-ink/10 pt-6">
           <WorkView
             products={person.productsUsed}
@@ -110,16 +117,18 @@ function PersonCard({
           />
         </div>
       ) : null}
-      <div className="mt-4">
-        <PhotoPicker
-          personKey={personInspirationKey(index)}
-          files={inspiration}
-          clientId={clientId}
-          action="/api/portal/inspiration"
-          tab="acompanantes"
-          localize
-        />
-      </div>
+      {showInspiration ? (
+        <div className="mt-4">
+          <PhotoPicker
+            personKey={personInspirationKey(index)}
+            files={inspiration}
+            clientId={clientId}
+            action="/api/portal/inspiration"
+            tab="acompanantes"
+            localize={!copy}
+          />
+        </div>
+      ) : null}
     </fieldset>
   );
 }
@@ -130,14 +139,25 @@ export function CompanionsForm({
   clientId,
   inspiration,
   workPhotos,
+  copy,
+  includeClientId = false,
+  showInspiration = true,
+  showTrialWork = true,
+  submitLabel,
 }: {
   event: EventDetails;
   action: string;
   clientId: string;
   inspiration: PortalFile[];
   workPhotos: PortalFile[];
+  copy?: PortalCopy;
+  includeClientId?: boolean;
+  showInspiration?: boolean;
+  showTrialWork?: boolean;
+  submitLabel?: string;
 }) {
-  const t = usePortalCopy();
+  const hooked = usePortalCopy();
+  const t = copy ?? hooked;
   const initial = Math.min(20, Math.max(0, event.peopleCount || 0));
   const [count, setCount] = useState(initial);
   const people = useMemo(() => {
@@ -156,6 +176,7 @@ export function CompanionsForm({
 
   return (
     <form action={action} method="post" className="flex flex-col gap-4">
+      {includeClientId ? <input type="hidden" name="clientId" value={clientId} /> : null}
       <label className="field-label max-w-xs">
         {t.peopleCount}
         <input
@@ -178,12 +199,15 @@ export function CompanionsForm({
             clientId={clientId}
             inspiration={inspiration}
             workPhotos={workPhotos}
+            copy={copy}
+            showInspiration={showInspiration}
+            showTrialWork={showTrialWork}
           />
         ))}
       </div>
       {count === 0 ? <p className="text-sm text-ash">{t.noCompanions}</p> : null}
       <button className="btn-atelier-solid btn-atelier mt-2 self-start" type="submit">
-        {t.saveCompanions}
+        {submitLabel || t.saveCompanions}
       </button>
     </form>
   );
