@@ -2,6 +2,7 @@ import { AgendaForm } from "@/app/components/portal/AgendaBlock";
 import { CompanionsForm } from "@/app/components/portal/CompanionsForm";
 import { CopyInvite, DeleteFileButton } from "@/app/components/portal/FileActions";
 import { EventForm } from "@/app/components/portal/EventForm";
+import { MailSetupNotice } from "@/app/components/portal/MailSetupNotice";
 import { PaymentsForm } from "@/app/components/portal/PaymentsBlock";
 import { PhotoGrid } from "@/app/components/portal/PhotoPicker";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
@@ -67,8 +68,15 @@ export default async function StudioClientPage({
       {ok === "agenda" ? <PortalNotice>Agenda actualizada.</PortalNotice> : null}
       {ok === "estudio" ? <PortalNotice>Productos guardados.</PortalNotice> : null}
       {ok === "fotos" ? <PortalNotice>Fotos de la prueba colgadas.</PortalNotice> : null}
-      {ok === "ficha" ? (
+      <MailSetupNotice />
+      {ok === "ficha" && error !== "correo" ? (
         <PortalNotice>Ficha actualizada. Ella ya ve los cambios y le he enviado un correo.</PortalNotice>
+      ) : null}
+      {ok === "ficha" && error === "correo" ? (
+        <PortalNotice>
+          Ficha actualizada y ella ya la ve, pero no he podido enviarle el correo. Falta
+          RESEND_API_KEY en Vercel.
+        </PortalNotice>
       ) : null}
       {error === "archivo" ? <PortalNotice>Ese archivo no se puede colgar.</PortalNotice> : null}
       {invite ? (

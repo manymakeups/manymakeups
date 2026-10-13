@@ -16,6 +16,9 @@ export async function POST(request: Request) {
     contractorLocked: client.event.contractorLocked,
   };
   await saveClient(client);
-  await mailClient(client, "update", { tab: "contratante" });
-  return go(request, `/privado/novias/${client.id}?tab=contratante&ok=ficha`);
+  const sent = await mailClient(client, "update", { tab: "contratante" });
+  return go(
+    request,
+    `/privado/novias/${client.id}?tab=contratante&ok=ficha${sent ? "" : "&error=correo"}`,
+  );
 }

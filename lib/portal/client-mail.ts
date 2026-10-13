@@ -28,5 +28,5 @@ export async function mailClient(
     kind === "reply"
       ? [hello, "", t.replyMailAbout, extra.original || "—", "", t.replyMailAnswer, extra.reply || "", "", t.mailSignoff, site.legalName].join("\n")
       : [hello, "", t.updateMailBody, link, "", t.mailSignoff, site.legalName].join("\n");
-  await notifyEmail(client.email, kind === "reply" ? t.replyMailSubject : t.updateMailSubject, body);
+  return notifyEmail(client.email, kind === "reply" ? t.replyMailSubject : t.updateMailSubject, body);
 }

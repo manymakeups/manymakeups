@@ -68,13 +68,14 @@ export async function POST(request: Request) {
         };
       }),
     );
+    let sent = false;
     if (clientId) {
       const client = await getClient(clientId);
       if (client) {
-        await mailClient(client, "reply", { reply: text, original });
+        sent = await mailClient(client, "reply", { reply: text, original });
       }
     }
-    return go(request, `${safeNext}?ok=respuesta`);
+    return go(request, sent ? `${safeNext}?ok=respuesta` : `${safeNext}?error=correo`);
   }
 
   return go(request, safeNext);

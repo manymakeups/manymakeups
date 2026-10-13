@@ -1,3 +1,4 @@
+import { MailSetupNotice } from "@/app/components/portal/MailSetupNotice";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { StudioAside } from "@/app/components/portal/StudioAside";
 import { requireAdmin } from "@/lib/portal/session";
@@ -29,6 +30,7 @@ export default async function StudioClientsPage({
       lead="Creas la cuenta con su correo, le envías el enlace y ella elige la contraseña. Luego ves la ficha, las fotos y cuelgas los papeles."
       aside={<StudioAside />}
     >
+      <MailSetupNotice />
       {!portalStorageReady() ? (
         <PortalNotice>
           En producción hace falta un almacén Vercel Blob (BLOB_READ_WRITE_TOKEN) para que fotos y

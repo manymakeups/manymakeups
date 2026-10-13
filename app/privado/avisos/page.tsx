@@ -1,3 +1,4 @@
+import { MailSetupNotice } from "@/app/components/portal/MailSetupNotice";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { StudioAside } from "@/app/components/portal/StudioAside";
 import { StudioInbox } from "@/app/components/portal/StudioInbox";
@@ -44,10 +45,17 @@ export default async function StudioInboxPage({
         />
       }
     >
+      <MailSetupNotice />
       {ok === "respuesta" ? (
         <PortalNotice>Respuesta enviada a su correo.</PortalNotice>
       ) : null}
       {error === "respuesta" ? <PortalNotice>Escribe un texto para responder.</PortalNotice> : null}
+      {error === "correo" ? (
+        <PortalNotice>
+          He guardado la respuesta aquí, pero no he podido enviarle el correo. Falta RESEND_API_KEY
+          en Vercel.
+        </PortalNotice>
+      ) : null}
       {notices.length ? (
         <StudioInbox
           notices={notices}

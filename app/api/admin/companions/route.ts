@@ -16,6 +16,9 @@ export async function POST(request: Request) {
     peopleLocked: client.event.peopleLocked,
   };
   await saveClient(client);
-  await mailClient(client, "update", { tab: "acompanantes" });
-  return go(request, `/privado/novias/${client.id}?tab=acompanantes&ok=ficha`);
+  const sent = await mailClient(client, "update", { tab: "acompanantes" });
+  return go(
+    request,
+    `/privado/novias/${client.id}?tab=acompanantes&ok=ficha${sent ? "" : "&error=correo"}`,
+  );
 }
