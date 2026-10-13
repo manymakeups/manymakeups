@@ -39,7 +39,18 @@ export async function mailClient(
     });
     return notifyEmail(client.email, t.updateMailSubject, mail.text, mail.html);
   }
-  const hello = interpolate(t.mailHello, { name });
-  const body = [hello, "", t.replyMailAbout, extra.original || "—", "", t.replyMailAnswer, extra.reply || "", "", t.mailSignoff, site.legalName].join("\n");
-  return notifyEmail(client.email, t.replyMailSubject, body);
+  const reply = extra.reply?.trim() ?? "";
+  const mail = brandedClientEmail({
+    lang: locale,
+    blocks: [
+      { text: interpolate(t.replyMailHello, { name }) },
+      { text: t.replyMailIntro },
+      ...(reply ? [{ text: reply, quote: true }] : []),
+      { text: t.replyMailBody },
+      { href: link, label: t.replyMailLink },
+      { text: t.replyMailClose },
+    ],
+    signoff: [t.replyMailSignoff],
+  });
+  return notifyEmail(client.email, t.replyMailSubject, mail.text, mail.html);
 }

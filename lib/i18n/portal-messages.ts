@@ -136,8 +136,12 @@ export type PortalCopy = {
   mailHello: string;
   mailSignoff: string;
   replyMailSubject: string;
-  replyMailAbout: string;
-  replyMailAnswer: string;
+  replyMailHello: string;
+  replyMailIntro: string;
+  replyMailBody: string;
+  replyMailLink: string;
+  replyMailClose: string;
+  replyMailSignoff: string;
   updateMailSubject: string;
   updateMailHello: string;
   updateMailIntro: string;
@@ -316,9 +320,13 @@ export const portalEs: PortalCopy = {
   trialNo: "Sin prueba",
   mailHello: "Hola, {name}.",
   mailSignoff: "Un abrazo,",
-  replyMailSubject: "Respuesta del estudio · Área clientes Many Makeups",
-  replyMailAbout: "Sobre tu aviso:",
-  replyMailAnswer: "Respuesta del estudio:",
+  replyMailSubject: "Tienes una nueva respuesta en tu área privada | Many Makeups",
+  replyMailHello: "Hola {name}:",
+  replyMailIntro: "Te he dejado una nueva respuesta a tu mensaje dentro de tu espacio privado.",
+  replyMailBody: "Puedes leer la respuesta completa y continuar nuestra conversación haciendo clic aquí:",
+  replyMailLink: "Ver mensaje en mi área privada",
+  replyMailClose: "Nos leemos dentro. ¡Seguimos preparando cada detalle!",
+  replyMailSignoff: "Un abrazo,",
   updateMailSubject: "He actualizado la ficha de tu evento | Many Makeups by Ana Zarza",
   updateMailHello: "Hola {name}:",
   updateMailIntro:
@@ -495,9 +503,13 @@ export const portalEn: PortalCopy = {
   trialNo: "No trial",
   mailHello: "Hello, {name}.",
   mailSignoff: "With love,",
-  replyMailSubject: "A note from the studio · Many Makeups client area",
-  replyMailAbout: "About your message:",
-  replyMailAnswer: "Reply from the studio:",
+  replyMailSubject: "You have a new reply in your private area | Many Makeups",
+  replyMailHello: "Hello {name}:",
+  replyMailIntro: "I have left a new reply to your message in your private area.",
+  replyMailBody: "You can read the full reply and continue our conversation by clicking here:",
+  replyMailLink: "View the message in my private area",
+  replyMailClose: "I'll see you in there. We keep preparing every detail!",
+  replyMailSignoff: "With love,",
   updateMailSubject: "I have updated your event details | Many Makeups by Ana Zarza",
   updateMailHello: "Hello {name}:",
   updateMailIntro:
@@ -679,9 +691,13 @@ export const portalFr: PortalCopy = {
   trialNo: "Sans essai",
   mailHello: "Bonjour, {name}.",
   mailSignoff: "Je t’embrasse,",
-  replyMailSubject: "Réponse de l’atelier · Espace clientes Many Makeups",
-  replyMailAbout: "À propos de ton message :",
-  replyMailAnswer: "Réponse de l’atelier :",
+  replyMailSubject: "Tu as une nouvelle réponse dans ton espace privé | Many Makeups",
+  replyMailHello: "Bonjour {name} :",
+  replyMailIntro: "Je t’ai laissé une nouvelle réponse à ton message dans ton espace privé.",
+  replyMailBody: "Tu peux lire la réponse complète et continuer notre conversation en cliquant ici :",
+  replyMailLink: "Voir le message dans mon espace privé",
+  replyMailClose: "On se lit dedans. On continue à préparer chaque détail !",
+  replyMailSignoff: "Je t’embrasse,",
   updateMailSubject: "J’ai mis à jour la fiche de ton événement | Many Makeups by Ana Zarza",
   updateMailHello: "Bonjour {name} :",
   updateMailIntro:

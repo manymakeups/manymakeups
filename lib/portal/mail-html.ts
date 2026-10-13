@@ -4,14 +4,15 @@ const signatureUrl = `${site.url}/brand/firmas-correo/info.png?v=2`;
 const signatureWidth = 180;
 const typeface = "font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;";
 
-type MailBlock = { text: string; muted?: boolean } | { href: string; label: string };
+type MailBlock = { text: string; muted?: boolean; quote?: boolean } | { href: string; label: string };
 
 function escapeHtml(value: string) {
   return value
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
+    .replaceAll('"', "&quot;")
+    .replaceAll("\n", "<br>");
 }
 
 export function brandedClientEmail(input: { blocks: MailBlock[]; signoff: string[]; lang?: string }) {
@@ -32,7 +33,8 @@ export function brandedClientEmail(input: { blocks: MailBlock[]; signoff: string
         return `<p style="margin:0 0 14px;${typeface}"><a href="${escapeHtml(block.href)}" style="${typeface}color:#7d6240;text-decoration:underline;">${escapeHtml(block.label)}</a></p>`;
       }
       const color = block.muted ? "#6d645b" : "#1a1613";
-      return `<p style="margin:0 0 14px;${typeface}color:${color};">${escapeHtml(block.text)}</p>`;
+      const quote = block.quote ? "padding:12px 14px;border-left:3px solid #9c7d52;background:#ece6dc;" : "";
+      return `<p style="margin:0 0 14px;${typeface}color:${color};${quote}">${escapeHtml(block.text)}</p>`;
     })
     .join("");
   const signoff = `<p style="margin:0 0 24px;${typeface}color:#1a1613;">${input.signoff.map(escapeHtml).join("<br>")}</p>`;
