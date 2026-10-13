@@ -29,6 +29,7 @@ export type Messages = {
     metodo: string;
     about: string;
     contact: string;
+    brideArea: string;
     principal: string;
     language: string;
   };
@@ -151,6 +152,7 @@ export const es: Messages = {
     metodo: "Método",
     about: "Sobre mí",
     contact: "Contacto",
+    brideArea: "Área de novia",
     principal: "Principal",
     language: "Idioma",
   },
@@ -486,6 +488,7 @@ export const en: Messages = {
     metodo: "Method",
     about: "About",
     contact: "Contact",
+    brideArea: "Bride area",
     principal: "Main",
     language: "Language",
   },
@@ -820,6 +823,7 @@ export const fr: Messages = {
     metodo: "Méthode",
     about: "À propos",
     contact: "Contact",
+    brideArea: "Espace mariée",
     principal: "Principal",
     language: "Langue",
   },

@@ -16,6 +16,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
+      disallow: ["/area-novia", "/privado", "/api/portal", "/api/admin"],
     },
     sitemap: `${site.url}/sitemap.xml`,
     host: site.url,

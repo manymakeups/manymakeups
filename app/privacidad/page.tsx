@@ -18,7 +18,7 @@ export default async function PrivacidadPage() {
     <LegalDoc
       kicker={t.legal.kicker}
       title={t.legal.privacyTitle}
-      updated="23 de septiembre de 2026"
+      updated="13 de octubre de 2026"
     >
       <section>
         <h2>1. Responsable</h2>
@@ -36,8 +36,12 @@ export default async function PrivacidadPage() {
           Si escribes el formulario, usas WhatsApp o reservas cita, trato el
           nombre, correo, teléfono, fecha del evento, tipo de servicio y el
           mensaje que me dejes, para responderte, valorar el encargo y, si
-          hay acuerdo, prestar el servicio. No elaboro perfiles comerciales
-          ni te mando boletines salvo que lo pidas de forma expresa.
+          hay acuerdo, prestar el servicio. Si te abro un acceso al área de
+          novia, trato además la contraseña (solo en forma cifrada), la ficha
+          del evento, las fotos de inspiración y los documentos del encargo,
+          para organizar tu fecha y que tengas contrato y presupuestos a
+          mano. No elaboro perfiles comerciales ni te mando boletines salvo
+          que lo pidas de forma expresa.
         </p>
       </section>
       <section>
@@ -56,12 +60,12 @@ export default async function PrivacidadPage() {
         <p>
           No vendo tus datos. Pueden acceder a ellos, solo para prestar su
           servicio: el proveedor de correo del formulario (FormSubmit), el
-          calendario de citas (Calendly), el alojamiento y la analítica de
-          visitas (Vercel) y, si eliges WhatsApp, Meta Platforms
-          Ireland según las condiciones de WhatsApp. Estos encargados o
-          destinos pueden estar fuera del Espacio Económico Europeo; en ese
-          caso se aplican las salvaguardas que ofrezca cada proveedor
-          (cláusulas tipo, etc.).
+          calendario de citas (Calendly), el alojamiento, el archivo de
+          fotos y documentos del área de novia y la analítica de visitas
+          (Vercel) y, si eliges WhatsApp, Meta Platforms Ireland según las
+          condiciones de WhatsApp. Estos encargados o destinos pueden estar
+          fuera del Espacio Económico Europeo; en ese caso se aplican las
+          salvaguardas que ofrezca cada proveedor (cláusulas tipo, etc.).
         </p>
       </section>
       <section>
@@ -69,7 +73,9 @@ export default async function PrivacidadPage() {
         <p>
           Conservo las consultas el tiempo necesario para resolverlas y, si
           hay encargo, el exigido por obligaciones contables, fiscales o de
-          reclamaciones. Después se suprimen o anonimizan.
+          reclamaciones. Los datos del área de novia se conservan mientras
+          dure el encargo y el plazo legal posterior. Después se suprimen o
+          anonimizan.
         </p>
       </section>
       <section>

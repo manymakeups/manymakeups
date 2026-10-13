@@ -18,7 +18,7 @@ export default async function CookiesPage() {
     <LegalDoc
       kicker={t.legal.kicker}
       title={t.legal.cookiesTitle}
-      updated="24 de septiembre de 2026"
+      updated="13 de octubre de 2026"
     >
       <section>
         <h2>1. Qué uso</h2>
@@ -27,9 +27,10 @@ export default async function CookiesPage() {
           miden con Vercel Web Analytics, un recuento agregado que no usa
           cookies de seguimiento ni te identifica. También hay cookies
           técnicas de idioma para mostrar el Sitio en español, inglés o
-          francés. La presentación inicial se recuerda solo durante la
-          visita, en el almacenamiento de sesión del navegador, para no
-          repetirla al cambiar de página.
+          francés, y una cookie de sesión si entras al área de novia o al
+          estudio, para mantenerte identificada. La presentación inicial se
+          recuerda solo durante la visita, en el almacenamiento de sesión
+          del navegador, para no repetirla al cambiar de página.
         </p>
       </section>
       <section>

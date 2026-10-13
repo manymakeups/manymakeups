@@ -51,6 +51,12 @@ export async function SiteFooter() {
           >
             {t.footer.cookies}
           </a>
+          <a
+            className="underline-offset-4 hover:underline"
+            href={localePath(locale, "/area-novia")}
+          >
+            {t.nav.brideArea}
+          </a>
         </nav>
       </div>
     </footer>

@@ -15,6 +15,7 @@ export async function SiteHeader() {
     { href: localePath(locale, "/#servicios"), label: t.nav.atelier },
     { href: localePath(locale, "/#metodo"), label: t.nav.metodo },
     { href: localePath(locale, "/#ana"), label: t.nav.about },
+    { href: localePath(locale, "/area-novia"), label: t.nav.brideArea },
   ];
 
   return (

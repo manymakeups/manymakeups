@@ -5,7 +5,7 @@ import { JsonLd } from "./components/JsonLd";
 import { ScrollJump } from "./components/ScrollJump";
 import "./globals.css";
 import { site } from "@/lib/site";
-import { getLocale } from "@/lib/i18n/server";
+import { getLocale, getRequestPathname } from "@/lib/i18n/server";
 import { getMessages } from "@/lib/i18n/messages";
 import { I18nProvider } from "@/lib/i18n/context";
 import { Analytics } from "@vercel/analytics/next";
@@ -100,6 +100,9 @@ export const viewport = {
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getLocale();
   const messages = getMessages(locale);
+  const pathname = await getRequestPathname();
+  const skipIntro =
+    pathname.startsWith("/area-novia") || pathname.startsWith("/privado");
 
   return (
     <html
@@ -109,7 +112,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full font-sans">
         <I18nProvider locale={locale} messages={messages}>
           <JsonLd />
-          <IntroSplash />
+          {skipIntro ? null : <IntroSplash />}
           {children}
           <ScrollJump />
         </I18nProvider>
