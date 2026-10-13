@@ -118,6 +118,7 @@ export type Appointment = {
 
 export type EventDetails = {
   clientName: string;
+  clientLastName: string;
   partnerName: string;
   phone: string;
   eventType: EventType;
@@ -194,6 +195,7 @@ export type ClientRecord = {
 export type PortalDb = {
   clients: ClientRecord[];
   notices: StudioNotice[];
+  studioCalendarUrl: string;
 };
 
 export function emptyAttendee(who = ""): Attendee {
@@ -232,6 +234,7 @@ export function emptyPayments(): Payments {
 export function emptyEvent(name = ""): EventDetails {
   return {
     clientName: name,
+    clientLastName: "",
     partnerName: "",
     phone: "",
     eventType: "boda",
@@ -256,7 +259,7 @@ export function emptyEvent(name = ""): EventDetails {
 }
 
 export function emptyDb(): PortalDb {
-  return { clients: [], notices: [] };
+  return { clients: [], notices: [], studioCalendarUrl: "" };
 }
 
 export function asStudioNotice(value: unknown): StudioNotice | null {
@@ -373,6 +376,7 @@ export function normalizeClient(client: ClientRecord): ClientRecord {
       peopleCount: count,
       people,
       productsUsed: client.event?.productsUsed ?? "",
+      clientLastName: client.event?.clientLastName ?? "",
       contractorLocked: Boolean(client.event?.contractorLocked),
       peopleLocked: Boolean(client.event?.peopleLocked),
     },

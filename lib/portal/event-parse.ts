@@ -41,6 +41,7 @@ export function contractorFromForm(form: FormData, fallback: EventDetails): Even
   return {
     ...fallback,
     clientName: text(form.get("clientName")) || fallback.clientName,
+    clientLastName: text(form.get("clientLastName")),
     partnerName: text(form.get("partnerName")),
     phone: text(form.get("phone")),
     eventType: eventType(text(form.get("eventType"))),

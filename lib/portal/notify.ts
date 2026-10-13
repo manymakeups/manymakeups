@@ -1,4 +1,5 @@
 import { site } from "@/lib/site";
+import { fullName } from "./names";
 import type { ClientRecord } from "./types";
 
 export function clientMailReady() {
@@ -67,5 +68,5 @@ export async function notifyEmail(to: string, subject: string, text: string, htm
 }
 
 export function clientLabel(client: ClientRecord) {
-  return `${client.event.clientName || client.name} · ${client.email}`;
+  return `${fullName(client.event, client.name)} · ${client.email}`;
 }

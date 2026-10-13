@@ -33,6 +33,7 @@ async function readDb(): Promise<PortalDb> {
     return {
       clients: (parsed.clients ?? []).map((client) => normalizeClient(client)),
       notices: (parsed.notices ?? []).map(asStudioNotice).filter(Boolean) as StudioNotice[],
+      studioCalendarUrl: typeof parsed.studioCalendarUrl === "string" ? parsed.studioCalendarUrl : "",
     };
   }
   try {
@@ -41,6 +42,7 @@ async function readDb(): Promise<PortalDb> {
     return {
       clients: (parsed.clients ?? []).map((client) => normalizeClient(client)),
       notices: (parsed.notices ?? []).map(asStudioNotice).filter(Boolean) as StudioNotice[],
+      studioCalendarUrl: typeof parsed.studioCalendarUrl === "string" ? parsed.studioCalendarUrl : "",
     };
   } catch {
     return emptyDb();
@@ -61,6 +63,17 @@ async function writeDb(db: PortalDb) {
   const file = path.join(ROOT, DB_PATH);
   await mkdir(path.dirname(file), { recursive: true });
   await writeFile(file, body, "utf8");
+}
+
+export async function getStudioCalendarUrl() {
+  const db = await readDb();
+  return db.studioCalendarUrl;
+}
+
+export async function setStudioCalendarUrl(url: string) {
+  const db = await readDb();
+  db.studioCalendarUrl = url;
+  await writeDb(db);
 }
 
 export async function listClients() {

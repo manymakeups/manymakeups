@@ -1,4 +1,5 @@
 import type { PortalCopy } from "@/lib/i18n/portal-messages";
+import { nameParts } from "@/lib/portal/names";
 import type { EventDetails } from "@/lib/portal/types";
 
 function Row({ label, value }: { label: string; value: string }) {
@@ -20,9 +21,11 @@ export function EventView({ event, copy }: { event: EventDetails; copy: PortalCo
     .filter(Boolean)
     .join(" · ");
 
+  const parts = nameParts(event);
   return (
     <dl className="grid gap-5 text-sm sm:grid-cols-2">
-      <Row label={copy.yourName} value={event.clientName} />
+      <Row label={copy.yourName} value={parts.first} />
+      <Row label={copy.lastName} value={parts.last} />
       <Row label={copy.partnerName} value={event.partnerName} />
       <Row label={copy.phone} value={event.phone} />
       <Row label={copy.eventType} value={copy.eventTypes[event.eventType] || event.eventType} />

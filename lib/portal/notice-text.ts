@@ -1,3 +1,4 @@
+import { fullName } from "./names";
 import type { Attendee, EventDetails, StudioNotice } from "./types";
 
 export function eventSummary(event: EventDetails) {
@@ -10,7 +11,7 @@ export function eventSummary(event: EventDetails) {
     .filter(Boolean)
     .join(" · ");
   return [
-    `Nombre: ${event.clientName || "—"}`,
+    `Nombre: ${fullName(event) || "—"}`,
     `Pareja: ${event.partnerName || "—"}`,
     `Teléfono: ${event.phone || "—"}`,
     `Tipo: ${event.eventType}`,

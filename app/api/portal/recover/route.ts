@@ -3,6 +3,7 @@ import { getPortalCopy, interpolate } from "@/lib/i18n";
 import { hashToken, isEmail, normalizeEmail, randomToken } from "@/lib/portal/crypto";
 import { goPortal, localizedPath, requestLocale } from "@/lib/portal/http";
 import { brandedClientEmail } from "@/lib/portal/mail-html";
+import { mailName } from "@/lib/portal/names";
 import { notifyEmail } from "@/lib/portal/notify";
 import { getClientByEmail, saveClient } from "@/lib/portal/store";
 
@@ -19,7 +20,7 @@ export async function POST(request: Request) {
     const locale = await requestLocale();
     const t = getPortalCopy(locale);
     const link = `${site.url}${await localizedPath(`/area-novia/activar?token=${encodeURIComponent(token)}`)}`;
-    const name = client.event.clientName || client.name;
+    const name = mailName(client.event, client.name);
     const mail = brandedClientEmail({
       lang: locale,
       blocks: [

@@ -3,6 +3,7 @@
 import { PhotoPicker } from "@/app/components/portal/PhotoPicker";
 import { usePortalCopy } from "@/app/components/portal/usePortalCopy";
 import type { PortalCopy } from "@/lib/i18n/portal-messages";
+import { nameParts } from "@/lib/portal/names";
 import { CONTRACTOR_INSPIRATION, type EventDetails, type PortalFile } from "@/lib/portal/types";
 
 export function EventForm({
@@ -26,6 +27,7 @@ export function EventForm({
 }) {
   const hooked = usePortalCopy();
   const t = copy ?? hooked;
+  const parts = nameParts(event);
   return (
     <div className="flex flex-col gap-8">
     <form action={action} method="post" className="flex flex-col gap-4">
@@ -33,7 +35,11 @@ export function EventForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="field-label">
           {t.yourName}
-          <input className="field" name="clientName" defaultValue={event.clientName} required />
+          <input className="field" name="clientName" defaultValue={parts.first} required />
+        </label>
+        <label className="field-label">
+          {t.lastName}
+          <input className="field" name="clientLastName" defaultValue={parts.last} />
         </label>
         <label className="field-label">
           {t.partnerName}

@@ -62,6 +62,7 @@ export type PortalCopy = {
   agendaTitle: string;
   agendaLead: string;
   yourName: string;
+  lastName: string;
   partnerName: string;
   phone: string;
   eventType: string;
@@ -219,7 +220,8 @@ export const portalEs: PortalCopy = {
   download: "Descargar",
   agendaTitle: "Agenda",
   agendaLead: "Las citas que tenemos planificadas: prueba, evento y lo que vayamos sumando.",
-  yourName: "Tu nombre",
+  yourName: "Nombre",
+  lastName: "Apellidos",
   partnerName: "Nombre de tu pareja",
   phone: "Teléfono",
   eventType: "Tipo de evento",
@@ -405,7 +407,8 @@ export const portalEn: PortalCopy = {
   download: "Download",
   agendaTitle: "Diary",
   agendaLead: "The appointments we have planned: trial, event, and anything we add.",
-  yourName: "Your name",
+  yourName: "First name",
+  lastName: "Last name",
   partnerName: "Your partner’s name",
   phone: "Phone",
   eventType: "Type of event",
@@ -590,7 +593,8 @@ export const portalFr: PortalCopy = {
   download: "Télécharger",
   agendaTitle: "Agenda",
   agendaLead: "Les rendez-vous prévus : essai, événement, et ce que nous ajouterons.",
-  yourName: "Ton prénom",
+  yourName: "Prénom",
+  lastName: "Nom",
   partnerName: "Prénom de ta/ton partenaire",
   phone: "Téléphone",
   eventType: "Type d’événement",

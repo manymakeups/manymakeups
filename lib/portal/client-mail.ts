@@ -3,6 +3,7 @@ import { getPortalCopy, interpolate } from "@/lib/i18n/portal-messages";
 import { localePath } from "@/lib/i18n/path";
 import { site } from "@/lib/site";
 import { brandedClientEmail } from "./mail-html";
+import { mailName } from "./names";
 import { notifyEmail } from "./notify";
 import type { ClientRecord } from "./types";
 
@@ -23,7 +24,7 @@ export async function mailClient(
 ) {
   const locale = clientLocale(client);
   const t = getPortalCopy(locale);
-  const name = client.event.clientName || client.name;
+  const name = mailName(client.event, client.name);
   const link = clientPanelUrl(client, extra.tab);
   if (kind === "update") {
     const mail = brandedClientEmail({

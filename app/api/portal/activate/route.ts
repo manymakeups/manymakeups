@@ -1,4 +1,5 @@
 import { hashPassword, hashToken, passwordIssue } from "@/lib/portal/crypto";
+import { fullName } from "@/lib/portal/names";
 import { goPortal, requestLocale } from "@/lib/portal/http";
 import { setSessionCookie } from "@/lib/portal/session";
 import { getClientByInviteHash, saveClient } from "@/lib/portal/store";
@@ -26,7 +27,7 @@ export async function POST(request: Request) {
     sub: client.id,
     role: "client",
     email: client.email,
-    name: client.event.clientName || client.name,
+    name: fullName(client.event, client.name),
   });
   return goPortal(request, "/area-novia/panel");
 }

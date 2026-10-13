@@ -2,6 +2,7 @@ import { MailSetupNotice } from "@/app/components/portal/MailSetupNotice";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { StudioAside } from "@/app/components/portal/StudioAside";
 import { StudioInbox } from "@/app/components/portal/StudioInbox";
+import { fullName } from "@/lib/portal/names";
 import { requireAdmin } from "@/lib/portal/session";
 import { listClients, listNotices } from "@/lib/portal/store";
 import { redirect } from "next/navigation";
@@ -61,7 +62,7 @@ export default async function StudioInboxPage({
           notices={notices}
           clients={clients.map((client) => ({
             id: client.id,
-            name: client.event.clientName || client.name,
+            name: fullName(client.event, client.name),
             email: client.email,
           }))}
         />

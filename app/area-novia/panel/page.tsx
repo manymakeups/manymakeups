@@ -10,6 +10,7 @@ import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { PortalTabs } from "@/app/components/portal/PortalTabs";
 import { WorkView } from "@/app/components/portal/WorkBlock";
 import { INSPIRATION_MAX } from "@/lib/portal/files";
+import { mailName } from "@/lib/portal/names";
 import { getLocale, getPortalCopy, interpolate, localePath } from "@/lib/i18n";
 import { requireClient } from "@/lib/portal/session";
 import { getClient } from "@/lib/portal/store";
@@ -62,7 +63,7 @@ export default async function BridePanelPage({
     <PortalFrame
       localize
       kicker={t.kicker}
-      title={interpolate(t.hello, { name: client.event.clientName || client.name })}
+      title={interpolate(t.hello, { name: mailName(client.event, client.name) })}
       lead={t.panelLead}
       aside={
         <form action="/api/portal/logout" method="post">

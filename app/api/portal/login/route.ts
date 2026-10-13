@@ -1,5 +1,6 @@
 import { checkPassword, isEmail, normalizeEmail } from "@/lib/portal/crypto";
 import { goPortal, requestLocale } from "@/lib/portal/http";
+import { fullName } from "@/lib/portal/names";
 import { setSessionCookie } from "@/lib/portal/session";
 import { getClientByEmail, saveClient } from "@/lib/portal/store";
 
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
     sub: client.id,
     role: "client",
     email: client.email,
-    name: client.event.clientName || client.name,
+    name: fullName(client.event, client.name),
   });
   return goPortal(request, "/area-novia/panel");
 }

@@ -10,6 +10,7 @@ import { PortalTabs } from "@/app/components/portal/PortalTabs";
 import { StudioAside } from "@/app/components/portal/StudioAside";
 import { WorkForm } from "@/app/components/portal/WorkBlock";
 import { portalEs } from "@/lib/i18n/portal-messages";
+import { fullName } from "@/lib/portal/names";
 import { portalFileHref } from "@/lib/portal/files";
 import {
   CONTRACTOR_INSPIRATION,
@@ -51,7 +52,7 @@ export default async function StudioClientPage({
   return (
     <PortalFrame
       kicker="Estudio"
-      title={event.clientName || client.name}
+      title={fullName(event, client.name)}
       lead={client.email}
       aside={
         <StudioAside

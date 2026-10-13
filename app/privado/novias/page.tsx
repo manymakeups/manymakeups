@@ -2,6 +2,7 @@ import { ClientMenu } from "@/app/components/portal/ClientMenu";
 import { MailSetupNotice } from "@/app/components/portal/MailSetupNotice";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { StudioAside } from "@/app/components/portal/StudioAside";
+import { fullName } from "@/lib/portal/names";
 import { requireAdmin } from "@/lib/portal/session";
 import { listClients, portalStorageReady } from "@/lib/portal/store";
 import { redirect } from "next/navigation";
@@ -63,7 +64,7 @@ export default async function StudioClientsPage({
           clients.map((client) => (
             <li key={client.id} className="flex flex-wrap items-center justify-between gap-3 py-5">
               <div>
-                <p className="font-serif text-2xl">{client.event.clientName || client.name}</p>
+                <p className="font-serif text-2xl">{fullName(client.event, client.name)}</p>
                 <p className="mt-1 text-sm text-ash">
                   {client.email}
                   {client.event.eventDate ? ` · ${client.event.eventDate}` : ""}
@@ -77,7 +78,7 @@ export default async function StudioClientsPage({
                 </a>
                 <ClientMenu
                   id={client.id}
-                  name={client.event.clientName || client.name}
+                  name={fullName(client.event, client.name)}
                   phone={client.event.phone}
                 />
               </div>
