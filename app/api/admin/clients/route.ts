@@ -3,7 +3,7 @@ import { hashToken, isEmail, newId, normalizeEmail, randomToken } from "@/lib/po
 import { go } from "@/lib/portal/http";
 import { requireAdmin } from "@/lib/portal/session";
 import { getClientByEmail, saveClient } from "@/lib/portal/store";
-import { emptyEvent } from "@/lib/portal/types";
+import { emptyEvent, emptyPayments } from "@/lib/portal/types";
 
 export async function POST(request: Request) {
   const admin = await requireAdmin();
@@ -23,6 +23,7 @@ export async function POST(request: Request) {
     inviteExpiresAt: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(),
     createdAt: new Date().toISOString(),
     event: emptyEvent(name),
+    payments: emptyPayments(),
     inspiration: [],
     documents: [],
   };

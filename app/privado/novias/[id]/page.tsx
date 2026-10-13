@@ -1,6 +1,8 @@
 import { CopyInvite, DeleteFileButton } from "@/app/components/portal/FileActions";
+import { PaymentsForm } from "@/app/components/portal/PaymentsBlock";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { isImageType } from "@/lib/portal/files";
+import { DOCUMENT_KINDS, euros } from "@/lib/portal/types";
 import { requireAdmin } from "@/lib/portal/session";
 import { getClient } from "@/lib/portal/store";
 import { notFound, redirect } from "next/navigation";
@@ -43,6 +45,7 @@ export default async function StudioClientPage({
       }
     >
       {ok === "doc" ? <PortalNotice>Documento colgado.</PortalNotice> : null}
+      {ok === "pagos" ? <PortalNotice>Pagos actualizados.</PortalNotice> : null}
       {error === "archivo" ? <PortalNotice>Ese archivo no se puede colgar.</PortalNotice> : null}
       {invite ? (
         <PortalNotice>
@@ -94,15 +97,8 @@ export default async function StudioClientPage({
             <dt className="text-ash">Ceremonia</dt>
             <dd>{event.ceremonyTime || "—"}</dd>
           </div>
-          <div>
-            <dt className="text-ash">Personas a atender</dt>
-            <dd>
-              {event.peopleCount}
-              {event.peopleBreakdown ? ` · ${event.peopleBreakdown}` : ""}
-            </dd>
-          </div>
           <div className="sm:col-span-2">
-            <dt className="text-ash">Servicios</dt>
+            <dt className="text-ash">Extras</dt>
             <dd>
               {[
                 event.makeup && "maquillaje",
@@ -127,6 +123,38 @@ export default async function StudioClientPage({
             <dd className="whitespace-pre-wrap">{event.notes || "—"}</dd>
           </div>
         </dl>
+        {event.people.length ? (
+          <ul className="mt-8 divide-y divide-ink/10 border border-ink/10">
+            {event.people.map((person, i) => (
+              <li key={i} className="grid gap-2 px-4 py-4 sm:grid-cols-4">
+                <p>
+                  <span className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">
+                    {i === 0 ? "Clienta" : `Acompañante ${i}`}
+                  </span>
+                  <span className="mt-1 block">{person.who || "—"}</span>
+                </p>
+                <p className="text-sm">{person.service || "—"}</p>
+                <p className="text-sm">
+                  {person.budgetAmount
+                    ? euros(Number(person.budgetAmount) || 0)
+                    : "—"}
+                </p>
+                <p className="text-sm">nº {person.budgetNumber || "—"}</p>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </section>
+
+      <section className="mt-12 border-t border-ink/10 pt-8">
+        <h2 className="font-serif text-3xl">Pagos</h2>
+        <p className="mt-3 max-w-2xl text-sm text-ash">
+          Indica el importe de la prueba y del evento y marca si está abonado. Lo pendiente se
+          calcula solo.
+        </p>
+        <div className="mt-8">
+          <PaymentsForm clientId={client.id} payments={client.payments} />
+        </div>
       </section>
 
       <section className="mt-12 border-t border-ink/10 pt-8">
@@ -151,7 +179,10 @@ export default async function StudioClientPage({
       </section>
 
       <section className="mt-12 border-t border-ink/10 pt-8">
-        <h2 className="font-serif text-3xl">Documentos</h2>
+        <h2 className="font-serif text-3xl">Documentación</h2>
+        <p className="mt-3 max-w-2xl text-sm text-ash">
+          Presupuestos, contratos, facturas y el resto de papeles. Ella los ve en su área.
+        </p>
         <form
           action="/api/admin/documents"
           method="post"
@@ -160,8 +191,14 @@ export default async function StudioClientPage({
         >
           <input type="hidden" name="clientId" value={client.id} />
           <label className="field-label">
-            Tipo (contrato, presupuesto, timeline…)
-            <input className="field" name="label" placeholder="Presupuesto" required />
+            Tipo
+            <select className="field" name="label" required defaultValue="Presupuesto">
+              {DOCUMENT_KINDS.map((kind) => (
+                <option key={kind} value={kind}>
+                  {kind}
+                </option>
+              ))}
+            </select>
           </label>
           <label className="field-label">
             Archivo (PDF o imagen)

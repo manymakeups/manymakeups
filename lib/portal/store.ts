@@ -1,7 +1,7 @@
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { del, get, put } from "@vercel/blob";
-import { emptyDb, type ClientRecord, type PortalDb, type PortalFile } from "./types";
+import { emptyDb, normalizeClient, type ClientRecord, type PortalDb, type PortalFile } from "./types";
 
 const DB_PATH = "portal/db.json";
 const ROOT = path.join(process.cwd(), "data");
@@ -21,12 +21,16 @@ async function readDb(): Promise<PortalDb> {
     if (!result) return emptyDb();
     const text = await new Response(result.stream).text();
     const parsed = JSON.parse(text) as PortalDb;
-    return { clients: parsed.clients ?? [] };
+    return {
+      clients: (parsed.clients ?? []).map((client) => normalizeClient(client)),
+    };
   }
   try {
     const raw = await readFile(path.join(ROOT, DB_PATH), "utf8");
     const parsed = JSON.parse(raw) as PortalDb;
-    return { clients: parsed.clients ?? [] };
+    return {
+      clients: (parsed.clients ?? []).map((client) => normalizeClient(client)),
+    };
   } catch {
     return emptyDb();
   }
@@ -77,11 +81,12 @@ export async function getClientByInviteHash(hash: string) {
 
 export async function saveClient(next: ClientRecord) {
   const db = await readDb();
-  const index = db.clients.findIndex((client) => client.id === next.id);
-  if (index === -1) db.clients.push(next);
-  else db.clients[index] = next;
+  const record = normalizeClient(next);
+  const index = db.clients.findIndex((client) => client.id === record.id);
+  if (index === -1) db.clients.push(record);
+  else db.clients[index] = record;
   await writeDb(db);
-  return next;
+  return record;
 }
 
 export async function putPortalFile(file: PortalFile, data: Buffer) {

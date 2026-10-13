@@ -1,4 +1,7 @@
-import type { EventDetails } from "@/lib/portal/types";
+"use client";
+
+import { useMemo, useState } from "react";
+import { SERVICE_OPTIONS, type EventDetails } from "@/lib/portal/types";
 
 export function EventForm({
   event,
@@ -9,6 +12,17 @@ export function EventForm({
   action: string;
   submitLabel: string;
 }) {
+  const initial = Math.min(20, Math.max(1, event.peopleCount || 1));
+  const [count, setCount] = useState(initial);
+  const people = useMemo(() => {
+    return Array.from({ length: count }, (_, i) => event.people?.[i] ?? {
+      who: i === 0 ? event.clientName : "",
+      service: "Maquillaje y peinado",
+      budgetAmount: "",
+      budgetNumber: "",
+    });
+  }, [count, event]);
+
   return (
     <form action={action} method="post" className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
@@ -59,33 +73,81 @@ export function EventForm({
         Hora de ceremonia o inicio
         <input className="field" name="ceremonyTime" type="time" defaultValue={event.ceremonyTime} />
       </label>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="field-label">
-          Nº de personas a atender
-          <input
-            className="field"
-            name="peopleCount"
-            type="number"
-            min={1}
-            max={80}
-            defaultValue={event.peopleCount}
-            required
-          />
-        </label>
-        <label className="field-label">
-          Quiénes (novia, pareja, madres, corte…)
-          <input className="field" name="peopleBreakdown" defaultValue={event.peopleBreakdown} />
-        </label>
+      <label className="field-label max-w-xs">
+        Nº de personas a atender
+        <input
+          className="field"
+          name="peopleCount"
+          type="number"
+          min={1}
+          max={20}
+          value={count}
+          required
+          onChange={(event) => setCount(Math.min(20, Math.max(1, Number(event.target.value) || 1)))}
+        />
+      </label>
+
+      <div className="mt-2 flex flex-col gap-6">
+        {people.map((person, i) => (
+          <fieldset key={i} className="border border-ink/10 bg-linen/30 p-4">
+            <legend className="px-1 text-[0.68rem] uppercase tracking-[0.18em] text-gilt">
+              {i === 0 ? "Persona 1 · Tú" : `Persona ${i + 1} · Acompañante`}
+            </legend>
+            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+              <label className="field-label">
+                Quién es
+                <input
+                  className="field"
+                  name={`people.${i}.who`}
+                  defaultValue={person.who}
+                  placeholder={i === 0 ? "Nombre y rol (novia, clienta…)" : "Nombre y rol (madre, madrina…)"}
+                  required
+                />
+              </label>
+              <label className="field-label">
+                Servicio
+                <select className="field" name={`people.${i}.service`} defaultValue={person.service}>
+                  {SERVICE_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field-label">
+                Importe del presupuesto
+                <input
+                  className="field"
+                  name={`people.${i}.budgetAmount`}
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  defaultValue={person.budgetAmount}
+                  placeholder="€"
+                />
+              </label>
+              <label className="field-label">
+                Nº de presupuesto
+                <input
+                  className="field"
+                  name={`people.${i}.budgetNumber`}
+                  defaultValue={person.budgetNumber}
+                />
+              </label>
+            </div>
+          </fieldset>
+        ))}
       </div>
+
       <fieldset className="grid gap-3 sm:grid-cols-2">
-        <legend className="field-label mb-1">Servicios</legend>
+        <legend className="field-label mb-1">Extras del evento</legend>
         <label className="flex items-center gap-2 text-sm normal-case tracking-normal text-ink">
           <input type="checkbox" name="makeup" defaultChecked={event.makeup} />
-          Maquillaje
+          Maquillaje (grupo / extras)
         </label>
         <label className="flex items-center gap-2 text-sm normal-case tracking-normal text-ink">
           <input type="checkbox" name="hair" defaultChecked={event.hair} />
-          Peinado
+          Peinado (grupo / extras)
         </label>
         <label className="flex items-center gap-2 text-sm normal-case tracking-normal text-ink">
           <input type="checkbox" name="glitterBar" defaultChecked={event.glitterBar} />

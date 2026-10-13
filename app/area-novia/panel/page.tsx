@@ -1,5 +1,6 @@
 import { EventForm } from "@/app/components/portal/EventForm";
 import { DeleteFileButton } from "@/app/components/portal/FileActions";
+import { PaymentsView } from "@/app/components/portal/PaymentsBlock";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { INSPIRATION_MAX, isImageType } from "@/lib/portal/files";
 import { requireClient } from "@/lib/portal/session";
@@ -66,7 +67,19 @@ export default async function BridePanelPage({
       </section>
 
       <section className="mt-16 border-t border-ink/10 pt-10">
-        <p className="text-[0.68rem] uppercase tracking-[0.32em] text-gilt">II · Inspiración</p>
+        <p className="text-[0.68rem] uppercase tracking-[0.32em] text-gilt">II · Pagos</p>
+        <h2 className="mt-3 font-serif text-3xl">Estado de los pagos</h2>
+        <p className="mt-3 max-w-2xl text-sm text-ash">
+          Yo anoto los importes y si están abonados. Aquí ves lo pendiente del día de la prueba y
+          del día del evento.
+        </p>
+        <div className="mt-8">
+          <PaymentsView payments={client.payments} />
+        </div>
+      </section>
+
+      <section className="mt-16 border-t border-ink/10 pt-10">
+        <p className="text-[0.68rem] uppercase tracking-[0.32em] text-gilt">III · Inspiración</p>
         <h2 className="mt-3 font-serif text-3xl">Fotos que te gustan</h2>
         <p className="mt-3 max-w-2xl text-sm text-ash">
           Looks, peinados, bocetos, capturas. No hace falta que sean perfectas: me sirven para
@@ -109,10 +122,11 @@ export default async function BridePanelPage({
       </section>
 
       <section className="mt-16 border-t border-ink/10 pt-10">
-        <p className="text-[0.68rem] uppercase tracking-[0.32em] text-gilt">III · Documentos</p>
-        <h2 className="mt-3 font-serif text-3xl">Contrato, presupuestos y papeles</h2>
+        <p className="text-[0.68rem] uppercase tracking-[0.32em] text-gilt">IV · Documentación</p>
+        <h2 className="mt-3 font-serif text-3xl">Presupuestos, contratos y papeles</h2>
         <p className="mt-3 max-w-2xl text-sm text-ash">
-          Yo los cuelgo aquí. Los tienes siempre, también desde el móvil.
+          Aquí cuelgo presupuestos, contratos y el resto de documentación. Los tienes siempre a
+          mano, también desde el móvil.
         </p>
         {client.documents.length ? (
           <ul className="mt-8 divide-y divide-ink/10 border border-ink/10">
