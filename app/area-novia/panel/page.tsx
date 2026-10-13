@@ -1,7 +1,11 @@
 import { AgendaView } from "@/app/components/portal/AgendaBlock";
+import { ChangeRequestForm } from "@/app/components/portal/ChangeRequestForm";
+import { CompanionView } from "@/app/components/portal/CompanionView";
 import { CompanionsForm } from "@/app/components/portal/CompanionsForm";
 import { EventForm } from "@/app/components/portal/EventForm";
+import { EventView } from "@/app/components/portal/EventView";
 import { PaymentsView } from "@/app/components/portal/PaymentsBlock";
+import { PhotoPicker } from "@/app/components/portal/PhotoPicker";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { PortalTabs } from "@/app/components/portal/PortalTabs";
 import { WorkView } from "@/app/components/portal/WorkBlock";
@@ -10,13 +14,15 @@ import { getLocale, getPortalCopy, interpolate, localePath } from "@/lib/i18n";
 import { requireClient } from "@/lib/portal/session";
 import { getClient } from "@/lib/portal/store";
 import {
+  CONTRACTOR_INSPIRATION,
   CONTRACTOR_TRIAL_PHOTOS,
   filesFor,
-  personTrialPhotoKey,
   portalTab,
 } from "@/lib/portal/types";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const copy = getPortalCopy(await getLocale());
@@ -41,10 +47,15 @@ export default async function BridePanelPage({
   if (!client) redirect(localePath(locale, "/area-novia"));
   const { ok, error, tab: tabRaw } = await searchParams;
   const tab = portalTab(tabRaw);
-  const okText: Record<string, string> = { evento: t.savedEvent, fotos: t.savedPhotos };
+  const okText: Record<string, string> = {
+    evento: t.savedEvent,
+    fotos: t.savedPhotos,
+    cambio: t.changeSent,
+  };
   const errorText: Record<string, string> = {
     limite: interpolate(t.errorLimit, { max: INSPIRATION_MAX }),
     archivo: t.errorFile,
+    cambio: t.changeError,
   };
 
   return (
@@ -72,15 +83,34 @@ export default async function BridePanelPage({
       {tab === "contratante" ? (
         <section className="pt-10">
           <h2 className="font-serif text-3xl">{t.yourDetails}</h2>
-          <p className="mt-3 max-w-2xl text-sm text-ash">{t.yourDetailsLead}</p>
+          <p className="mt-3 max-w-2xl text-sm text-ash">
+            {client.event.contractorLocked ? t.lockedLead : t.yourDetailsLead}
+          </p>
           <div className="mt-8">
-            <EventForm
-              event={client.event}
-              clientId={client.id}
-              inspiration={client.inspiration}
-              action="/api/portal/event"
-              submitLabel={t.saveCard}
-            />
+            {client.event.contractorLocked ? (
+              <>
+                <EventView event={client.event} copy={t} />
+                <div className="mt-8">
+                  <PhotoPicker
+                    personKey={CONTRACTOR_INSPIRATION}
+                    files={client.inspiration}
+                    clientId={client.id}
+                    action="/api/portal/inspiration"
+                    tab="contratante"
+                    localize
+                  />
+                </div>
+                <ChangeRequestForm copy={t} scope="contratante" />
+              </>
+            ) : (
+              <EventForm
+                event={client.event}
+                clientId={client.id}
+                inspiration={client.inspiration}
+                action="/api/portal/event"
+                submitLabel={t.saveCard}
+              />
+            )}
           </div>
           <div className="mt-14 border-t border-ink/10 pt-10">
             <h3 className="font-serif text-3xl">{t.trialHeading}</h3>
@@ -100,36 +130,41 @@ export default async function BridePanelPage({
       {tab === "acompanantes" ? (
         <section className="pt-10">
           <h2 className="font-serif text-3xl">{t.companionsTitle}</h2>
-          <p className="mt-3 max-w-2xl text-sm text-ash">{t.companionsLead}</p>
+          <p className="mt-3 max-w-2xl text-sm text-ash">
+            {client.event.peopleLocked ? t.lockedLead : t.companionsLead}
+          </p>
           <div className="mt-8">
-            <CompanionsForm
-              event={client.event}
-              clientId={client.id}
-              inspiration={client.inspiration}
-              action="/api/portal/companions"
-            />
+            {client.event.peopleLocked ? (
+              client.event.people.length ? (
+                <div className="flex flex-col gap-8">
+                  {client.event.people.map((person, i) => (
+                    <CompanionView
+                      key={i}
+                      index={i}
+                      person={person}
+                      clientId={client.id}
+                      inspiration={client.inspiration}
+                      workPhotos={client.workPhotos}
+                      copy={t}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm text-ash">{t.noCompanions}</p>
+                  <ChangeRequestForm copy={t} scope="acompanante" />
+                </>
+              )
+            ) : (
+              <CompanionsForm
+                event={client.event}
+                clientId={client.id}
+                inspiration={client.inspiration}
+                workPhotos={client.workPhotos}
+                action="/api/portal/companions"
+              />
+            )}
           </div>
-          {client.event.people.some((person) => person.wantsTrial) ? (
-            <div className="mt-14 flex flex-col gap-10 border-t border-ink/10 pt-10">
-              <h3 className="font-serif text-3xl">{t.companionsTrials}</h3>
-              {client.event.people.map((person, i) =>
-                person.wantsTrial ? (
-                  <WorkView
-                    key={i}
-                    title={
-                      t.whoOptions[person.who] ||
-                      person.who ||
-                      interpolate(t.personN, { n: i + 1 })
-                    }
-                    products={person.productsUsed}
-                    photos={filesFor(client.workPhotos, personTrialPhotoKey(i))}
-                    clientId={client.id}
-                    copy={t}
-                  />
-                ) : null,
-              )}
-            </div>
-          ) : null}
         </section>
       ) : null}
 

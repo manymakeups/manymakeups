@@ -136,6 +136,22 @@ export type EventDetails = {
   skinNotes: string;
   notes: string;
   productsUsed: string;
+  contractorLocked: boolean;
+  peopleLocked: boolean;
+};
+
+export type StudioNoticeKind = "ficha" | "acompanantes" | "cambio";
+export type StudioNoticeScope = "contratante" | "acompanante";
+
+export type StudioNotice = {
+  id: string;
+  clientId: string;
+  createdAt: string;
+  kind: StudioNoticeKind;
+  scope: StudioNoticeScope;
+  personIndex?: number;
+  message: string;
+  read: boolean;
 };
 
 export type FileKind = "inspiration" | "document" | "work";
@@ -169,6 +185,7 @@ export type ClientRecord = {
 
 export type PortalDb = {
   clients: ClientRecord[];
+  notices: StudioNotice[];
 };
 
 export function emptyAttendee(who = ""): Attendee {
@@ -225,11 +242,31 @@ export function emptyEvent(name = ""): EventDetails {
     skinNotes: "",
     notes: "",
     productsUsed: "",
+    contractorLocked: false,
+    peopleLocked: false,
   };
 }
 
 export function emptyDb(): PortalDb {
-  return { clients: [] };
+  return { clients: [], notices: [] };
+}
+
+export function asStudioNotice(value: unknown): StudioNotice | null {
+  if (!value || typeof value !== "object") return null;
+  const row = value as StudioNotice;
+  if (!row.id || !row.clientId) return null;
+  const kind = row.kind === "acompanantes" || row.kind === "cambio" ? row.kind : "ficha";
+  const scope = row.scope === "acompanante" ? "acompanante" : "contratante";
+  return {
+    id: String(row.id),
+    clientId: String(row.clientId),
+    createdAt: row.createdAt || "",
+    kind,
+    scope,
+    personIndex: Number.isFinite(row.personIndex) ? Number(row.personIndex) : undefined,
+    message: row.message ?? "",
+    read: Boolean(row.read),
+  };
 }
 
 export function pendingAmount(slice: PaymentSlice) {
@@ -319,6 +356,8 @@ export function normalizeClient(client: ClientRecord): ClientRecord {
       peopleCount: count,
       people,
       productsUsed: client.event?.productsUsed ?? "",
+      contractorLocked: Boolean(client.event?.contractorLocked),
+      peopleLocked: Boolean(client.event?.peopleLocked),
     },
     payments: migratePayments(client.payments, count),
     inspiration: client.inspiration ?? [],

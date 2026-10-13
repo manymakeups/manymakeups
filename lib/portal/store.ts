@@ -1,7 +1,16 @@
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { del, get, put } from "@vercel/blob";
-import { emptyDb, normalizeClient, type ClientRecord, type PortalDb, type PortalFile } from "./types";
+import { newId } from "./crypto";
+import {
+  asStudioNotice,
+  emptyDb,
+  normalizeClient,
+  type ClientRecord,
+  type PortalDb,
+  type PortalFile,
+  type StudioNotice,
+} from "./types";
 
 const DB_PATH = "portal/db.json";
 const ROOT = path.join(process.cwd(), "data");
@@ -23,6 +32,7 @@ async function readDb(): Promise<PortalDb> {
     const parsed = JSON.parse(text) as PortalDb;
     return {
       clients: (parsed.clients ?? []).map((client) => normalizeClient(client)),
+      notices: (parsed.notices ?? []).map(asStudioNotice).filter(Boolean) as StudioNotice[],
     };
   }
   try {
@@ -30,6 +40,7 @@ async function readDb(): Promise<PortalDb> {
     const parsed = JSON.parse(raw) as PortalDb;
     return {
       clients: (parsed.clients ?? []).map((client) => normalizeClient(client)),
+      notices: (parsed.notices ?? []).map(asStudioNotice).filter(Boolean) as StudioNotice[],
     };
   } catch {
     return emptyDb();
@@ -79,14 +90,53 @@ export async function getClientByInviteHash(hash: string) {
   );
 }
 
-export async function saveClient(next: ClientRecord) {
+export type NewStudioNotice = {
+  kind: StudioNotice["kind"];
+  scope: StudioNotice["scope"];
+  message: string;
+  personIndex?: number;
+};
+
+function pushNotice(db: PortalDb, clientId: string, notice: NewStudioNotice) {
+  db.notices.unshift({
+    id: newId(),
+    clientId,
+    createdAt: new Date().toISOString(),
+    kind: notice.kind,
+    scope: notice.scope,
+    personIndex: notice.personIndex,
+    message: notice.message,
+    read: false,
+  });
+  db.notices = db.notices.slice(0, 200);
+}
+
+export async function saveClient(next: ClientRecord, notice?: NewStudioNotice) {
   const db = await readDb();
   const record = normalizeClient(next);
   const index = db.clients.findIndex((client) => client.id === record.id);
   if (index === -1) db.clients.push(record);
   else db.clients[index] = record;
+  if (notice) pushNotice(db, record.id, notice);
   await writeDb(db);
   return record;
+}
+
+export async function addStudioNotice(clientId: string, notice: NewStudioNotice) {
+  const db = await readDb();
+  pushNotice(db, clientId, notice);
+  await writeDb(db);
+}
+
+export async function listNotices() {
+  const db = await readDb();
+  return db.notices;
+}
+
+export async function markNoticeRead(id: string) {
+  const db = await readDb();
+  db.notices = db.notices.map((notice) => (notice.id === id ? { ...notice, read: true } : notice));
+  await writeDb(db);
 }
 
 export async function putPortalFile(file: PortalFile, data: Buffer) {

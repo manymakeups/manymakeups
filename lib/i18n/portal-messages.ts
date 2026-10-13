@@ -121,6 +121,14 @@ export type PortalCopy = {
   recoverMailHello: string;
   recoverMailBody: string;
   recoverMailExpiry: string;
+  lockedLead: string;
+  notifyChanges: string;
+  notifyChangesLead: string;
+  notifyPlaceholder: string;
+  changeSent: string;
+  changeError: string;
+  trialYes: string;
+  trialNo: string;
 };
 
 export const portalEs: PortalCopy = {
@@ -274,6 +282,15 @@ export const portalEs: PortalCopy = {
   recoverMailHello: "Hola,",
   recoverMailBody: "Para elegir una nueva contraseña en tu Área clientes, abre este enlace:",
   recoverMailExpiry: "Caduca a las tres semanas. Si no lo has pedido tú, ignóralo.",
+  lockedLead:
+    "Esta ficha ya está guardada y no se puede editar. Si algo cambia, escríbeme aquí y me llegará al estudio.",
+  notifyChanges: "Notificar cambios",
+  notifyChangesLead: "Cuéntame qué hay que cambiar",
+  notifyPlaceholder: "Fecha, hora, lugar, servicio…",
+  changeSent: "He recibido tu aviso. Lo veré en el estudio.",
+  changeError: "Escribe al menos unas palabras para que sepa qué cambiar.",
+  trialYes: "Quiere prueba",
+  trialNo: "Sin prueba",
 };
 
 export const portalEn: PortalCopy = {
@@ -426,6 +443,15 @@ export const portalEn: PortalCopy = {
   recoverMailHello: "Hello,",
   recoverMailBody: "To choose a new password for your client area, open this link:",
   recoverMailExpiry: "It expires after three weeks. If you did not request this, you can ignore it.",
+  lockedLead:
+    "This form is saved and can no longer be edited. If something changes, write it here and it will reach the studio.",
+  notifyChanges: "Request a change",
+  notifyChangesLead: "Tell me what needs to change",
+  notifyPlaceholder: "Date, time, venue, service…",
+  changeSent: "I have received your note. I will see it in the studio.",
+  changeError: "Please write a few words so I know what to change.",
+  trialYes: "Wants a trial",
+  trialNo: "No trial",
 };
 
 export const portalFr: PortalCopy = {
@@ -580,6 +606,15 @@ export const portalFr: PortalCopy = {
   recoverMailHello: "Bonjour,",
   recoverMailBody: "Pour choisir un nouveau mot de passe dans ton espace clientes, ouvre ce lien :",
   recoverMailExpiry: "Il expire au bout de trois semaines. Si tu ne l’as pas demandé, ignore-le.",
+  lockedLead:
+    "Cette fiche est enregistrée et ne peut plus être modifiée. Si quelque chose change, écris-le ici et je le verrai à l’atelier.",
+  notifyChanges: "Signaler un changement",
+  notifyChangesLead: "Dis-moi ce qu’il faut changer",
+  notifyPlaceholder: "Date, heure, lieu, service…",
+  changeSent: "J’ai reçu ton message. Je le verrai à l’atelier.",
+  changeError: "Écris quelques mots pour que je sache quoi changer.",
+  trialYes: "Souhaite un essai",
+  trialNo: "Sans essai",
 };
 
 const catalog: Record<Locale, PortalCopy> = {

@@ -3,6 +3,7 @@ import { CopyInvite, DeleteFileButton } from "@/app/components/portal/FileAction
 import { PaymentsForm } from "@/app/components/portal/PaymentsBlock";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { PortalTabs } from "@/app/components/portal/PortalTabs";
+import { StudioNotices } from "@/app/components/portal/StudioNotices";
 import { WorkForm } from "@/app/components/portal/WorkBlock";
 import { portalFileHref } from "@/lib/portal/files";
 import {
@@ -12,9 +13,11 @@ import {
   portalTab,
 } from "@/lib/portal/types";
 import { requireAdmin } from "@/lib/portal/session";
-import { getClient } from "@/lib/portal/store";
+import { getClient, listNotices } from "@/lib/portal/store";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Ficha de clienta",
@@ -33,6 +36,7 @@ export default async function StudioClientPage({
   const { id } = await params;
   const client = await getClient(id);
   if (!client) notFound();
+  const notices = (await listNotices()).filter((notice) => notice.clientId === client.id);
   const { invite, ok, error, tab: tabRaw } = await searchParams;
   const event = client.event;
   const tab = portalTab(tabRaw);
@@ -54,6 +58,11 @@ export default async function StudioClientPage({
       {ok === "estudio" ? <PortalNotice>Productos guardados.</PortalNotice> : null}
       {ok === "fotos" ? <PortalNotice>Fotos de la prueba colgadas.</PortalNotice> : null}
       {error === "archivo" ? <PortalNotice>Ese archivo no se puede colgar.</PortalNotice> : null}
+      <StudioNotices
+        notices={notices}
+        clients={[client]}
+        next={`/privado/novias/${client.id}${tabRaw ? `?tab=${tabRaw}` : ""}`}
+      />
       {invite ? (
         <PortalNotice>
           Enlace de activación (21 días, un uso). Envíaselo por WhatsApp o correo:

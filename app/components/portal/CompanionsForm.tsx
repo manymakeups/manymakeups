@@ -2,12 +2,15 @@
 
 import { useMemo, useState } from "react";
 import { PhotoPicker } from "@/app/components/portal/PhotoPicker";
+import { WorkView } from "@/app/components/portal/WorkBlock";
 import { usePortalCopy } from "@/app/components/portal/usePortalCopy";
 import { interpolate } from "@/lib/i18n/portal-messages";
 import {
   PERSON_SERVICE_OPTIONS,
   WHO_OPTIONS,
+  filesFor,
   personInspirationKey,
+  personTrialPhotoKey,
   type EventDetails,
   type PortalFile,
 } from "@/lib/portal/types";
@@ -17,11 +20,13 @@ function PersonCard({
   person,
   clientId,
   inspiration,
+  workPhotos,
 }: {
   index: number;
   person: EventDetails["people"][number];
   clientId: string;
   inspiration: PortalFile[];
+  workPhotos: PortalFile[];
 }) {
   const t = usePortalCopy();
   const [wantsTrial, setWantsTrial] = useState(Boolean(person.wantsTrial));
@@ -95,6 +100,16 @@ function PersonCard({
           />
         </label>
       ) : null}
+      {wantsTrial ? (
+        <div className="mt-6 border-t border-ink/10 pt-6">
+          <WorkView
+            products={person.productsUsed}
+            photos={filesFor(workPhotos, personTrialPhotoKey(index))}
+            clientId={clientId}
+            copy={t}
+          />
+        </div>
+      ) : null}
       <div className="mt-4">
         <PhotoPicker
           personKey={personInspirationKey(index)}
@@ -114,11 +129,13 @@ export function CompanionsForm({
   action,
   clientId,
   inspiration,
+  workPhotos,
 }: {
   event: EventDetails;
   action: string;
   clientId: string;
   inspiration: PortalFile[];
+  workPhotos: PortalFile[];
 }) {
   const t = usePortalCopy();
   const initial = Math.min(20, Math.max(0, event.peopleCount || 0));
@@ -160,6 +177,7 @@ export function CompanionsForm({
             person={person}
             clientId={clientId}
             inspiration={inspiration}
+            workPhotos={workPhotos}
           />
         ))}
       </div>

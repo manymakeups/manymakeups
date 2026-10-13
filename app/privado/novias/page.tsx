@@ -1,8 +1,11 @@
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
+import { StudioNotices } from "@/app/components/portal/StudioNotices";
 import { requireAdmin } from "@/lib/portal/session";
-import { listClients, portalStorageReady } from "@/lib/portal/store";
+import { listClients, listNotices, portalStorageReady } from "@/lib/portal/store";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Clientas",
@@ -17,13 +20,19 @@ export default async function StudioClientsPage({
   const admin = await requireAdmin();
   if (!admin) redirect("/privado");
   const clients = await listClients();
+  const notices = await listNotices();
+  const unread = notices.filter((notice) => !notice.read).length;
   const { error } = await searchParams;
 
   return (
     <PortalFrame
       kicker="Estudio"
       title="Área clientes"
-      lead="Creas la cuenta con su correo, le envías el enlace y ella elige la contraseña. Luego ves la ficha, las fotos y cuelgas los papeles."
+      lead={
+        unread
+          ? `Tienes ${unread} aviso${unread === 1 ? "" : "s"} nuevo${unread === 1 ? "" : "s"} del área clientas.`
+          : "Creas la cuenta con su correo, le envías el enlace y ella elige la contraseña. Luego ves la ficha, las fotos y cuelgas los papeles."
+      }
       aside={
         <form action="/api/portal/logout?next=/privado" method="post">
           <button className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink" type="submit">
@@ -40,6 +49,7 @@ export default async function StudioClientsPage({
       ) : null}
       {error === "datos" ? <PortalNotice>Nombre y correo válidos, por favor.</PortalNotice> : null}
       {error === "existe" ? <PortalNotice>Ese correo ya tiene cuenta.</PortalNotice> : null}
+      <StudioNotices notices={notices} clients={clients} next="/privado/novias" />
 
       <form action="/api/admin/clients" method="post" className="grid max-w-xl gap-4 sm:grid-cols-2">
         <label className="field-label sm:col-span-1">

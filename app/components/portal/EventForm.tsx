@@ -19,6 +19,7 @@ export function EventForm({
 }) {
   const t = usePortalCopy();
   return (
+    <div className="flex flex-col gap-8">
     <form action={action} method="post" className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="field-label">
@@ -100,6 +101,10 @@ export function EventForm({
         {t.extraNotes}
         <textarea className="field min-h-28" name="notes" defaultValue={event.notes} />
       </label>
+      <button className="btn-atelier-solid btn-atelier mt-2 self-start" type="submit">
+        {submitLabel}
+      </button>
+    </form>
       <PhotoPicker
         personKey={CONTRACTOR_INSPIRATION}
         files={inspiration}
@@ -108,9 +113,6 @@ export function EventForm({
         tab="contratante"
         localize
       />
-      <button className="btn-atelier-solid btn-atelier mt-2 self-start" type="submit">
-        {submitLabel}
-      </button>
-    </form>
+    </div>
   );
 }
