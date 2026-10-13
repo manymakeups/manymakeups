@@ -1,6 +1,7 @@
 import { site } from "@/lib/site";
 
-const signatureUrl = `${site.url}/brand/firmas-correo/info.png`;
+const signatureUrl = `${site.url}/brand/firmas-correo/info.png?v=2`;
+const signatureWidth = 180;
 const typeface = "font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;";
 
 type MailBlock = { text: string; muted?: boolean } | { href: string; label: string };
@@ -47,7 +48,7 @@ export function brandedClientEmail(input: { blocks: MailBlock[]; signoff: string
               <td style="font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;color:#1a1613;">
                 ${body}
                 ${signoff}
-                <img src="${signatureUrl}" width="280" alt="Ana Zarza, Makeup Artist. Many Makeups. @m.any_makeups · www.manymakeups.com · +34 645 800 760 · info@manymakeups.com" style="display:block;width:280px;max-width:100%;height:auto;border:0;" />
+                <img src="${signatureUrl}" width="${signatureWidth}" alt="Ana Zarza, Makeup Artist. Many Makeups. @m.any_makeups · www.manymakeups.com · +34 645 800 760 · info@manymakeups.com" style="display:block;width:${signatureWidth}px;max-width:100%;height:auto;border:0;" />
               </td>
             </tr>
           </table>
