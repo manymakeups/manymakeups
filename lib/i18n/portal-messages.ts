@@ -41,7 +41,6 @@ export type PortalCopy = {
   tabs: {
     contratante: string;
     acompanantes: string;
-    facturacion: string;
     documentacion: string;
     agenda: string;
     historico: string;
@@ -74,6 +73,9 @@ export type PortalCopy = {
   budgetPending: string;
   budgetUnset: string;
   budgetEmpty: string;
+  budgetEvent: string;
+  budgetCare: string;
+  budgetCareEmpty: string;
   requestLabel: string;
   filterShow: string;
   filterAll: string;
@@ -201,7 +203,7 @@ export const portalEs: PortalCopy = {
   backToSite: "Volver a la web",
   logout: "Salir",
   hello: "Hola, {name}.",
-  panelLead: "Tu ficha, la de tus acompañantes, el histórico, el budget, los pagos, los papeles y la agenda de citas.",
+  panelLead: "Tu ficha, la de tus acompañantes, el histórico, el budget, los papeles y la agenda de citas.",
   email: "Correo",
   password: "Contraseña",
   confirmPassword: "Repite la contraseña",
@@ -239,7 +241,6 @@ export const portalEs: PortalCopy = {
   tabs: {
     contratante: "Tu evento",
     acompanantes: "Acompañantes",
-    facturacion: "Facturación",
     documentacion: "Documentación",
     agenda: "Agenda",
     historico: "Histórico",
@@ -274,6 +275,9 @@ export const portalEs: PortalCopy = {
   budgetPending: "Pendiente",
   budgetUnset: "Importe por anotar",
   budgetEmpty: "Todavía no hay servicios ni importes en el budget.",
+  budgetEvent: "Evento",
+  budgetCare: "Cuidado",
+  budgetCareEmpty: "Todavía no hay tratamientos, productos ni otros cuidados.",
   requestLabel: "Solicitud",
   filterShow: "Ver",
   filterAll: "Todo",
@@ -456,7 +460,7 @@ export const portalEn: PortalCopy = {
   backToSite: "Back to the site",
   logout: "Log out",
   hello: "Hello, {name}.",
-  panelLead: "Your details, your guests, your history, your budget, payments, documents and the appointment diary.",
+  panelLead: "Your details, your guests, your history, your budget, documents and the appointment diary.",
   email: "Email",
   password: "Password",
   confirmPassword: "Repeat password",
@@ -493,7 +497,6 @@ export const portalEn: PortalCopy = {
   tabs: {
     contratante: "Your event",
     acompanantes: "Guests",
-    facturacion: "Billing",
     documentacion: "Documents",
     agenda: "Diary",
     historico: "History",
@@ -527,6 +530,9 @@ export const portalEn: PortalCopy = {
   budgetPending: "Outstanding",
   budgetUnset: "Amount still to enter",
   budgetEmpty: "There are no services or amounts in the budget yet.",
+  budgetEvent: "Event",
+  budgetCare: "Care",
+  budgetCareEmpty: "No treatments, products or other care yet.",
   requestLabel: "Request",
   filterShow: "Show",
   filterAll: "All",
@@ -706,7 +712,7 @@ export const portalFr: PortalCopy = {
   backToSite: "Retour au site",
   logout: "Sortir",
   hello: "Bonjour, {name}.",
-  panelLead: "Ta fiche, celle de tes accompagnants, l’historique, le budget, les paiements, les papiers et l’agenda des rendez-vous.",
+  panelLead: "Ta fiche, celle de tes accompagnants, l’historique, le budget, les papiers et l’agenda des rendez-vous.",
   email: "E-mail",
   password: "Mot de passe",
   confirmPassword: "Répète le mot de passe",
@@ -744,7 +750,6 @@ export const portalFr: PortalCopy = {
   tabs: {
     contratante: "Ton événement",
     acompanantes: "Accompagnants",
-    facturacion: "Facturation",
     documentacion: "Documents",
     agenda: "Agenda",
     historico: "Historique",
@@ -779,6 +784,9 @@ export const portalFr: PortalCopy = {
   budgetPending: "Reste",
   budgetUnset: "Montant à indiquer",
   budgetEmpty: "Il n’y a pas encore de services ni de montants dans le budget.",
+  budgetEvent: "Événement",
+  budgetCare: "Soin",
+  budgetCareEmpty: "Pas encore de soins, de produits ni d’autres attentions.",
   requestLabel: "Demande",
   filterShow: "Voir",
   filterAll: "Tout",

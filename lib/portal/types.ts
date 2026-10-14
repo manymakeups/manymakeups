@@ -68,7 +68,6 @@ export const PORTAL_TABS = [
   { id: "acompanantes", label: "Acompañantes" },
   { id: "historico", label: "Histórico" },
   { id: "budget", label: "Budget" },
-  { id: "facturacion", label: "Facturación" },
   { id: "documentacion", label: "Documentación" },
   { id: "agenda", label: "Agenda" },
 ] as const;
@@ -76,6 +75,7 @@ export const PORTAL_TABS = [
 export type PortalTab = (typeof PORTAL_TABS)[number]["id"];
 
 export function portalTab(value: string | undefined): PortalTab {
+  if (value === "facturacion") return "budget";
   if (PORTAL_TABS.some((tab) => tab.id === value)) return value as PortalTab;
   return "contratante";
 }

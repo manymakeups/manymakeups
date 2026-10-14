@@ -210,22 +210,6 @@ export default async function StudioClientPage({
         </section>
       ) : null}
 
-      {tab === "facturacion" ? (
-        <section className="pt-10">
-          <h2 className="font-serif text-3xl">Facturación</h2>
-          <p className="mt-3 max-w-2xl text-sm text-ash">
-            Reserva, prueba (si la hay) y día del evento, para ella y para cada acompañante.
-          </p>
-          <div className="mt-8">
-            <PaymentsForm
-              clientId={client.id}
-              payments={client.payments}
-              people={event.people}
-            />
-          </div>
-        </section>
-      ) : null}
-
       {tab === "documentacion" ? (
         <section className="pt-10">
           <h2 className="font-serif text-3xl">Documentación</h2>
@@ -301,10 +285,15 @@ export default async function StudioClientPage({
         <section className="pt-10">
           <h2 className="font-serif text-3xl">Budget</h2>
           <p className="mt-3 max-w-2xl text-sm text-ash">
-            Suma los servicios del histórico, el del evento y el de cada acompañante. Ella lo ve en su pestaña de budget.
+            El resumen junta el evento y el cuidado, esté pagado o pendiente. Ella lo ve igual en su budget.
           </p>
           <div className="mt-8">
-            <BudgetView entries={client.history} event={client.event} payments={client.payments} />
+            <BudgetView
+              entries={client.history}
+              event={client.event}
+              payments={client.payments}
+              billing={<PaymentsForm clientId={client.id} payments={client.payments} people={event.people} />}
+            />
           </div>
         </section>
       ) : null}

@@ -197,17 +197,13 @@ export default async function BridePanelPage({
           <h2 className="font-serif text-3xl">{t.budgetTitle}</h2>
           <p className="mt-3 max-w-2xl text-sm text-ash">{t.budgetLead}</p>
           <div className="mt-8">
-            <BudgetView entries={client.history} event={client.event} payments={client.payments} copy={t} />
-          </div>
-        </section>
-      ) : null}
-
-      {tab === "facturacion" ? (
-        <section className="pt-10">
-          <h2 className="font-serif text-3xl">{t.billingTitle}</h2>
-          <p className="mt-3 max-w-2xl text-sm text-ash">{t.billingLead}</p>
-          <div className="mt-8">
-            <PaymentsView payments={client.payments} people={client.event.people} />
+            <BudgetView
+              entries={client.history}
+              event={client.event}
+              payments={client.payments}
+              copy={t}
+              billing={<PaymentsView payments={client.payments} people={client.event.people} />}
+            />
           </div>
         </section>
       ) : null}

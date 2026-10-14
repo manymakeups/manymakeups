@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { dateLocale, interpolate, portalEs, type PortalCopy } from "@/lib/i18n/portal-messages";
+import { useState, type ReactNode } from "react";
+import { dateLocale, portalEs, type PortalCopy } from "@/lib/i18n/portal-messages";
 import type { Locale } from "@/lib/i18n/config";
-import { clientBudget, type BudgetGroup } from "@/lib/portal/budget";
+import { clientBudget } from "@/lib/portal/budget";
 import {
   canonicalService,
   CONTACT_TITLES,
@@ -35,42 +35,45 @@ function labelFor(title: string, copy: PortalCopy) {
   return copy.historyTitles[canonical] || canonical;
 }
 
-function serviceLabel(name: string, copy: PortalCopy) {
-  return labelFor(name, copy);
+type WhoFilter = "" | "ella" | "acompanante";
+
+function whoMatches(who: WhoFilter, role: "contratante" | "acompanante") {
+  if (!who) return true;
+  return who === "ella" ? role === "contratante" : role === "acompanante";
 }
 
-function sliceLabel(kind: BudgetGroup["slices"][number]["kind"], copy: PortalCopy) {
-  if (kind === "deposit") return copy.deposit;
-  if (kind === "trial") return copy.trialDay;
-  return copy.eventDay;
+const EVENT_SERVICES = new Set([
+  "Maquillaje y Peinado",
+  "Sólo Maquillaje",
+  "Sólo peinado",
+  "Prueba",
+  "Glitter Bar",
+  "Beauty Corner",
+]);
+
+function isCareService(title: string) {
+  return !EVENT_SERVICES.has(canonicalService(title));
 }
 
-function BudgetGroups({ groups, copy }: { groups: BudgetGroup[]; copy: PortalCopy }) {
-  if (!groups.length) return null;
+function ServiceLines({ entries, copy }: { entries: HistoryEntry[]; copy: PortalCopy }) {
+  if (!entries.length) return null;
   return (
     <ul className="mt-8 divide-y divide-ink/10 border border-ink/10">
-      {groups.map((group) => {
-        const who =
-          group.role === "contratante"
-            ? copy.contractor
-            : copy.whoOptions[group.who] || group.who || interpolate(copy.guestN, { n: group.index + 1 });
-        const services = group.services.map((name) => serviceLabel(name, copy)).join(" · ");
+      {entries.map((entry) => {
+        const known = CATALOG.has(canonicalService(entry.title));
+        const category = known ? labelFor(entry.title, copy) : "";
+        const specific = entry.name.trim() || (known ? "" : entry.title);
         return (
-          <li key={group.id} className="px-4 py-4">
-            <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">{who}</p>
-            {services ? <p className="mt-1 font-serif text-2xl">{services}</p> : null}
-            {group.slices.length ? (
-              <ul className="mt-3 flex flex-col gap-1 text-sm">
-                {group.slices.map((slice) => (
-                  <li key={slice.id}>
-                    {sliceLabel(slice.kind, copy)} · {euros(slice.amount)}
-                    {` · ${slice.paid ? copy.paid : copy.unpaid}`}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="mt-2 text-sm text-ash">{copy.budgetUnset}</p>
-            )}
+          <li key={entry.id} className="px-4 py-4">
+            <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">
+              {copy.historyKinds.servicio}
+              {category ? ` · ${category}` : ""}
+            </p>
+            {specific ? <p className="mt-1 font-serif text-2xl">{specific}</p> : null}
+            <p className="mt-2 text-sm">
+              {euros(entry.amount)}
+              {` · ${entry.paid ? copy.paid : copy.unpaid}`}
+            </p>
           </li>
         );
       })}
@@ -78,96 +81,32 @@ function BudgetGroups({ groups, copy }: { groups: BudgetGroup[]; copy: PortalCop
   );
 }
 
-type PayFilter = "" | "abonado" | "pendiente";
-type WhoFilter = "" | "ella" | "acompanante";
-
-function sameService(name: string, selected: string) {
-  return canonicalService(name) === selected;
-}
-
-function whoMatches(who: WhoFilter, role: "contratante" | "acompanante") {
-  if (!who) return true;
-  return who === "ella" ? role === "contratante" : role === "acompanante";
-}
-
-function filterGroup(group: BudgetGroup, service: string, pay: PayFilter, who: WhoFilter) {
-  if (!whoMatches(who, group.role)) return null;
-  if (service && !group.services.some((name) => sameService(name, service))) return null;
-  if (pay === "abonado") {
-    const slices = group.slices.filter((slice) => slice.paid);
-    return slices.length ? { ...group, slices } : null;
-  }
-  if (pay === "pendiente") {
-    const slices = group.slices.filter((slice) => !slice.paid);
-    if (group.slices.length && !slices.length) return null;
-    return { ...group, slices };
-  }
-  return group;
-}
-
 export function BudgetView({
   entries,
   event,
   payments,
   copy = portalEs,
+  billing,
 }: {
   entries: HistoryEntry[];
   event?: EventDetails;
   payments?: Payments;
   copy?: PortalCopy;
+  billing?: ReactNode;
 }) {
-  const [service, setService] = useState("");
-  const [pay, setPay] = useState<PayFilter>("");
-  const [budgetWho, setBudgetWho] = useState<WhoFilter>("");
+  const [pane, setPane] = useState<"evento" | "cuidado">("evento");
   const booked = event && payments ? clientBudget({ history: entries, event, payments }) : null;
   const history = booked?.history ?? historyBudget(entries);
   const budget = booked ?? { ...history, groups: [], total: history.total, pending: history.pending, paid: history.paid };
-  const showBudget = history.services.length > 0 || budget.groups.length > 0;
-  const groups = budget.groups.flatMap((group) => {
-    const next = filterGroup(group, service, pay, budgetWho);
-    return next ? [next] : [];
-  });
-  const services = history.services.filter((entry) => {
-    if (!whoMatches(budgetWho, "contratante")) return false;
-    if (service && !sameService(entry.title, service)) return false;
-    if (pay === "abonado") return entry.paid;
-    if (pay === "pendiente") return !entry.paid;
-    return true;
-  });
-  const filtering = Boolean(service || pay || budgetWho);
-  if (!showBudget) return <p className="text-sm text-ash">{copy.budgetEmpty}</p>;
+  const eventServices = history.services.filter((entry) => !isCareService(entry.title));
+  const careServices = history.services.filter((entry) => isCareService(entry.title));
+  const tabClass = (on: boolean) =>
+    on
+      ? "border-b-2 border-gilt px-1 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ink"
+      : "border-b-2 border-transparent px-1 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ash hover:text-ink";
   return (
     <div>
-      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
-        <label className="field-label sm:w-56">
-          {copy.filterService}
-          <select className="field" value={service} onChange={(event) => setService(event.target.value)}>
-            <option value="">{copy.filterAll}</option>
-            {SERVICE_TITLES.map((title) => (
-              <option key={title} value={title}>
-                {serviceLabel(title, copy)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="field-label sm:w-44">
-          {copy.filterPay}
-          <select className="field" value={pay} onChange={(event) => setPay(event.target.value as PayFilter)}>
-            <option value="">{copy.filterAll}</option>
-            <option value="abonado">{copy.paid}</option>
-            <option value="pendiente">{copy.budgetPending}</option>
-          </select>
-        </label>
-        <label className="field-label sm:w-44">
-          {copy.filterWho}
-          <select className="field" value={budgetWho} onChange={(event) => setBudgetWho(event.target.value as WhoFilter)}>
-            <option value="">{copy.filterAll}</option>
-            <option value="ella">{copy.filterHer}</option>
-            <option value="acompanante">{copy.filterGuest}</option>
-          </select>
-        </label>
-      </div>
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-3">
         <article className="border border-ink/10 bg-linen/40 p-5">
           <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">{copy.budgetTotal}</p>
           <p className="mt-3 font-serif text-3xl">{euros(budget.total)}</p>
@@ -181,35 +120,24 @@ export function BudgetView({
           <p className="mt-3 font-serif text-3xl">{euros(budget.pending)}</p>
         </article>
       </div>
-      {groups.length || services.length ? (
-        <>
-          <BudgetGroups groups={groups} copy={copy} />
-          {services.length ? (
-            <ul className={`${groups.length ? "mt-4" : "mt-8"} divide-y divide-ink/10 border border-ink/10`}>
-              {services.map((entry) => {
-                const known = CATALOG.has(canonicalService(entry.title));
-                const category = known ? labelFor(entry.title, copy) : "";
-                const specific = entry.name.trim() || (known ? "" : entry.title);
-                return (
-                  <li key={entry.id} className="px-4 py-4">
-                    <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">
-                      {copy.historyKinds.servicio}
-                      {category ? ` · ${category}` : ""}
-                    </p>
-                    {specific ? <p className="mt-1 font-serif text-2xl">{specific}</p> : null}
-                    <p className="mt-2 text-sm">
-                      {euros(entry.amount)}
-                      {` · ${entry.paid ? copy.paid : copy.unpaid}`}
-                    </p>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : null}
-        </>
-      ) : filtering ? (
-        <p className="mt-6 text-sm text-ash">{copy.filterEmpty}</p>
-      ) : null}
+      <div className="mt-10 flex gap-6 border-b border-ink/10">
+        <button className={tabClass(pane === "evento")} type="button" onClick={() => setPane("evento")}>
+          {copy.budgetEvent}
+        </button>
+        <button className={tabClass(pane === "cuidado")} type="button" onClick={() => setPane("cuidado")}>
+          {copy.budgetCare}
+        </button>
+      </div>
+      {pane === "evento" ? (
+        <div className="pt-8">
+          {billing}
+          <ServiceLines entries={eventServices} copy={copy} />
+        </div>
+      ) : careServices.length ? (
+        <ServiceLines entries={careServices} copy={copy} />
+      ) : (
+        <p className="mt-8 text-sm text-ash">{copy.budgetCareEmpty}</p>
+      )}
     </div>
   );
 }

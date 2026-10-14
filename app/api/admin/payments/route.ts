@@ -50,5 +50,5 @@ export async function POST(request: Request) {
     ),
   };
   await saveClient(client);
-  return go(request, `/privado/novias/${client.id}?tab=facturacion&ok=pagos`);
+  return go(request, `/privado/novias/${client.id}?tab=budget&ok=pagos`);
 }
