@@ -37,5 +37,5 @@ export async function POST(request: Request) {
   };
   await saveClient(client);
   const invite = `${site.url}/area-novia/activar?token=${encodeURIComponent(token)}`;
-  return go(request, `/privado/novias/${client.id}?invite=${encodeURIComponent(invite)}`);
+  return go(request, `/privado/novias?invite=${encodeURIComponent(invite)}&client=${client.id}`);
 }

@@ -2,7 +2,7 @@ import { AgendaView } from "@/app/components/portal/AgendaBlock";
 import { SendDocumentModal } from "@/app/components/portal/SendDocumentModal";
 import { ClientCalendar } from "@/app/components/portal/ClientCalendar";
 import { BudgetView, HistoryView } from "@/app/components/portal/HistoryBlock";
-import { ChangeRequestForm } from "@/app/components/portal/ChangeRequestForm";
+import { ClientCompose } from "@/app/components/portal/ClientCompose";
 import { CompanionView } from "@/app/components/portal/CompanionView";
 import { AddCompanionModal, CompanionsForm } from "@/app/components/portal/CompanionsForm";
 import { EventForm } from "@/app/components/portal/EventForm";
@@ -19,7 +19,7 @@ import { INSPIRATION_MAX } from "@/lib/portal/files";
 import { companionHeading, fullName, mailName } from "@/lib/portal/names";
 import { getLocale, getPortalCopy, interpolate, localePath } from "@/lib/i18n";
 import { requireClient } from "@/lib/portal/session";
-import { getClient, listNotices } from "@/lib/portal/store";
+import { getClient, listNotices, markClientCommsRead } from "@/lib/portal/store";
 import {
   CONTRACTOR_TRIAL_PHOTOS,
   contractorInspirationKey,
@@ -53,9 +53,13 @@ export default async function BridePanelPage({
   if (!session) redirect(localePath(locale, "/area-novia"));
   const client = await getClient(session.sub);
   if (!client) redirect(localePath(locale, "/area-novia"));
-  const requests = (await listNotices()).filter((notice) => notice.clientId === client.id && notice.kind === "cambio");
   const { ok, error, tab: tabRaw, mes, com, sec } = await searchParams;
   const tab = portalTab(tabRaw);
+  const requests = (await listNotices()).filter((notice) => notice.clientId === client.id && notice.kind === "cambio");
+  const unreadComms =
+    client.history.filter((entry) => entry.kind === "contacto" && entry.seenByClient === false).length +
+    requests.filter((notice) => notice.fromStudio && !notice.read).length;
+  if (tab === "historico" && unreadComms > 0) await markClientCommsRead(client.id);
   const today = madridToday();
   const { year: initialYear, month: initialMonth } = parseMonth(mes, today);
   const busyDates = tab === "agenda" ? await studioBusyDates() : [];
@@ -91,6 +95,7 @@ export default async function BridePanelPage({
           basePath={localePath(locale, "/area-novia/panel")}
           active={tab}
           labels={t.tabs}
+          badges={{ historico: tab === "historico" ? 0 : unreadComms }}
         />
       </div>
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -215,7 +220,7 @@ export default async function BridePanelPage({
           <div
             className={
               client.event.peopleLocked
-                ? "mt-4 min-h-0 flex-1"
+                ? "mt-4 flex min-h-0 flex-1 flex-col"
                 : "mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16"
             }
             {...(client.event.peopleLocked ? {} : { "data-portal-scroll": "" })}
@@ -263,7 +268,7 @@ export default async function BridePanelPage({
       {tab === "historico" ? (
         <section className="flex min-h-0 flex-1 flex-col pt-4">
           <h2 className="shrink-0 font-serif text-3xl">{t.historyTitle}</h2>
-          <div className="mt-4 min-h-0 flex-1">
+          <div className="mt-4 flex min-h-0 flex-1 flex-col">
             <SubTabs
               fill
               initial={com === "nueva" || ok === "cambio" || error === "cambio" ? "nueva" : "historico"}
@@ -284,35 +289,26 @@ export default async function BridePanelPage({
                 {
                   id: "nueva",
                   label: t.commsWrite,
-                  body: (
-                    <div className="flex max-w-xl flex-col gap-10">
-                      {client.event.contractorLocked ? (
-                        <div>
-                          <h3 className="font-serif text-2xl">{t.contractor}</h3>
-                          <ChangeRequestForm copy={t} scope="contratante" />
-                        </div>
-                      ) : null}
-                      {client.event.peopleLocked && client.event.people.length
-                        ? client.event.people.map((person, index) => (
-                            <div key={index}>
-                              <h3 className="font-serif text-2xl">
-                                {companionHeading(person, t.whoOptions, interpolate(t.personN, { n: index + 1 }))}
-                              </h3>
-                              <ChangeRequestForm copy={t} scope="acompanante" personIndex={index} />
-                            </div>
-                          ))
-                        : null}
-                      {client.event.peopleLocked && !client.event.people.length ? (
-                        <div>
-                          <h3 className="font-serif text-2xl">{t.companionsTitle}</h3>
-                          <ChangeRequestForm copy={t} scope="acompanante" />
-                        </div>
-                      ) : null}
-                      {!client.event.contractorLocked && !client.event.peopleLocked ? (
-                        <p className="text-sm text-ash">{t.commsWait}</p>
-                      ) : null}
-                    </div>
-                  ),
+                  body:
+                    client.event.contractorLocked || client.event.peopleLocked ? (
+                      <ClientCompose
+                        copy={t}
+                        people={[
+                          ...(client.event.contractorLocked
+                            ? [{ name: fullName(client.event, client.name), scope: "contratante" as const }]
+                            : []),
+                          ...(client.event.peopleLocked
+                            ? client.event.people.map((person, index) => ({
+                                name: companionHeading(person, t.whoOptions, interpolate(t.personN, { n: index + 1 })),
+                                scope: "acompanante" as const,
+                                personIndex: index,
+                              }))
+                            : []),
+                        ]}
+                      />
+                    ) : (
+                      <p className="text-sm text-ash">{t.commsWait}</p>
+                    ),
                 },
               ]}
             />
@@ -324,7 +320,7 @@ export default async function BridePanelPage({
         <section className="flex min-h-0 flex-1 flex-col pt-4">
           <h2 className="shrink-0 font-serif text-3xl">{t.budgetTitle}</h2>
           <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">{t.budgetLead}</p>
-          <div className="mt-6 min-h-0 flex-1">
+          <div className="mt-6 flex min-h-0 flex-1 flex-col">
             <BudgetView
               entries={client.history}
               event={client.event}
@@ -371,20 +367,33 @@ export default async function BridePanelPage({
         <section className="flex min-h-0 flex-1 flex-col pt-4">
           <h2 className="shrink-0 font-serif text-3xl">{t.agendaBook}</h2>
           <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">{t.agendaBookLead}</p>
-          <div data-portal-scroll className="mt-6 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
-            <ClientCalendar
-              busyDates={busyDates}
-              today={today}
-              initialYear={initialYear}
-              initialMonth={initialMonth}
-              freeLabel={t.agendaFree}
-              closeLabel={t.agendaClose}
-              previousLabel={t.agendaPrev}
-              nextLabel={t.agendaNext}
+          <div className="mt-4 flex min-h-0 flex-1 flex-col">
+            <SubTabs
+              fill
+              tabs={[
+                {
+                  id: "calendario",
+                  label: t.agendaCalendar,
+                  body: (
+                    <ClientCalendar
+                      busyDates={busyDates}
+                      today={today}
+                      initialYear={initialYear}
+                      initialMonth={initialMonth}
+                      freeLabel={t.agendaFree}
+                      closeLabel={t.agendaClose}
+                      previousLabel={t.agendaPrev}
+                      nextLabel={t.agendaNext}
+                    />
+                  ),
+                },
+                {
+                  id: "historico",
+                  label: t.agendaHistory,
+                  body: <AgendaView appointments={client.appointments} copy={t} locale={locale} />,
+                },
+              ]}
             />
-            <div className="mt-12">
-              <AgendaView appointments={client.appointments} copy={t} locale={locale} />
-            </div>
           </div>
         </section>
       ) : null}

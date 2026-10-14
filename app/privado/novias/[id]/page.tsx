@@ -1,4 +1,4 @@
-import { AgendaForm } from "@/app/components/portal/AgendaBlock";
+import { AgendaLists, NewAppointmentModal } from "@/app/components/portal/AgendaBlock";
 import { BudgetView, HistoryComposer, HistoryForm } from "@/app/components/portal/HistoryBlock";
 import { AddCompanionModal, PersonDataForm } from "@/app/components/portal/CompanionsForm";
 import { DeleteFileButton } from "@/app/components/portal/FileActions";
@@ -216,7 +216,7 @@ export default async function StudioClientPage({
           <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">
             Corrige nombre, parentesco y servicio en Datos. Inspiraciones y prueba van en sus pestañas.
           </p>
-          <div className="mt-4 min-h-0 flex-1">
+          <div className="mt-4 flex min-h-0 flex-1 flex-col">
             {event.people.length ? (
               <SubTabs
                 fill
@@ -391,7 +391,7 @@ export default async function StudioClientPage({
       {tab === "historico" ? (
         <section className="flex min-h-0 flex-1 flex-col pt-4">
           <h2 className="shrink-0 font-serif text-3xl">Comunicaciones</h2>
-          <div className="mt-4 min-h-0 flex-1">
+          <div className="mt-4 flex min-h-0 flex-1 flex-col">
             <SubTabs
               fill
               initial={com === "nueva" || ok === "mensaje" ? "nueva" : "historico"}
@@ -425,7 +425,7 @@ export default async function StudioClientPage({
           <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">
             El resumen junta el evento y los otros gastos, estén pagados o pendientes. Ella lo ve igual en su budget.
           </p>
-          <div className="mt-6 min-h-0 flex-1">
+          <div className="mt-6 flex min-h-0 flex-1 flex-col">
             <BudgetView
               entries={client.history}
               event={client.event}
@@ -438,12 +438,15 @@ export default async function StudioClientPage({
 
       {tab === "agenda" ? (
         <section className="flex min-h-0 flex-1 flex-col pt-4">
-          <h2 className="shrink-0 font-serif text-3xl">Agenda</h2>
+          <div className="flex shrink-0 items-center justify-between gap-4">
+            <h2 className="font-serif text-3xl">Agenda</h2>
+            <NewAppointmentModal clientId={client.id} />
+          </div>
           <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">
             Citas planificadas y las que ya hayáis tenido. Ella las ve en su panel.
           </p>
           <div data-portal-scroll className="mt-6 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
-            <AgendaForm clientId={client.id} appointments={client.appointments} />
+            <AgendaLists clientId={client.id} appointments={client.appointments} />
           </div>
         </section>
       ) : null}

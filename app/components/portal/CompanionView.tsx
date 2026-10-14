@@ -39,8 +39,7 @@ export function CompanionView({
     notes: copy.notesTab,
   };
   return (
-    <article className="flex h-full min-h-0 flex-col">
-      <div className="min-h-0 flex-1">
+    <article className="flex h-full min-h-0 flex-1 flex-col">
         <EventSections
           labels={labels}
           section={section}
@@ -139,7 +138,6 @@ export function CompanionView({
             />
           }
         />
-      </div>
     </article>
   );
 }

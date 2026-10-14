@@ -159,6 +159,8 @@ export type PortalCopy = {
   agendaEmpty: string;
   agendaBook: string;
   agendaBookLead: string;
+  agendaCalendar: string;
+  agendaHistory: string;
   photoOpen: string;
   photoClose: string;
   agendaFree: string;
@@ -189,6 +191,8 @@ export type PortalCopy = {
   recoverMailSignoff: string;
   lockedLead: string;
   notifyChanges: string;
+  searchName: string;
+  searchNameEmpty: string;
   notifyChangesLead: string;
   notifyPlaceholder: string;
   changeSent: string;
@@ -422,6 +426,8 @@ export const portalEs: PortalCopy = {
   removeConfirm: "¿Quitar este archivo?",
   agendaEmpty: "Todavía no hay citas en la agenda.",
   agendaBook: "Pide una cita",
+  agendaCalendar: "Calendario",
+  agendaHistory: "Histórico de citas",
   agendaBookLead:
     "Las casillas que estén marcadas tienen huecos disponibles. Selecciona el que mejor se adapte a tu agenda. Recuerda que hasta que no recibas mi confirmación de cita, esta no está bloqueada.",
   photoOpen: "Ver fotos",
@@ -470,6 +476,8 @@ export const portalEs: PortalCopy = {
   lockedLead:
     "Esta ficha ya está guardada y no se puede editar. Si algo cambia, escríbeme en Comunicaciones.",
   notifyChanges: "Notificar cambios",
+  searchName: "Buscar por nombre",
+  searchNameEmpty: "Ningún nombre coincide.",
   notifyChangesLead: "Cuéntame qué hay que cambiar",
   notifyPlaceholder: "Fecha, hora, lugar, servicio…",
   changeSent: "He recibido tu aviso. Lo veré en el estudio.",
@@ -704,6 +712,8 @@ export const portalEn: PortalCopy = {
   removeConfirm: "Remove this file?",
   agendaEmpty: "There are no appointments in the diary yet.",
   agendaBook: "Book an appointment",
+  agendaCalendar: "Calendar",
+  agendaHistory: "Appointment history",
   agendaBookLead:
     "Marked days have openings. Choose the one that fits your diary. Until you receive my confirmation, the appointment is not held.",
   photoOpen: "View photos",
@@ -749,6 +759,8 @@ export const portalEn: PortalCopy = {
   lockedLead:
     "This form is saved and can no longer be edited. If something changes, write to me in Communications.",
   notifyChanges: "Request a change",
+  searchName: "Search by name",
+  searchNameEmpty: "No name matches.",
   notifyChangesLead: "Tell me what needs to change",
   notifyPlaceholder: "Date, time, venue, service…",
   changeSent: "I have received your note. I will see it in the studio.",
@@ -985,6 +997,8 @@ export const portalFr: PortalCopy = {
   removeConfirm: "Retirer ce fichier ?",
   agendaEmpty: "Il n’y a pas encore de rendez-vous dans l’agenda.",
   agendaBook: "Demande un rendez-vous",
+  agendaCalendar: "Calendrier",
+  agendaHistory: "Historique des rendez-vous",
   agendaBookLead:
     "Les cases marquées ont des créneaux. Choisis celui qui convient le mieux à ton agenda. Tant que tu n’as pas reçu ma confirmation, le rendez-vous n’est pas bloqué.",
   photoOpen: "Voir les photos",
@@ -1033,6 +1047,8 @@ export const portalFr: PortalCopy = {
   lockedLead:
     "Cette fiche est enregistrée et ne peut plus être modifiée. Si quelque chose change, écris-moi dans Communications.",
   notifyChanges: "Signaler un changement",
+  searchName: "Chercher par nom",
+  searchNameEmpty: "Aucun nom ne correspond.",
   notifyChangesLead: "Dis-moi ce qu’il faut changer",
   notifyPlaceholder: "Date, heure, lieu, service…",
   changeSent: "J’ai reçu ton message. Je le verrai à l’atelier.",

@@ -130,7 +130,7 @@ function pushNotice(db: PortalDb, clientId: string, notice: NewStudioNotice) {
     scope: notice.scope,
     personIndex: notice.personIndex,
     message: notice.message,
-    read: Boolean(notice.fromStudio),
+    read: false,
     fromStudio: Boolean(notice.fromStudio),
     replies: [],
   });
@@ -176,6 +176,20 @@ export async function mutateNotices(
 ) {
   const db = await readDb();
   db.notices = mutator(db.notices);
+  await writeDb(db);
+}
+
+export async function markClientCommsRead(clientId: string) {
+  const db = await readDb();
+  const client = db.clients.find((item) => item.id === clientId);
+  if (client) {
+    client.history = client.history.map((entry) =>
+      entry.kind === "contacto" ? { ...entry, seenByClient: true } : entry,
+    );
+  }
+  db.notices = db.notices.map((notice) =>
+    notice.clientId === clientId && notice.fromStudio ? { ...notice, read: true } : notice,
+  );
   await writeDb(db);
 }
 

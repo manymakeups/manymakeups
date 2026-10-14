@@ -19,7 +19,11 @@ function viewport() {
 }
 
 function portalScroll() {
-  return document.querySelector<HTMLElement>("[data-portal-scroll]");
+  const boxes = document.querySelectorAll<HTMLElement>("[data-portal-scroll]");
+  for (const box of boxes) {
+    if (box.getClientRects().length > 0) return box;
+  }
+  return null;
 }
 
 export function ScrollJump() {

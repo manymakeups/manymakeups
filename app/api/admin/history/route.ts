@@ -39,6 +39,7 @@ export async function POST(request: Request) {
       notes: text(form.get("notes")),
       amount: kind === "servicio" ? money(text(form.get("amount"))) : 0,
       paid: kind !== "servicio" || form.get("payLater") !== "1",
+      seenByClient: kind !== "contacto",
     });
   }
   await saveClient(client);

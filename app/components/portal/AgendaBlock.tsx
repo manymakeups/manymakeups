@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { dateLocale } from "@/lib/i18n/portal-messages";
 import { portalEs, type PortalCopy } from "@/lib/i18n/portal-messages";
 import type { Locale } from "@/lib/i18n/config";
@@ -58,60 +61,117 @@ export function AgendaView({
   );
 }
 
-export function AgendaForm({
+function AppointmentFields() {
+  return (
+    <>
+      <label className="field-label">
+        Tipo de cita
+        <select className="field" name="title" defaultValue="Prueba">
+          {APPOINTMENT_TITLES.map((title) => (
+            <option key={title} value={title}>
+              {title}
+            </option>
+          ))}
+        </select>
+      </label>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="field-label">
+          Fecha
+          <input className="field" name="date" type="date" required />
+        </label>
+        <label className="field-label">
+          Hora
+          <input className="field" name="time" type="time" />
+        </label>
+      </div>
+      <label className="field-label">
+        Lugar
+        <input className="field" name="place" />
+      </label>
+      <label className="field-label">
+        Estado
+        <select className="field" name="status" defaultValue="planificada">
+          {APPOINTMENT_STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {statusLabelEs[status]}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="field-label">
+        Notas
+        <textarea className="field min-h-24" name="notes" />
+      </label>
+    </>
+  );
+}
+
+export function NewAppointmentModal({ clientId }: { clientId: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink"
+        onClick={() => setOpen(true)}
+      >
+        Crear nueva cita
+      </button>
+      {open ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 px-5" onClick={() => setOpen(false)}>
+          <div
+            className="max-h-[85dvh] w-full max-w-lg overflow-y-auto bg-porcelain p-6 shadow-[0_20px_60px_rgba(26,22,19,0.16)]"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            <h2 className="font-serif text-3xl">Nueva cita</h2>
+            <form action="/api/admin/appointments" method="post" className="mt-6 grid gap-4">
+              <input type="hidden" name="clientId" value={clientId} />
+              <AppointmentFields />
+              <button className="btn-atelier self-start" type="submit">
+                Añadir a la agenda
+              </button>
+            </form>
+            <button
+              type="button"
+              className="mt-4 text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink"
+              onClick={() => setOpen(false)}
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+export function AgendaLists({
   clientId,
   appointments,
 }: {
   clientId: string;
   appointments: Appointment[];
 }) {
+  const planned = appointments.filter((item) => item.status !== "hecha");
+  const done = appointments.filter((item) => item.status === "hecha");
   return (
     <div className="flex flex-col gap-10">
-      <AgendaView appointments={appointments} />
-      <form action="/api/admin/appointments" method="post" className="grid max-w-xl gap-4">
-        <input type="hidden" name="clientId" value={clientId} />
-        <label className="field-label">
-          Tipo de cita
-          <select className="field" name="title" defaultValue="Prueba">
-            {APPOINTMENT_TITLES.map((title) => (
-              <option key={title} value={title}>
-                {title}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="field-label">
-            Fecha
-            <input className="field" name="date" type="date" required />
-          </label>
-          <label className="field-label">
-            Hora
-            <input className="field" name="time" type="time" />
-          </label>
+      <div>
+        <p className="font-serif text-2xl">Planificadas</p>
+        <div className="mt-4">
+          <AgendaView appointments={planned} />
         </div>
-        <label className="field-label">
-          Lugar
-          <input className="field" name="place" />
-        </label>
-        <label className="field-label">
-          Estado
-          <select className="field" name="status" defaultValue="planificada">
-            {APPOINTMENT_STATUSES.map((status) => (
-              <option key={status} value={status}>
-                {statusLabelEs[status]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="field-label">
-          Notas
-          <textarea className="field min-h-24" name="notes" />
-        </label>
-        <button className="btn-atelier-solid btn-atelier self-start" type="submit">
-          Añadir a la agenda
-        </button>
-      </form>
+      </div>
+      {done.length ? (
+        <div>
+          <p className="font-serif text-2xl">Hechas</p>
+          <div className="mt-4">
+            <AgendaView appointments={done} />
+          </div>
+        </div>
+      ) : null}
       {appointments.length ? (
         <ul className="divide-y divide-ink/10 border border-ink/10">
           {appointments.map((item) => (
