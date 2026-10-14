@@ -5,6 +5,7 @@ import { dateLocale, interpolate, portalEs, type PortalCopy } from "@/lib/i18n/p
 import type { Locale } from "@/lib/i18n/config";
 import { clientBudget, type BudgetGroup } from "@/lib/portal/budget";
 import {
+  canonicalService,
   CONTACT_TITLES,
   euros,
   historyBudget,
@@ -30,15 +31,12 @@ function formatWhen(date: string, locale: Locale, copy: PortalCopy) {
 const CATALOG = new Set<string>([...CONTACT_TITLES, ...SERVICE_TITLES]);
 
 function labelFor(title: string, copy: PortalCopy) {
-  return copy.historyTitles[title] || title;
+  const canonical = (CONTACT_TITLES as readonly string[]).includes(title) ? title : canonicalService(title);
+  return copy.historyTitles[canonical] || canonical;
 }
 
 function serviceLabel(name: string, copy: PortalCopy) {
-  if (name === "Maquillaje") return copy.makeup;
-  if (name === "Peinado") return copy.hair;
-  if (name === "Glitter Bar") return copy.glitterBar;
-  if (name === "Beauty Corner") return copy.beautyCorner;
-  return copy.serviceOptions[name] || copy.historyTitles[name] || name;
+  return labelFor(name, copy);
 }
 
 function sliceLabel(kind: BudgetGroup["slices"][number]["kind"], copy: PortalCopy) {
@@ -82,16 +80,6 @@ function BudgetGroups({ groups, copy }: { groups: BudgetGroup[]; copy: PortalCop
 
 type PayFilter = "" | "abonado" | "pendiente";
 type WhoFilter = "" | "ella" | "acompanante";
-
-const SERVICE_ALIASES: Record<string, string> = {
-  "Sólo maquillaje": "Maquillaje",
-  "Sólo peinado": "Peinado",
-  "Tratamiento de piel": "Tratamiento facial",
-};
-
-function canonicalService(name: string) {
-  return SERVICE_ALIASES[name] ?? name;
-}
 
 function sameService(name: string, selected: string) {
   return canonicalService(name) === selected;
@@ -143,14 +131,7 @@ export function HistoryView({
   const history = booked?.history ?? historyBudget(entries);
   const budget = booked ?? { ...history, groups: [], total: history.total, pending: history.pending, paid: history.paid };
   const showBudget = history.services.length > 0 || budget.groups.length > 0;
-  const presentServices = [
-    ...budget.groups.flatMap((group) => group.services),
-    ...history.services.map((entry) => entry.title),
-  ].map(canonicalService);
-  const serviceOptions = [
-    ...SERVICE_TITLES.filter((title) => presentServices.includes(title)),
-    ...presentServices.filter((title) => !(SERVICE_TITLES as readonly string[]).includes(title)),
-  ].filter((title, index, all) => all.indexOf(title) === index);
+  const serviceOptions = [...SERVICE_TITLES];
   const groups = budget.groups.flatMap((group) => {
     const next = filterGroup(group, service, pay, budgetWho);
     return next ? [next] : [];
@@ -231,7 +212,7 @@ export function HistoryView({
             {services.length ? (
               <ul className={`${groups.length ? "mt-4" : "mt-8"} divide-y divide-ink/10 border border-ink/10`}>
                 {services.map((entry) => {
-                  const known = CATALOG.has(entry.title);
+                  const known = CATALOG.has(canonicalService(entry.title));
                   const category = known ? labelFor(entry.title, copy) : "";
                   const specific = entry.name.trim() || (known ? "" : entry.title);
                   return (
@@ -298,7 +279,7 @@ export function HistoryView({
               );
             })}
             {contacts.map((entry) => {
-              const known = CATALOG.has(entry.title);
+              const known = CATALOG.has(canonicalService(entry.title));
               const category = known ? labelFor(entry.title, copy) : "";
               const specific = entry.name.trim() || (known ? "" : entry.title);
               return (
@@ -325,10 +306,11 @@ export function HistoryView({
 }
 
 function nameLabel(title: string) {
-  if (title === "Tratamiento facial" || title === "Servicios de ojos") return "Nombre del tratamiento";
-  if (title === "Bonos de tratamientos" || title === "Bonos de ojos") return "Nombre del bono";
-  if (title === "Formaciones") return "Nombre de la formación";
-  if (title === "Compra de productos") return "Qué ha comprado";
+  const name = canonicalService(title);
+  if (name === "Tratamiento facial" || name === "Servicios de ojos") return "Nombre del tratamiento";
+  if (name === "Bonos de tratamientos faciales" || name === "Bonos servicios de ojos") return "Nombre del bono";
+  if (name === "Formaciones") return "Nombre de la formación";
+  if (name === "Compra de productos") return "Qué ha comprado";
   return "Nombre";
 }
 

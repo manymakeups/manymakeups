@@ -135,6 +135,8 @@ export type PortalCopy = {
   remove: string;
   removeConfirm: string;
   agendaEmpty: string;
+  agendaBook: string;
+  agendaBookLead: string;
   noDate: string;
   appointment: string;
   appointmentTitles: Record<string, string>;
@@ -287,7 +289,15 @@ export const portalEs: PortalCopy = {
     "Bonos de ojos": "Bonos de ojos",
     Formaciones: "Formaciones",
     "Compra de productos": "Compra de productos",
-    "Tratamiento de piel": "Tratamiento de piel",
+    "Maquillaje y Peinado": "Maquillaje y Peinado",
+    "Sólo Maquillaje": "Sólo Maquillaje",
+    "Sólo peinado": "Sólo peinado",
+    "Bonos de tratamientos faciales": "Bonos de tratamientos faciales",
+    "Bonos servicios de ojos": "Bonos servicios de ojos",
+    "Glitter Bar": "Glitter Bar",
+    "Beauty Corner": "Beauty Corner",
+    otro: "otro",
+    "Tratamiento de piel": "Tratamiento facial",
   },
   yourName: "Nombre",
   lastName: "Apellidos",
@@ -348,6 +358,8 @@ export const portalEs: PortalCopy = {
   remove: "Quitar",
   removeConfirm: "¿Quitar este archivo?",
   agendaEmpty: "Todavía no hay citas en la agenda.",
+  agendaBook: "Pide una cita",
+  agendaBookLead: "Elige el día y la hora en el calendario. La cita queda pedida.",
   noDate: "Sin fecha",
   appointment: "Cita",
   appointmentTitles: {
@@ -517,6 +529,14 @@ export const portalEn: PortalCopy = {
     "Bonos de ojos": "Eye packages",
     Formaciones: "Training",
     "Compra de productos": "Product purchase",
+    "Maquillaje y Peinado": "Makeup and hair",
+    "Sólo Maquillaje": "Makeup only",
+    "Sólo peinado": "Hair only",
+    "Bonos de tratamientos faciales": "Facial treatment packages",
+    "Bonos servicios de ojos": "Eye service packages",
+    "Glitter Bar": "Glitter Bar",
+    "Beauty Corner": "Beauty Corner",
+    otro: "Other",
     "Tratamiento de piel": "Skin treatment",
   },
   yourName: "First name",
@@ -578,6 +598,8 @@ export const portalEn: PortalCopy = {
   remove: "Remove",
   removeConfirm: "Remove this file?",
   agendaEmpty: "There are no appointments in the diary yet.",
+  agendaBook: "Book an appointment",
+  agendaBookLead: "Choose the day and time on the calendar. The appointment is requested.",
   noDate: "No date",
   appointment: "Appointment",
   appointmentTitles: {
@@ -746,6 +768,14 @@ export const portalFr: PortalCopy = {
     "Bonos de ojos": "Forfaits des yeux",
     Formaciones: "Formations",
     "Compra de productos": "Achat de produits",
+    "Maquillaje y Peinado": "Maquillage et coiffure",
+    "Sólo Maquillaje": "Maquillage seul",
+    "Sólo peinado": "Coiffure seule",
+    "Bonos de tratamientos faciales": "Forfaits de soins du visage",
+    "Bonos servicios de ojos": "Forfaits des services des yeux",
+    "Glitter Bar": "Glitter Bar",
+    "Beauty Corner": "Beauty Corner",
+    otro: "Autre",
     "Tratamiento de piel": "Soin de la peau",
   },
   yourName: "Prénom",
@@ -807,6 +837,8 @@ export const portalFr: PortalCopy = {
   remove: "Retirer",
   removeConfirm: "Retirer ce fichier ?",
   agendaEmpty: "Il n’y a pas encore de rendez-vous dans l’agenda.",
+  agendaBook: "Demande un rendez-vous",
+  agendaBookLead: "Choisis le jour et l’heure dans le calendrier. Le rendez-vous est demandé.",
   noDate: "Sans date",
   appointment: "Rendez-vous",
   appointmentTitles: {

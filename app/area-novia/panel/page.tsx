@@ -1,3 +1,4 @@
+import { CalendlyEmbed } from "@/app/components/CalendlyEmbed";
 import { AgendaView } from "@/app/components/portal/AgendaBlock";
 import { HistoryView } from "@/app/components/portal/HistoryBlock";
 import { ChangeRequestForm } from "@/app/components/portal/ChangeRequestForm";
@@ -230,6 +231,13 @@ export default async function BridePanelPage({
           <p className="mt-3 max-w-2xl text-sm text-ash">{t.agendaLead}</p>
           <div className="mt-8">
             <AgendaView appointments={client.appointments} copy={t} locale={locale} />
+          </div>
+          <div className="mt-12">
+            <h3 className="font-serif text-3xl">{t.agendaBook}</h3>
+            <p className="mt-3 max-w-2xl text-sm text-ash">{t.agendaBookLead}</p>
+            <div className="mt-6">
+              <CalendlyEmbed eager />
+            </div>
           </div>
         </section>
       ) : null}

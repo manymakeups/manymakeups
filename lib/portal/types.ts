@@ -122,31 +122,49 @@ export type HistoryKind = (typeof HISTORY_KINDS)[number];
 
 export const CONTACT_TITLES = ["Llamada", "WhatsApp", "Reunión", "Correo", "Otro"] as const;
 export const SERVICE_TITLES = [
-  "Maquillaje y peinado",
-  "Maquillaje",
-  "Peinado",
+  "Maquillaje y Peinado",
+  "Sólo Maquillaje",
+  "Sólo peinado",
   "Prueba",
   "Tratamiento facial",
   "Servicios de ojos",
-  "Bonos de tratamientos",
-  "Bonos de ojos",
+  "Bonos de tratamientos faciales",
+  "Bonos servicios de ojos",
   "Formaciones",
   "Compra de productos",
-  "Otro",
+  "Glitter Bar",
+  "Beauty Corner",
+  "otro",
 ] as const;
+
+export const SERVICE_ALIASES: Record<string, (typeof SERVICE_TITLES)[number]> = {
+  "Maquillaje y peinado": "Maquillaje y Peinado",
+  Maquillaje: "Sólo Maquillaje",
+  "Sólo maquillaje": "Sólo Maquillaje",
+  Peinado: "Sólo peinado",
+  "Sólo peinado": "Sólo peinado",
+  "Bonos de tratamientos": "Bonos de tratamientos faciales",
+  "Bonos de ojos": "Bonos servicios de ojos",
+  Otro: "otro",
+  "Tratamiento de piel": "Tratamiento facial",
+};
+
+export function canonicalService(name: string) {
+  return SERVICE_ALIASES[name] ?? name;
+}
 
 export const NAMED_SERVICE_TITLES = [
   "Tratamiento facial",
   "Servicios de ojos",
-  "Bonos de tratamientos",
-  "Bonos de ojos",
+  "Bonos de tratamientos faciales",
+  "Bonos servicios de ojos",
   "Formaciones",
   "Compra de productos",
-  "Otro",
+  "otro",
 ] as const;
 
 export function serviceNeedsName(title: string) {
-  return (NAMED_SERVICE_TITLES as readonly string[]).includes(title);
+  return (NAMED_SERVICE_TITLES as readonly string[]).includes(canonicalService(title));
 }
 
 export type HistoryEntry = {
