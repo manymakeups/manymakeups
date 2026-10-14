@@ -118,7 +118,7 @@ export function ClientCalendar({
             role="dialog"
             aria-modal="true"
             aria-label={dayLabel(booking)}
-            className="flex max-h-[92vh] w-full max-w-3xl flex-col bg-porcelain shadow-xl"
+            className="flex max-h-[92vh] w-full max-w-[1100px] flex-col bg-porcelain shadow-xl"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between gap-4 border-b border-ink/10 px-5 py-4">
@@ -127,7 +127,7 @@ export function ClientCalendar({
                 {closeLabel}
               </button>
             </div>
-            <CalendlyEmbed eager month={booking.slice(0, 7)} />
+            <CalendlyEmbed eager month={booking.slice(0, 7)} date={booking} />
           </div>
         </div>
       ) : null}
