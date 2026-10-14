@@ -1,5 +1,6 @@
+import { bookingGroups, clientBudget } from "./budget";
 import { fullName } from "./names";
-import { historyBudget, type ClientRecord } from "./types";
+import type { ClientRecord } from "./types";
 
 export const CLIENT_SEARCH_MODES = ["nombre", "presupuesto", "telefono", "fecha"] as const;
 export type ClientSearchMode = (typeof CLIENT_SEARCH_MODES)[number];
@@ -25,20 +26,38 @@ function moneyNeedle(value: string) {
   return /^\d+(\.\d+)?$/.test(normalized) ? normalized : "";
 }
 
+function partidaHits(titles: string[], partida: string) {
+  const wanted = fold(partida);
+  return titles.some((title) => {
+    const name = fold(title);
+    return name === wanted || name.includes(wanted) || wanted.includes(name);
+  });
+}
+
 function matchesBudget(client: ClientRecord, partida: string, query: string) {
   const services = (client.history ?? []).filter((entry) => entry.kind === "servicio");
-  const scoped = partida ? services.filter((entry) => entry.title === partida) : services;
-  if (!query) return partida ? scoped.length > 0 : true;
+  const groups = bookingGroups(client);
+  const scopedServices = partida ? services.filter((entry) => partidaHits([entry.title, entry.name], partida)) : services;
+  const scopedGroups = partida
+    ? groups.filter((group) => partidaHits(group.services, partida) || (partida === "Prueba" && group.slices.some((slice) => slice.kind === "trial")))
+    : groups;
+  if (!query) return partida ? scopedServices.length > 0 || scopedGroups.length > 0 : true;
   const needle = fold(query);
   const amount = moneyNeedle(query);
-  const lineHit = scoped.some((entry) => {
+  const lineHit = scopedServices.some((entry) => {
     const text = fold(`${entry.name} ${entry.title} ${entry.notes}`);
     if (needle && text.includes(needle)) return true;
     return amount ? Number(amount) === Number(entry.amount) : false;
   });
   if (lineHit) return true;
+  const bookingHit = scopedGroups.some((group) => {
+    const text = fold(`${group.who} ${group.services.join(" ")}`);
+    if (needle && text.includes(needle)) return true;
+    return amount ? group.slices.some((slice) => Number(amount) === slice.amount) : false;
+  });
+  if (bookingHit) return true;
   if (!amount || partida) return false;
-  return Number(amount) === historyBudget(client.history ?? []).total;
+  return Number(amount) === clientBudget(client).total;
 }
 
 export function clientMatchesSearch(client: ClientRecord, mode: ClientSearchMode, query: string, partida: string) {

@@ -23,7 +23,7 @@ import {
   portalTab,
 } from "@/lib/portal/types";
 import { requireAdmin } from "@/lib/portal/session";
-import { getClient } from "@/lib/portal/store";
+import { getClient, listNotices } from "@/lib/portal/store";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 
@@ -46,6 +46,7 @@ export default async function StudioClientPage({
   const { id } = await params;
   const client = await getClient(id);
   if (!client) notFound();
+  const requests = (await listNotices()).filter((notice) => notice.clientId === client.id && notice.kind === "cambio");
   const { invite, ok, error, tab: tabRaw } = await searchParams;
   const event = client.event;
   const tab = portalTab(tabRaw);
@@ -286,11 +287,17 @@ export default async function StudioClientPage({
         <section className="pt-10">
           <h2 className="font-serif text-3xl">Histórico y budget</h2>
           <p className="mt-3 max-w-2xl text-sm text-ash">
-            Anota cada contacto y cada servicio. Ella ve lo mismo. El importe del servicio queda abonado, salvo que marques
-            que lo paga después.
+            Anota cada contacto y cada servicio. Ella ve lo mismo, junto con las solicitudes que te llegan al buzón. El
+            budget suma esos servicios, el del evento y el de cada acompañante.
           </p>
           <div className="mt-8">
-            <HistoryForm clientId={client.id} entries={client.history} />
+            <HistoryForm
+              clientId={client.id}
+              entries={client.history}
+              event={client.event}
+              payments={client.payments}
+              requests={requests}
+            />
           </div>
         </section>
       ) : null}

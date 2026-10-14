@@ -3,8 +3,10 @@ import { ClientSearch } from "@/app/components/portal/ClientSearch";
 import { MailSetupNotice } from "@/app/components/portal/MailSetupNotice";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { StudioAside } from "@/app/components/portal/StudioAside";
+import { clientBudget } from "@/lib/portal/budget";
 import { clientMatchesSearch, clientSearchMode } from "@/lib/portal/client-search";
 import { fullName } from "@/lib/portal/names";
+import { euros } from "@/lib/portal/types";
 import { requireAdmin } from "@/lib/portal/session";
 import { listClients, portalStorageReady } from "@/lib/portal/store";
 import { redirect } from "next/navigation";
@@ -16,6 +18,14 @@ export const metadata: Metadata = {
   title: "Clientas",
   robots: { index: false, follow: false },
 };
+
+function formatEventDate(value: string) {
+  return new Date(`${value}T00:00:00`).toLocaleDateString("es-ES", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
 
 export default async function StudioClientsPage({
   searchParams,
@@ -75,9 +85,13 @@ export default async function StudioClientsPage({
             <li key={client.id} className="flex flex-wrap items-center justify-between gap-3 py-5">
               <div>
                 <p className="font-serif text-2xl">{fullName(client.event, client.name)}</p>
+                <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                  <span>Tlf. {client.event.phone || "—"}</span>
+                  <span>Presupuesto {euros(clientBudget(client).total)}</span>
+                  <span>Evento {client.event.eventDate ? formatEventDate(client.event.eventDate) : "—"}</span>
+                </p>
                 <p className="mt-1 text-sm text-ash">
                   {client.email}
-                  {client.event.eventDate ? ` · ${client.event.eventDate}` : ""}
                   {` · ${client.event.peopleCount} persona(s)`}
                   {client.passwordHash ? " · activa" : " · pendiente de activar"}
                 </p>

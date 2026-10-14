@@ -70,6 +70,8 @@ export type PortalCopy = {
   budgetTotal: string;
   budgetPaid: string;
   budgetPending: string;
+  budgetUnset: string;
+  requestLabel: string;
   historyKinds: { contacto: string; servicio: string };
   historyTitles: Record<string, string>;
   yourName: string;
@@ -232,14 +234,16 @@ export const portalEs: PortalCopy = {
   download: "Descargar",
   agendaTitle: "Agenda",
   agendaLead: "Las citas que tenemos planificadas: prueba, evento y lo que vayamos sumando.",
-  historyTitle: "Histórico",
-  historyLead: "Los contactos y los servicios que vamos anotando. El budget suma solo los servicios.",
-  historyEmpty: "Todavía no hay contactos ni servicios anotados.",
+  historyTitle: "Histórico de contactos o solicitudes",
+  historyLead: "Aquí encontrarás un extracto de tus solicitudes o cambios.",
+  historyEmpty: "Todavía no hay contactos, solicitudes ni servicios.",
   budgetTitle: "Budget",
-  budgetLead: "El importe queda abonado. Si marcas que lo paga después, esa cantidad pasa a pendiente.",
+  budgetLead: "Ten controlados los pagos y conoce el detalle de todos los servicios realizados.",
   budgetTotal: "Total",
   budgetPaid: "Abonado",
   budgetPending: "Pendiente",
+  budgetUnset: "Importe por anotar",
+  requestLabel: "Solicitud",
   historyKinds: { contacto: "Contacto", servicio: "Servicio" },
   historyTitles: {
     Llamada: "Llamada",
@@ -447,14 +451,16 @@ export const portalEn: PortalCopy = {
   download: "Download",
   agendaTitle: "Diary",
   agendaLead: "The appointments we have planned: trial, event, and anything we add.",
-  historyTitle: "History",
-  historyLead: "The contacts and services we record. The budget adds up the services only.",
-  historyEmpty: "There are no contacts or services recorded yet.",
+  historyTitle: "History of contacts and requests",
+  historyLead: "Here you will find a summary of your requests and changes.",
+  historyEmpty: "There are no contacts, requests or services yet.",
   budgetTitle: "Budget",
-  budgetLead: "The amount is paid. If you mark that she will pay later, that sum stays outstanding.",
+  budgetLead: "Keep your payments in view and see every service that has been carried out.",
   budgetTotal: "Total",
   budgetPaid: "Paid",
   budgetPending: "Outstanding",
+  budgetUnset: "Amount still to enter",
+  requestLabel: "Request",
   historyKinds: { contacto: "Contact", servicio: "Service" },
   historyTitles: {
     Llamada: "Call",
@@ -661,14 +667,16 @@ export const portalFr: PortalCopy = {
   download: "Télécharger",
   agendaTitle: "Agenda",
   agendaLead: "Les rendez-vous prévus : essai, événement, et ce que nous ajouterons.",
-  historyTitle: "Historique",
-  historyLead: "Les contacts et les services que nous notons. Le budget additionne seulement les services.",
-  historyEmpty: "Il n’y a pas encore de contacts ni de services notés.",
+  historyTitle: "Historique des contacts ou demandes",
+  historyLead: "Tu trouveras ici un extrait de tes demandes ou changements.",
+  historyEmpty: "Il n’y a pas encore de contacts, de demandes ni de services.",
   budgetTitle: "Budget",
-  budgetLead: "Le montant est payé. Si tu indiques qu’elle paie plus tard, cette somme reste à régler.",
+  budgetLead: "Garde le contrôle des paiements et le détail de tous les services réalisés.",
   budgetTotal: "Total",
   budgetPaid: "Payé",
   budgetPending: "Reste",
+  budgetUnset: "Montant à indiquer",
+  requestLabel: "Demande",
   historyKinds: { contacto: "Contact", servicio: "Service" },
   historyTitles: {
     Llamada: "Appel",

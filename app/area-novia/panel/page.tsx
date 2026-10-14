@@ -14,7 +14,7 @@ import { INSPIRATION_MAX } from "@/lib/portal/files";
 import { mailName } from "@/lib/portal/names";
 import { getLocale, getPortalCopy, interpolate, localePath } from "@/lib/i18n";
 import { requireClient } from "@/lib/portal/session";
-import { getClient } from "@/lib/portal/store";
+import { getClient, listNotices } from "@/lib/portal/store";
 import {
   CONTRACTOR_INSPIRATION,
   CONTRACTOR_TRIAL_PHOTOS,
@@ -47,6 +47,7 @@ export default async function BridePanelPage({
   if (!session) redirect(localePath(locale, "/area-novia"));
   const client = await getClient(session.sub);
   if (!client) redirect(localePath(locale, "/area-novia"));
+  const requests = (await listNotices()).filter((notice) => notice.clientId === client.id && notice.kind === "cambio");
   const { ok, error, tab: tabRaw } = await searchParams;
   const tab = portalTab(tabRaw);
   const okText: Record<string, string> = {
@@ -175,7 +176,14 @@ export default async function BridePanelPage({
           <h2 className="font-serif text-3xl">{t.historyTitle}</h2>
           <p className="mt-3 max-w-2xl text-sm text-ash">{t.historyLead}</p>
           <div className="mt-8">
-            <HistoryView entries={client.history} copy={t} locale={locale} />
+            <HistoryView
+              entries={client.history}
+              event={client.event}
+              payments={client.payments}
+              requests={requests}
+              copy={t}
+              locale={locale}
+            />
           </div>
         </section>
       ) : null}
