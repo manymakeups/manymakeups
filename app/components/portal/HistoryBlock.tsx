@@ -55,6 +55,41 @@ function isCareService(title: string) {
   return !EVENT_SERVICES.has(canonicalService(title));
 }
 
+function sumServices(entries: HistoryEntry[]) {
+  const total = entries.reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0);
+  const pending = entries.reduce((sum, entry) => sum + (entry.paid ? 0 : Number(entry.amount) || 0), 0);
+  return { total, pending, paid: Math.max(0, total - pending) };
+}
+
+function MoneyBoxes({
+  total,
+  paid,
+  pending,
+  copy,
+}: {
+  total: number;
+  paid: number;
+  pending: number;
+  copy: PortalCopy;
+}) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-3">
+      <article className="border border-ink/10 bg-linen/40 p-5">
+        <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">{copy.budgetTotal}</p>
+        <p className="mt-3 font-serif text-3xl">{euros(total)}</p>
+      </article>
+      <article className="border border-ink/10 bg-linen/40 p-5">
+        <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">{copy.budgetPaid}</p>
+        <p className="mt-3 font-serif text-3xl">{euros(paid)}</p>
+      </article>
+      <article className="border border-ink/10 bg-linen/40 p-5">
+        <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">{copy.budgetPending}</p>
+        <p className="mt-3 font-serif text-3xl">{euros(pending)}</p>
+      </article>
+    </div>
+  );
+}
+
 function ServiceLines({ entries, copy }: { entries: HistoryEntry[]; copy: PortalCopy }) {
   if (!entries.length) return null;
   return (
@@ -94,37 +129,25 @@ export function BudgetView({
   copy?: PortalCopy;
   billing?: ReactNode;
 }) {
-  const [pane, setPane] = useState<"evento" | "cuidado">("evento");
+  const [pane, setPane] = useState<"evento" | "otros">("evento");
   const booked = event && payments ? clientBudget({ history: entries, event, payments }) : null;
   const history = booked?.history ?? historyBudget(entries);
   const budget = booked ?? { ...history, groups: [], total: history.total, pending: history.pending, paid: history.paid };
   const eventServices = history.services.filter((entry) => !isCareService(entry.title));
   const careServices = history.services.filter((entry) => isCareService(entry.title));
+  const care = sumServices(careServices);
   const tabClass = (on: boolean) =>
     on
       ? "border-b-2 border-gilt px-1 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ink"
       : "border-b-2 border-transparent px-1 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ash hover:text-ink";
   return (
     <div>
-      <div className="grid gap-4 sm:grid-cols-3">
-        <article className="border border-ink/10 bg-linen/40 p-5">
-          <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">{copy.budgetTotal}</p>
-          <p className="mt-3 font-serif text-3xl">{euros(budget.total)}</p>
-        </article>
-        <article className="border border-ink/10 bg-linen/40 p-5">
-          <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">{copy.budgetPaid}</p>
-          <p className="mt-3 font-serif text-3xl">{euros(budget.paid)}</p>
-        </article>
-        <article className="border border-ink/10 bg-linen/40 p-5">
-          <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">{copy.budgetPending}</p>
-          <p className="mt-3 font-serif text-3xl">{euros(budget.pending)}</p>
-        </article>
-      </div>
+      <MoneyBoxes total={budget.total} paid={budget.paid} pending={budget.pending} copy={copy} />
       <div className="mt-10 flex gap-6 border-b border-ink/10">
         <button className={tabClass(pane === "evento")} type="button" onClick={() => setPane("evento")}>
           {copy.budgetEvent}
         </button>
-        <button className={tabClass(pane === "cuidado")} type="button" onClick={() => setPane("cuidado")}>
+        <button className={tabClass(pane === "otros")} type="button" onClick={() => setPane("otros")}>
           {copy.budgetCare}
         </button>
       </div>
@@ -133,10 +156,15 @@ export function BudgetView({
           {billing}
           <ServiceLines entries={eventServices} copy={copy} />
         </div>
-      ) : careServices.length ? (
-        <ServiceLines entries={careServices} copy={copy} />
       ) : (
-        <p className="mt-8 text-sm text-ash">{copy.budgetCareEmpty}</p>
+        <div className="pt-8">
+          <MoneyBoxes total={care.total} paid={care.paid} pending={care.pending} copy={copy} />
+          {careServices.length ? (
+            <ServiceLines entries={careServices} copy={copy} />
+          ) : (
+            <p className="mt-8 text-sm text-ash">{copy.budgetCareEmpty}</p>
+          )}
+        </div>
       )}
     </div>
   );
@@ -172,8 +200,7 @@ export function HistoryView({
   const person = clientName.trim() || copy.threadClient;
   return (
     <div>
-      <h3 className="font-serif text-3xl">{copy.contactsTitle}</h3>
-        <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
+        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
           <label className="field-label sm:w-52">
             {copy.filterContact}
             <select className="field" value={contact} onChange={(event) => setContact(event.target.value)}>

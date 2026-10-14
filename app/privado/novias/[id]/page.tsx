@@ -285,7 +285,7 @@ export default async function StudioClientPage({
         <section className="pt-10">
           <h2 className="font-serif text-3xl">Budget</h2>
           <p className="mt-3 max-w-2xl text-sm text-ash">
-            El resumen junta el evento y el cuidado, esté pagado o pendiente. Ella lo ve igual en su budget.
+            El resumen junta el evento y los otros gastos, estén pagados o pendientes. Ella lo ve igual en su budget.
           </p>
           <div className="mt-8">
             <BudgetView

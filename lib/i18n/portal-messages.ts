@@ -76,6 +76,7 @@ export type PortalCopy = {
   budgetEvent: string;
   budgetCare: string;
   budgetCareEmpty: string;
+  budgetService: string;
   requestLabel: string;
   filterShow: string;
   filterAll: string;
@@ -276,8 +277,9 @@ export const portalEs: PortalCopy = {
   budgetUnset: "Importe por anotar",
   budgetEmpty: "Todavía no hay servicios ni importes en el budget.",
   budgetEvent: "Evento",
-  budgetCare: "Cuidado",
-  budgetCareEmpty: "Todavía no hay tratamientos, productos ni otros cuidados.",
+  budgetCare: "Otros",
+  budgetCareEmpty: "Todavía no hay otros gastos.",
+  budgetService: "Tu servicio",
   requestLabel: "Solicitud",
   filterShow: "Ver",
   filterAll: "Todo",
@@ -531,8 +533,9 @@ export const portalEn: PortalCopy = {
   budgetUnset: "Amount still to enter",
   budgetEmpty: "There are no services or amounts in the budget yet.",
   budgetEvent: "Event",
-  budgetCare: "Care",
-  budgetCareEmpty: "No treatments, products or other care yet.",
+  budgetCare: "Other",
+  budgetCareEmpty: "No other expenses yet.",
+  budgetService: "Your service",
   requestLabel: "Request",
   filterShow: "Show",
   filterAll: "All",
@@ -785,8 +788,9 @@ export const portalFr: PortalCopy = {
   budgetUnset: "Montant à indiquer",
   budgetEmpty: "Il n’y a pas encore de services ni de montants dans le budget.",
   budgetEvent: "Événement",
-  budgetCare: "Soin",
-  budgetCareEmpty: "Pas encore de soins, de produits ni d’autres attentions.",
+  budgetCare: "Autres",
+  budgetCareEmpty: "Pas encore d’autres dépenses.",
+  budgetService: "Ton service",
   requestLabel: "Demande",
   filterShow: "Voir",
   filterAll: "Tout",

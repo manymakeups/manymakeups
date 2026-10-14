@@ -58,7 +58,7 @@ export function PaymentsView({
   const t = usePortalCopy();
   return (
     <div className="flex flex-col gap-12">
-      <PersonPayView title={t.contractor} payments={payments.contractor} showTrial />
+      <PersonPayView title={t.budgetService} payments={payments.contractor} showTrial />
       {people.map((person, i) => (
         <PersonPayView
           key={i}
@@ -118,7 +118,7 @@ export function PaymentsForm({
     <form action="/api/admin/payments" method="post" className="flex flex-col gap-12">
       <input type="hidden" name="clientId" value={clientId} />
       <div>
-        <h3 className="font-serif text-2xl">Contratante</h3>
+        <h3 className="font-serif text-2xl">Tu servicio</h3>
         <div className="mt-4 grid gap-6 sm:grid-cols-3">
           <SliceFields
             title="Reserva"
