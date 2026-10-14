@@ -6,6 +6,212 @@ import { usePortalCopy } from "@/app/components/portal/usePortalCopy";
 import { isImageType, portalFileHref } from "@/lib/portal/files";
 import { filesFor, type FileKind, type PortalFile } from "@/lib/portal/types";
 
+function loadSheet(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("image"));
+    image.src = src;
+  });
+}
+
+function coverSheet(image: HTMLImageElement, width: number, height: number) {
+  const sheet = document.createElement("canvas");
+  sheet.width = width;
+  sheet.height = height;
+  const ctx = sheet.getContext("2d");
+  if (!ctx || !image.width || !image.height) return sheet;
+  const scale = Math.max(width / image.width, height / image.height);
+  const drawnWidth = image.width * scale;
+  const drawnHeight = image.height * scale;
+  ctx.drawImage(image, (width - drawnWidth) / 2, (height - drawnHeight) / 2, drawnWidth, drawnHeight);
+  return sheet;
+}
+
+function smoothstep(value: number) {
+  const t = Math.min(1, Math.max(0, value));
+  return t * t * (3 - 2 * t);
+}
+
+function drawCurl(
+  ctx: CanvasRenderingContext2D,
+  sheet: HTMLCanvasElement,
+  under: HTMLCanvasElement | null,
+  width: number,
+  height: number,
+  progress: number,
+  direction: 1 | -1,
+) {
+  const t = smoothstep(progress);
+  ctx.clearRect(0, 0, width, height);
+  if (under) ctx.drawImage(under, 0, 0, width, height);
+  else {
+    ctx.fillStyle = "#ece6dc";
+    ctx.fillRect(0, 0, width, height);
+  }
+
+  const radius = width * 0.4 * Math.sin(Math.PI * t);
+  if (radius < 1.5) {
+    if (t < 0.5) ctx.drawImage(sheet, 0, 0, width, height);
+    return;
+  }
+
+  const sign = direction === 1 ? 1 : -1;
+  const crest = direction === 1 ? width * (1 - t) : width * t;
+  const fold = crest - sign * radius;
+  const maxAngle = Math.PI * 0.72;
+  const shade = Math.sin(Math.PI * t) * 0.42;
+  const reach = radius * 2.1;
+
+  if (direction === 1) {
+    const shadow = ctx.createLinearGradient(crest, 0, crest + reach, 0);
+    shadow.addColorStop(0, `rgba(26,22,19,${shade})`);
+    shadow.addColorStop(1, "rgba(26,22,19,0)");
+    ctx.fillStyle = shadow;
+    ctx.fillRect(crest, 0, reach, height);
+  } else {
+    const shadow = ctx.createLinearGradient(crest - reach, 0, crest, 0);
+    shadow.addColorStop(0, "rgba(26,22,19,0)");
+    shadow.addColorStop(1, `rgba(26,22,19,${shade})`);
+    ctx.fillStyle = shadow;
+    ctx.fillRect(crest - reach, 0, reach, height);
+  }
+
+  function project(pageX: number) {
+    const past = direction === 1 ? pageX - fold : fold - pageX;
+    if (past <= 0) return pageX;
+    const angle = past / radius;
+    if (angle >= maxAngle) return null;
+    return fold + sign * Math.sin(angle) * radius;
+  }
+
+  const strips = 80;
+  const backs: { x: number; w: number; angle: number }[] = [];
+  for (let i = 0; i < strips; i += 1) {
+    const x0 = (width * i) / strips;
+    const x1 = (width * (i + 1)) / strips;
+    const mid = (x0 + x1) / 2;
+    const past = direction === 1 ? mid - fold : fold - mid;
+    if (past <= 0) {
+      ctx.drawImage(sheet, x0, 0, x1 - x0, height, x0 - 0.5, 0, x1 - x0 + 1, height);
+      continue;
+    }
+    const angle = past / radius;
+    if (angle >= maxAngle) continue;
+    const left = project(x0);
+    const right = project(x1);
+    if (left === null || right === null) continue;
+    const destX = Math.min(left, right);
+    const destW = Math.max(1, Math.abs(right - left) + 1);
+    if (angle <= Math.PI / 2) {
+      ctx.drawImage(sheet, x0, 0, x1 - x0, height, destX, 0, destW, height);
+      ctx.fillStyle = `rgba(26,22,19,${(angle / (Math.PI / 2)) * 0.2})`;
+      ctx.fillRect(destX, 0, destW, height);
+    } else {
+      backs.push({ x: destX, w: destW, angle });
+    }
+  }
+
+  if (backs.length) {
+    const lipX = Math.min(...backs.map((back) => back.x));
+    const lipEnd = Math.max(...backs.map((back) => back.x + back.w));
+    const paper = ctx.createLinearGradient(direction === 1 ? lipX : lipEnd, 0, direction === 1 ? lipEnd : lipX, 0);
+    paper.addColorStop(0, "#d9cebe");
+    paper.addColorStop(0.55, "#f4ecdf");
+    paper.addColorStop(1, "#fffaf3");
+    ctx.fillStyle = paper;
+    ctx.fillRect(lipX, 0, lipEnd - lipX, height);
+    const cylinder = ctx.createLinearGradient(0, 0, 0, height);
+    cylinder.addColorStop(0, "rgba(26,22,19,0.16)");
+    cylinder.addColorStop(0.45, "rgba(255,250,244,0.2)");
+    cylinder.addColorStop(1, "rgba(26,22,19,0.2)");
+    ctx.fillStyle = cylinder;
+    ctx.fillRect(lipX, 0, lipEnd - lipX, height);
+  }
+}
+
+function CurlCanvas({
+  front,
+  under,
+  direction,
+  onDone,
+}: {
+  front: string;
+  under: string;
+  direction: 1 | -1;
+  onDone: () => void;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const doneRef = useRef(onDone);
+  doneRef.current = onDone;
+
+  useEffect(() => {
+    const stage = canvasRef.current;
+    if (!stage) return;
+    let frame = 0;
+    let cancelled = false;
+
+    async function run(surface: HTMLCanvasElement) {
+      const ctx = surface.getContext("2d");
+      if (!ctx) {
+        doneRef.current();
+        return;
+      }
+      const [frontImage, underImage] = await Promise.all([
+        loadSheet(front),
+        under ? loadSheet(under).catch(() => null) : Promise.resolve(null),
+      ]).catch(() => [null, null] as const);
+      if (cancelled) return;
+      if (!frontImage) {
+        doneRef.current();
+        return;
+      }
+
+      const started = performance.now();
+      const duration = 1100;
+      let sheet: HTMLCanvasElement | null = null;
+      let below: HTMLCanvasElement | null = null;
+      let sized = "";
+
+      function tick(now: number) {
+        if (cancelled || !ctx || !frontImage) return;
+        const rect = surface.getBoundingClientRect();
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const width = Math.max(1, Math.round(rect.width * dpr));
+        const height = Math.max(1, Math.round(rect.height * dpr));
+        if (rect.width < 2) {
+          frame = window.requestAnimationFrame(tick);
+          return;
+        }
+        if (surface.width !== width || surface.height !== height) {
+          surface.width = width;
+          surface.height = height;
+        }
+        const key = `${width}x${height}`;
+        if (key !== sized) {
+          sheet = coverSheet(frontImage, width, height);
+          below = underImage ? coverSheet(underImage, width, height) : null;
+          sized = key;
+        }
+        const progress = Math.min(1, (now - started) / duration);
+        if (sheet) drawCurl(ctx, sheet, below, width, height, progress, direction);
+        if (progress < 1) frame = window.requestAnimationFrame(tick);
+        else doneRef.current();
+      }
+
+      frame = window.requestAnimationFrame(tick);
+    }
+
+    void run(stage);
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(frame);
+    };
+  }, [direction, front, under]);
+
+  return <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />;
+}
+
 function PhotoBook({
   images,
   clientId,
@@ -27,16 +233,13 @@ function PhotoBook({
 }) {
   const [index, setIndex] = useState(0);
   const [turn, setTurn] = useState<1 | -1 | 0>(0);
-  const [hold, setHold] = useState(false);
   const startX = useRef(0);
   const closeRef = useRef(onClose);
   const indexRef = useRef(index);
   const turnRef = useRef(turn);
-  const holdRef = useRef(hold);
   closeRef.current = onClose;
   indexRef.current = index;
   turnRef.current = turn;
-  holdRef.current = hold;
   const page = images[index];
 
   useEffect(() => {
@@ -49,7 +252,7 @@ function PhotoBook({
       }
       if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
       const dir = event.key === "ArrowRight" ? 1 : -1;
-      if (turnRef.current !== 0 || holdRef.current) return;
+      if (turnRef.current !== 0) return;
       const next = indexRef.current + dir;
       if (next < 0 || next >= images.length) return;
       setTurn(dir);
@@ -64,7 +267,7 @@ function PhotoBook({
   const turned = useRef(false);
 
   function go(dir: 1 | -1) {
-    if (turn !== 0 || hold) return;
+    if (turn !== 0) return;
     const next = index + dir;
     if (next < 0 || next >= images.length) return;
     turned.current = false;
@@ -75,20 +278,12 @@ function PhotoBook({
     if (turned.current || turn === 0) return;
     turned.current = true;
     const dir = turn;
-    setHold(true);
     setIndex((current) => current + dir);
     setTurn(0);
     requestAnimationFrame(() => {
-      setHold(false);
       turned.current = false;
     });
   }
-
-  useEffect(() => {
-    if (turn === 0) return;
-    const timer = window.setTimeout(finishTurn, 1040);
-    return () => window.clearTimeout(timer);
-  }, [turn]);
 
   const under = images[Math.min(images.length - 1, Math.max(0, index + (turn === 0 ? 1 : turn)))];
 
@@ -125,25 +320,19 @@ function PhotoBook({
             go(event.clientX - rect.left > rect.width / 2 ? 1 : -1);
           }}
         >
-          {under && under.id !== page?.id ? (
+          {page && turn === 0 ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={portalFileHref(clientId, under.id)} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            <img src={portalFileHref(clientId, page.id)} alt="" className="absolute inset-0 h-full w-full object-cover" />
           ) : (
             <div className="absolute inset-0 bg-linen" />
           )}
-          {turn !== 0 ? <div className={turn === -1 ? "page-cast-back" : "page-cast"} /> : null}
-          {page ? (
-            <div
-              key={`${page.id}-${hold ? "hold" : "live"}`}
-              className={`page-sheet ${hold ? "" : turn === 1 ? "page-peel-forward" : turn === -1 ? "page-peel-back" : ""}`}
-              onAnimationEnd={(event) => {
-                if (event.animationName.startsWith("page-peel")) finishTurn();
-              }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={portalFileHref(clientId, page.id)} alt="" className="h-full w-full object-cover [backface-visibility:hidden]" />
-              <span className="page-crease" />
-            </div>
+          {page && turn !== 0 ? (
+            <CurlCanvas
+              front={portalFileHref(clientId, page.id)}
+              under={under && under.id !== page.id ? portalFileHref(clientId, under.id) : ""}
+              direction={turn}
+              onDone={finishTurn}
+            />
           ) : null}
         </div>
         <div className="mt-4 flex w-full max-w-md items-center justify-between text-porcelain">
