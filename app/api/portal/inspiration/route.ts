@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { newId } from "@/lib/portal/crypto";
 import { INSPIRATION_MAX, isImageUpload, maxBytes, safeFileName } from "@/lib/portal/files";
 import { goPortal } from "@/lib/portal/http";
+import { inspirationPlace, valueChange } from "@/lib/portal/notice-text";
 import { clientLabel, notifyStudio } from "@/lib/portal/notify";
 import { requireClient } from "@/lib/portal/session";
 import { deletePortalFile, getClient, putPortalFile, saveClient } from "@/lib/portal/store";
@@ -52,17 +53,17 @@ export async function POST(request: Request) {
     added.push(record.name);
   }
   const label = personLabel(form.get("person"));
-  const where = inspirationWhere(label);
-  const lines = [`${added.length} foto(s) en ${where}.`, ...added];
+  const where = inspirationPlace(label, client.event.people);
+  const message = valueChange(where, "", added.join(", "));
   const place = inspirationScope(label);
   await saveClient(
     client,
     added.length
-      ? { kind: "fotos", scope: place.scope, personIndex: place.personIndex, message: lines.join("\n") }
+      ? { kind: "fotos", scope: place.scope, personIndex: place.personIndex, message }
       : undefined,
   );
   if (added.length) {
-    await notifyStudio(`Inspiración nueva · ${clientLabel(client)}`, lines);
+    await notifyStudio(`Inspiración nueva · ${clientLabel(client)}`, message.split("\n"));
   }
   const tab = typeof form.get("tab") === "string" && form.get("tab") ? String(form.get("tab")) : "contratante";
   const sec = typeof form.get("sec") === "string" ? String(form.get("sec")) : "";
@@ -80,11 +81,10 @@ export async function DELETE(request: Request) {
   if (!file) return NextResponse.json({ ok: false }, { status: 404 });
   await deletePortalFile(file);
   client.inspiration = client.inspiration.filter((item) => item.id !== id);
-  const where = inspirationWhere(file.label);
   const place = inspirationScope(file.label);
-  const message = `Ha quitado una foto de ${where}.`;
+  const message = valueChange(inspirationPlace(file.label, client.event.people), file.name, "");
   await saveClient(client, { kind: "fotos", scope: place.scope, personIndex: place.personIndex, message });
-  await notifyStudio(`Inspiración quitada · ${clientLabel(client)}`, [message]);
+  await notifyStudio(`Inspiración quitada · ${clientLabel(client)}`, message.split("\n"));
   return NextResponse.json({ ok: true });
 }
 
@@ -94,14 +94,3 @@ function inspirationScope(label: string) {
   return { scope: "acompanante" as const, personIndex: Number(person[1]) };
 }
 
-function inspirationWhere(label: string) {
-  const person = /^persona-(\d+)(?:-(maquillaje|peinado))?$/.exec(label);
-  if (person) {
-    const who = `acompañante ${Number(person[1]) + 1}`;
-    if (person[2] === "peinado") return `${who}, peinado`;
-    if (person[2] === "maquillaje") return `${who}, maquillaje`;
-    return who;
-  }
-  if (label.includes("peinado")) return "su peinado";
-  return "su maquillaje";
-}

@@ -261,10 +261,11 @@ export function RemoveCompanionButton({
     <>
       <button
         type="button"
-        className="mt-8 text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink"
+        aria-label={`Eliminar a ${name}`}
+        className="px-1 text-xs leading-none text-ash hover:text-ink"
         onClick={() => setOpen(true)}
       >
-        Eliminar acompañante
+        ×
       </button>
       {open ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 px-5" onClick={() => setOpen(false)}>

@@ -176,7 +176,15 @@ export function BudgetView({
   );
 }
 
-function ClientReply({ id, copy }: { id: string; copy: PortalCopy }) {
+function ThreadReply({
+  id,
+  copy,
+  studioNext,
+}: {
+  id: string;
+  copy: PortalCopy;
+  studioNext?: string;
+}) {
   const [open, setOpen] = useState(false);
   if (!open) {
     return (
@@ -190,7 +198,17 @@ function ClientReply({ id, copy }: { id: string; copy: PortalCopy }) {
     );
   }
   return (
-    <form action="/api/portal/replies" method="post" className="mt-5 flex max-w-xl flex-col gap-3">
+    <form
+      action={studioNext ? "/api/admin/notices" : "/api/portal/replies"}
+      method="post"
+      className="mt-5 flex max-w-xl flex-col gap-3"
+    >
+      {studioNext ? (
+        <>
+          <input type="hidden" name="next" value={studioNext} />
+          <input type="hidden" name="intent" value="reply" />
+        </>
+      ) : null}
       <input type="hidden" name="id" value={id} />
       <label className="field-label">
         {copy.replyButton}
@@ -210,6 +228,7 @@ export function HistoryView({
   copy = portalEs,
   locale = "es",
   canReply = false,
+  studioNext,
 }: {
   entries: HistoryEntry[];
   requests?: StudioNotice[];
@@ -217,6 +236,7 @@ export function HistoryView({
   copy?: PortalCopy;
   locale?: Locale;
   canReply?: boolean;
+  studioNext?: string;
 }) {
   const [contactWho, setContactWho] = useState<WhoFilter>("");
   const ordered = [...entries].sort((a, b) => `${b.date}${b.title}`.localeCompare(`${a.date}${a.title}`));
@@ -279,7 +299,9 @@ export function HistoryView({
                       </div>
                       <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{notice.message}</p>
                       {replies}
-                      {canReply ? <ClientReply id={notice.id} copy={copy} /> : null}
+                      {canReply || studioNext ? (
+                        <ThreadReply id={notice.id} copy={copy} studioNext={studioNext} />
+                      ) : null}
                     </article>
                   </li>
                 );
@@ -300,7 +322,9 @@ export function HistoryView({
                     <p className="mt-2 font-serif text-2xl">{heading || copy.requestLabel}</p>
                     {body ? <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{body}</p> : null}
                     {replies}
-                    {canReply ? <ClientReply id={notice.id} copy={copy} /> : null}
+                    {canReply || studioNext ? (
+                      <ThreadReply id={notice.id} copy={copy} studioNext={studioNext} />
+                    ) : null}
                   </article>
                 </li>
               );
@@ -353,7 +377,12 @@ export function HistoryForm({
 }) {
   return (
     <div className="flex flex-col gap-10">
-      <HistoryView entries={entries} requests={requests} clientName={clientName} />
+      <HistoryView
+        entries={entries}
+        requests={requests}
+        clientName={clientName}
+        studioNext={`/privado/novias/${clientId}?tab=historico`}
+      />
       {entries.length ? (
         <ul className="divide-y divide-ink/10 border border-ink/10">
           {[...entries]

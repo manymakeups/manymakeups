@@ -81,9 +81,14 @@ export default async function StudioClientPage({
       {ok === "estudio" ? <PortalNotice>Productos guardados.</PortalNotice> : null}
       {ok === "fotos" ? <PortalNotice>Fotos de la prueba colgadas.</PortalNotice> : null}
       {ok === "mensaje" ? <PortalNotice>Mensaje enviado. Ella lo ve en comunicaciones.</PortalNotice> : null}
+      {ok === "respuesta" ? <PortalNotice>Respuesta enviada. Ella la ve en comunicaciones.</PortalNotice> : null}
       {error === "mensaje" ? <PortalNotice>Escribe el mensaje antes de enviarlo.</PortalNotice> : null}
+      {error === "respuesta" ? <PortalNotice>Escribe la respuesta antes de enviarla.</PortalNotice> : null}
       {error === "correo" && ok === "mensaje" ? (
         <PortalNotice>El mensaje está en comunicaciones, pero no he podido enviarle el correo.</PortalNotice>
+      ) : null}
+      {error === "correo" && ok === "respuesta" ? (
+        <PortalNotice>La respuesta está en comunicaciones, pero no he podido enviarle el correo.</PortalNotice>
       ) : null}
       <MailSetupNotice />
       {ok === "ficha" && error !== "correo" ? (
@@ -230,9 +235,11 @@ export default async function StudioClientPage({
                   const makeupPhotos = filesFor(ownInspiration, personInspirationLookKey(i, "maquillaje"));
                   const hairPhotos = filesFor(ownInspiration, personInspirationLookKey(i, "peinado"));
                   const trialPhotos = filesFor(client.workPhotos, personTrialPhotoKey(i));
+                  const heading = companionHeading(person, portalEs.whoOptions, `Persona ${i + 1}`);
                   return {
                     id: String(i),
-                    label: companionHeading(person, portalEs.whoOptions, `Persona ${i + 1}`),
+                    label: heading,
+                    above: <RemoveCompanionButton clientId={client.id} index={i} name={heading} />,
                     nested: true,
                     body: (
                       <EventSections
@@ -248,20 +255,13 @@ export default async function StudioClientPage({
                           notes: "Notas / comentarios",
                         }}
                         details={
-                          <>
-                            <PersonDataForm
-                              person={person}
-                              index={i}
-                              clientId={client.id}
-                              action="/api/admin/companions"
-                              copy={portalEs}
-                            />
-                            <RemoveCompanionButton
-                              clientId={client.id}
-                              index={i}
-                              name={companionHeading(person, portalEs.whoOptions, `Persona ${i + 1}`)}
-                            />
-                          </>
+                          <PersonDataForm
+                            person={person}
+                            index={i}
+                            clientId={client.id}
+                            action="/api/admin/companions"
+                            copy={portalEs}
+                          />
                         }
                         makeupInspiration={
                           makeupPhotos.length ? (

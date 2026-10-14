@@ -1,6 +1,7 @@
 import { newId } from "@/lib/portal/crypto";
 import { allowedType, isImageUpload, maxBytes, safeFileName } from "@/lib/portal/files";
 import { goPortal } from "@/lib/portal/http";
+import { valueChange } from "@/lib/portal/notice-text";
 import { clientLabel, notifyStudio } from "@/lib/portal/notify";
 import { requireClient } from "@/lib/portal/session";
 import { getClient, putPortalFile, saveClient } from "@/lib/portal/store";
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
   };
   await putPortalFile(record, Buffer.from(await upload.arrayBuffer()));
   client.documents.push(record);
-  const message = `Ha enviado un documento: ${record.name}`;
+  const message = valueChange("Documentación", "", record.name);
   await saveClient(client, { kind: "documento", scope: "contratante", message });
   await notifyStudio(`Documentación nueva · ${clientLabel(client)}`, [message]);
   return goPortal(request, "/area-novia/panel?tab=documentacion&ok=doc");

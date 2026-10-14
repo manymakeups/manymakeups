@@ -1,4 +1,5 @@
 import { goPortal } from "@/lib/portal/http";
+import { valueChange, valueChanges } from "@/lib/portal/notice-text";
 import { clientLabel, notifyStudio } from "@/lib/portal/notify";
 import { requireClient } from "@/lib/portal/session";
 import { getClient, saveClient } from "@/lib/portal/store";
@@ -18,11 +19,19 @@ export async function POST(request: Request) {
   const back = "/area-novia/panel?tab=agenda&agenda=historico";
   if (!item || item.status === "hecha" || item.status === "anulada") return goPortal(request, back);
   const intent = text(form.get("intent"));
+  const previous = {
+    title: item.title || "Cita",
+    date: item.date,
+    time: item.time,
+    place: item.place,
+    notes: item.notes,
+  };
   if (intent === "cancel") {
     item.status = "anulada";
-    const line = `${item.title || "Cita"} · ${item.date || "sin fecha"} ${item.time}`.trim();
-    await saveClient(client, { kind: "agenda", scope: "contratante", message: `Ha anulado una cita.\n${line}` });
-    await notifyStudio(`Cita anulada · ${clientLabel(client)}`, [line]);
+    const when = [previous.date, previous.time, previous.place].filter(Boolean).join(" · ");
+    const message = valueChange(`Agenda · ${previous.title} · Estado`, when || "Planificada", "Anulada");
+    await saveClient(client, { kind: "agenda", scope: "contratante", message });
+    await notifyStudio(`Cita anulada · ${clientLabel(client)}`, message.split("\n"));
     return goPortal(request, `${back}&ok=agenda`);
   }
   const date = text(form.get("date"));
@@ -31,12 +40,18 @@ export async function POST(request: Request) {
   item.time = text(form.get("time"));
   item.place = text(form.get("place"));
   item.notes = text(form.get("notes"));
-  const line = `${item.title || "Cita"} · ${item.date} ${item.time}`.trim();
+  const message =
+    valueChanges([
+      { where: `Agenda · ${previous.title} · Fecha`, before: previous.date, after: item.date },
+      { where: `Agenda · ${previous.title} · Hora`, before: previous.time, after: item.time },
+      { where: `Agenda · ${previous.title} · Lugar`, before: previous.place, after: item.place },
+      { where: `Agenda · ${previous.title} · Notas`, before: previous.notes, after: item.notes },
+    ]) || valueChange(`Agenda · ${previous.title}`, "sin cambios", "sin cambios");
   await saveClient(client, {
     kind: "agenda",
     scope: "contratante",
-    message: `Ha modificado una cita.\n${line}${item.place ? `\n${item.place}` : ""}`,
+    message,
   });
-  await notifyStudio(`Cita modificada · ${clientLabel(client)}`, [line, item.place]);
+  await notifyStudio(`Cita modificada · ${clientLabel(client)}`, message.split("\n"));
   return goPortal(request, `${back}&ok=agenda`);
 }

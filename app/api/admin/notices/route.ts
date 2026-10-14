@@ -67,7 +67,8 @@ export async function POST(request: Request) {
   if (intent === "reply") {
     const text = String(form.get("reply") ?? "").trim();
     const id = ids[0];
-    if (text.length < 2 || !id) return go(request, `${safeNext}?error=respuesta`);
+    const join = safeNext.includes("?") ? "&" : "?";
+    if (text.length < 2 || !id) return go(request, `${safeNext}${join}error=respuesta`);
     let clientId = "";
     let original = "";
     await mutateNotices((notices) =>
@@ -77,7 +78,7 @@ export async function POST(request: Request) {
         original = notice.message;
         return {
           ...notice,
-          read: true,
+          read: notice.fromStudio ? false : true,
           replies: [
             ...notice.replies,
             { id: newId(), createdAt: new Date().toISOString(), text },
@@ -92,7 +93,7 @@ export async function POST(request: Request) {
         sent = await mailClient(client, "reply", { reply: text, original });
       }
     }
-    return go(request, sent ? `${safeNext}?ok=respuesta` : `${safeNext}?error=correo`);
+    return go(request, sent ? `${safeNext}${join}ok=respuesta` : `${safeNext}${join}error=correo`);
   }
 
   return go(request, safeNext);

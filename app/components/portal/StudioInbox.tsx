@@ -63,6 +63,7 @@ export function StudioInbox({
     [clients],
   );
   const [selected, setSelected] = useState<string[]>([]);
+  const [replying, setReplying] = useState<string | null>(null);
   const allIds = notices.map((notice) => notice.id);
   const allSelected = allIds.length > 0 && selected.length === allIds.length;
 
@@ -151,7 +152,7 @@ export function StudioInbox({
                   />
                 </div>
               </div>
-              <p className="mt-4 whitespace-pre-wrap text-sm">{notice.message}</p>
+              <p className="mt-4 whitespace-pre-wrap text-sm">{notice.detail || notice.message}</p>
               {notice.replies.length ? (
                 <ul className="mt-4 space-y-3 border-t border-ink/10 pt-4">
                   {notice.replies.map((reply) => (
@@ -164,18 +165,28 @@ export function StudioInbox({
                   ))}
                 </ul>
               ) : null}
-              <form action="/api/admin/notices" method="post" className="mt-5 flex max-w-xl flex-col gap-3">
-                <input type="hidden" name="next" value="/privado/avisos" />
-                <input type="hidden" name="intent" value="reply" />
-                <input type="hidden" name="id" value={notice.id} />
-                <label className="field-label">
-                  Responder por correo
-                  <textarea className="field min-h-24" name="reply" required minLength={2} />
-                </label>
-                <button className="btn-atelier self-start" type="submit">
-                  Enviar respuesta
+              {replying === notice.id ? (
+                <form action="/api/admin/notices" method="post" className="mt-5 flex max-w-xl flex-col gap-3">
+                  <input type="hidden" name="next" value="/privado/avisos" />
+                  <input type="hidden" name="intent" value="reply" />
+                  <input type="hidden" name="id" value={notice.id} />
+                  <label className="field-label">
+                    Responder
+                    <textarea className="field min-h-24" name="reply" required minLength={2} placeholder="Escribe tu respuesta" />
+                  </label>
+                  <button className="btn-atelier self-start" type="submit">
+                    Responder
+                  </button>
+                </form>
+              ) : (
+                <button
+                  type="button"
+                  className="mt-5 text-[0.68rem] uppercase tracking-[0.16em] text-ash hover:text-ink"
+                  onClick={() => setReplying(notice.id)}
+                >
+                  Responder
                 </button>
-              </form>
+              )}
             </li>
           );
         })}

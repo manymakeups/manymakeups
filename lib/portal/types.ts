@@ -259,6 +259,7 @@ export type StudioNotice = {
   scope: StudioNoticeScope;
   personIndex?: number;
   message: string;
+  detail?: string;
   read: boolean;
   fromStudio?: boolean;
   replies: StudioNoticeReply[];
@@ -389,6 +390,7 @@ export function asStudioNotice(value: unknown): StudioNotice | null {
     scope,
     personIndex: Number.isFinite(row.personIndex) ? Number(row.personIndex) : undefined,
     message: row.message ?? "",
+    detail: typeof row.detail === "string" && row.detail ? row.detail : undefined,
     read: Boolean(row.read),
     fromStudio: Boolean(row.fromStudio),
     replies: Array.isArray(row.replies)

@@ -7,7 +7,7 @@ export function SubTabs({
   initial,
   fill = false,
 }: {
-  tabs: { id: string; label: string; body: ReactNode; nested?: boolean }[];
+  tabs: { id: string; label: string; body: ReactNode; nested?: boolean; above?: ReactNode }[];
   initial?: string;
   fill?: boolean;
 }) {
@@ -20,18 +20,20 @@ export function SubTabs({
       {tabs.map((tab) => {
         const on = tab.id === active.id;
         return (
-          <button
-            key={tab.id}
-            type="button"
-            className={
-              on
-                ? "border-b-2 border-gilt px-1 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ink"
-                : "border-b-2 border-transparent px-1 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ash hover:text-ink"
-            }
-            onClick={() => setCurrent(tab.id)}
-          >
-            {tab.label}
-          </button>
+          <div key={tab.id} className="flex flex-col items-center">
+            {tab.above ? <div className="flex h-4 items-end justify-center">{tab.above}</div> : null}
+            <button
+              type="button"
+              className={
+                on
+                  ? "border-b-2 border-gilt px-1 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ink"
+                  : "border-b-2 border-transparent px-1 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ash hover:text-ink"
+              }
+              onClick={() => setCurrent(tab.id)}
+            >
+              {tab.label}
+            </button>
+          </div>
         );
       })}
     </div>

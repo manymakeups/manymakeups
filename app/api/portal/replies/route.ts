@@ -1,5 +1,6 @@
 import { newId } from "@/lib/portal/crypto";
 import { goPortal } from "@/lib/portal/http";
+import { valueChange } from "@/lib/portal/notice-text";
 import { clientLabel, notifyStudio } from "@/lib/portal/notify";
 import { requireClient } from "@/lib/portal/session";
 import { addStudioNotice, getClient, mutateNotices } from "@/lib/portal/store";
@@ -15,12 +16,14 @@ export async function POST(request: Request) {
   const back = "/area-novia/panel?tab=historico";
   if (text.length < 2 || !id) return goPortal(request, `${back}&error=respuesta`);
   let found = false;
+  let original = "";
   let scope: "contratante" | "acompanante" = "contratante";
   let personIndex: number | undefined;
   await mutateNotices((notices) =>
     notices.map((notice) => {
       if (notice.id !== id || notice.clientId !== client.id) return notice;
       found = true;
+      original = notice.message;
       scope = notice.scope;
       personIndex = notice.personIndex;
       return {
@@ -33,12 +36,13 @@ export async function POST(request: Request) {
     }),
   );
   if (!found) return goPortal(request, back);
+  const notice = valueChange("Comunicaciones", original, text);
   await addStudioNotice(client.id, {
     kind: "respuesta",
     scope,
     personIndex,
-    message: text,
+    message: notice,
   });
-  await notifyStudio(`Respuesta · ${clientLabel(client)}`, [text]);
+  await notifyStudio(`Respuesta · ${clientLabel(client)}`, notice.split("\n"));
   return goPortal(request, `${back}&ok=respuesta`);
 }

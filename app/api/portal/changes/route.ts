@@ -2,7 +2,7 @@ import { goPortal } from "@/lib/portal/http";
 import { clientLabel, notifyStudio } from "@/lib/portal/notify";
 import { requireClient } from "@/lib/portal/session";
 import { addStudioNotice, getClient } from "@/lib/portal/store";
-import { personLine } from "@/lib/portal/notice-text";
+import { personTitle, valueChange } from "@/lib/portal/notice-text";
 
 export async function POST(request: Request) {
   const session = await requireClient();
@@ -24,18 +24,18 @@ export async function POST(request: Request) {
     return goPortal(request, back);
   }
   const person = personIndex != null ? client.event.people[personIndex] : null;
-  const heading =
+  const where =
     scope === "acompanante"
-      ? person
-        ? personLine(person, personIndex ?? 0)
-        : `Acompañante ${(personIndex ?? 0) + 1}`
-      : "Contratante";
+      ? `Comunicaciones · ${personTitle(person ?? undefined, personIndex ?? 0)}`
+      : "Comunicaciones · Evento";
+  const detail = valueChange(where, "", message);
   await addStudioNotice(client.id, {
     kind: "cambio",
     scope,
     personIndex,
-    message: `${heading}\n\n${message}`,
+    message: `${where}\n\n${message}`,
+    detail,
   });
-  await notifyStudio(`Cambio solicitado · ${clientLabel(client)}`, [heading, "", message]);
+  await notifyStudio(`Cambio solicitado · ${clientLabel(client)}`, detail.split("\n"));
   return goPortal(request, `${back}&ok=cambio`);
 }
