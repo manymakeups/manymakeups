@@ -86,7 +86,7 @@ function PhotoBook({
 
   useEffect(() => {
     if (turn === 0) return;
-    const timer = window.setTimeout(finishTurn, 760);
+    const timer = window.setTimeout(finishTurn, 1040);
     return () => window.clearTimeout(timer);
   }, [turn]);
 
@@ -98,7 +98,7 @@ function PhotoBook({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label={page?.name || closeLabel}
+        aria-label={`${index + 1} / ${images.length}`}
         className="pointer-events-none relative flex min-h-full items-center justify-center overflow-y-auto p-4"
       >
         <div className="pointer-events-auto flex w-[min(92vw,420px)] flex-col items-center">
@@ -111,7 +111,7 @@ function PhotoBook({
           </button>
         </div>
         <div
-          className="relative aspect-[4/5] w-[min(78vw,420px)] [perspective:1400px]"
+          className="relative aspect-[4/5] w-[min(78vw,420px)] [perspective:900px]"
           onPointerDown={(event) => {
             startX.current = event.clientX;
           }}
@@ -131,24 +131,25 @@ function PhotoBook({
           ) : (
             <div className="absolute inset-0 bg-linen" />
           )}
+          {turn !== 0 ? <div className={turn === -1 ? "page-cast-back" : "page-cast"} /> : null}
           {page ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <div
               key={`${page.id}-${hold ? "hold" : "live"}`}
-              src={portalFileHref(clientId, page.id)}
-              alt={page.name}
-              onTransitionEnd={(event) => {
-                if (event.propertyName === "transform") finishTurn();
+              className={`page-sheet ${hold ? "" : turn === 1 ? "page-peel-forward" : turn === -1 ? "page-peel-back" : ""}`}
+              onAnimationEnd={(event) => {
+                if (event.animationName.startsWith("page-peel")) finishTurn();
               }}
-              className={`absolute inset-0 h-full w-full object-cover shadow-2xl [backface-visibility:hidden] ${hold ? "" : "transition-transform duration-700 ease-in-out"} ${turn === 1 ? "origin-left [transform:rotateY(-172deg)]" : turn === -1 ? "origin-right [transform:rotateY(172deg)]" : "origin-left"}`}
-            />
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={portalFileHref(clientId, page.id)} alt="" className="h-full w-full object-cover [backface-visibility:hidden]" />
+              <span className="page-crease" />
+            </div>
           ) : null}
         </div>
-        <div className="mt-4 flex w-full max-w-md items-center justify-between gap-4 text-porcelain">
+        <div className="mt-4 flex w-full max-w-md items-center justify-between text-porcelain">
           <button className="text-[0.68rem] uppercase tracking-[0.16em] disabled:opacity-30" type="button" onClick={() => go(-1)} disabled={index === 0}>
             ←
           </button>
-          <p className="truncate text-sm">{page?.name}</p>
           <button className="text-[0.68rem] uppercase tracking-[0.16em] disabled:opacity-30" type="button" onClick={() => go(1)} disabled={index >= images.length - 1}>
             →
           </button>
