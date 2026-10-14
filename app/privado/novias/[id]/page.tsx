@@ -285,11 +285,7 @@ export default async function StudioClientPage({
 
       {tab === "historico" ? (
         <section className="pt-10">
-          <h2 className="font-serif text-3xl">Histórico</h2>
-          <p className="mt-3 max-w-2xl text-sm text-ash">
-            Anota cada contacto y cada servicio. Ella ve los contactos y las solicitudes en su histórico. Los servicios
-            pasan al budget.
-          </p>
+          <h2 className="font-serif text-3xl">Histórico de nuestras comunicaciones</h2>
           <div className="mt-8">
             <HistoryForm
               clientId={client.id}

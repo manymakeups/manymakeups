@@ -180,7 +180,6 @@ export default async function BridePanelPage({
       {tab === "historico" ? (
         <section className="pt-10">
           <h2 className="font-serif text-3xl">{t.historyTitle}</h2>
-          <p className="mt-3 max-w-2xl text-sm text-ash">{t.historyLead}</p>
           <div className="mt-8">
             <HistoryView
               entries={client.history}
