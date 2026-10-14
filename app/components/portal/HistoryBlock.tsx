@@ -83,6 +83,20 @@ function BudgetGroups({ groups, copy }: { groups: BudgetGroup[]; copy: PortalCop
 type PayFilter = "" | "abonado" | "pendiente";
 type WhoFilter = "" | "ella" | "acompanante";
 
+const SERVICE_ALIASES: Record<string, string> = {
+  "Sólo maquillaje": "Maquillaje",
+  "Sólo peinado": "Peinado",
+  "Tratamiento de piel": "Tratamiento facial",
+};
+
+function canonicalService(name: string) {
+  return SERVICE_ALIASES[name] ?? name;
+}
+
+function sameService(name: string, selected: string) {
+  return canonicalService(name) === selected;
+}
+
 function whoMatches(who: WhoFilter, role: "contratante" | "acompanante") {
   if (!who) return true;
   return who === "ella" ? role === "contratante" : role === "acompanante";
@@ -90,7 +104,7 @@ function whoMatches(who: WhoFilter, role: "contratante" | "acompanante") {
 
 function filterGroup(group: BudgetGroup, service: string, pay: PayFilter, who: WhoFilter) {
   if (!whoMatches(who, group.role)) return null;
-  if (service && !group.services.includes(service)) return null;
+  if (service && !group.services.some((name) => sameService(name, service))) return null;
   if (pay === "abonado") {
     const slices = group.slices.filter((slice) => slice.paid);
     return slices.length ? { ...group, slices } : null;
@@ -129,24 +143,21 @@ export function HistoryView({
   const history = booked?.history ?? historyBudget(entries);
   const budget = booked ?? { ...history, groups: [], total: history.total, pending: history.pending, paid: history.paid };
   const showBudget = history.services.length > 0 || budget.groups.length > 0;
+  const presentServices = [
+    ...budget.groups.flatMap((group) => group.services),
+    ...history.services.map((entry) => entry.title),
+  ].map(canonicalService);
   const serviceOptions = [
-    ...new Set([
-      ...SERVICE_TITLES,
-      "Sólo maquillaje",
-      "Sólo peinado",
-      "Glitter Bar",
-      "Beauty Corner",
-      ...budget.groups.flatMap((group) => group.services),
-      ...history.services.map((entry) => entry.title),
-    ]),
-  ];
+    ...SERVICE_TITLES.filter((title) => presentServices.includes(title)),
+    ...presentServices.filter((title) => !(SERVICE_TITLES as readonly string[]).includes(title)),
+  ].filter((title, index, all) => all.indexOf(title) === index);
   const groups = budget.groups.flatMap((group) => {
     const next = filterGroup(group, service, pay, budgetWho);
     return next ? [next] : [];
   });
   const services = history.services.filter((entry) => {
     if (!whoMatches(budgetWho, "contratante")) return false;
-    if (service && entry.title !== service) return false;
+    if (service && !sameService(entry.title, service)) return false;
     if (pay === "abonado") return entry.paid;
     if (pay === "pendiente") return !entry.paid;
     return true;
