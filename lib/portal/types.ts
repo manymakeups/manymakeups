@@ -80,6 +80,14 @@ export function portalTab(value: string | undefined): PortalTab {
   return "contratante";
 }
 
+export const PRODUCT_ZONES = ["Ojos", "Labios", "Piel", "Acabado", "Cejas", "Pestañas", "Mejillas"] as const;
+
+export type UsedProduct = {
+  brand: string;
+  shade: string;
+  zone: string;
+};
+
 export type Attendee = {
   who: string;
   service: string;
@@ -88,6 +96,7 @@ export type Attendee = {
   skinNotes: string;
   notes: string;
   productsUsed: string;
+  products: UsedProduct[];
   budgetAmount: string;
   budgetNumber: string;
 };
@@ -200,6 +209,7 @@ export type EventDetails = {
   skinNotes: string;
   notes: string;
   productsUsed: string;
+  products: UsedProduct[];
   contractorLocked: boolean;
   peopleLocked: boolean;
 };
@@ -273,6 +283,7 @@ export function emptyAttendee(who = ""): Attendee {
     skinNotes: "",
     notes: "",
     productsUsed: "",
+    products: [],
     budgetAmount: "",
     budgetNumber: "",
   };
@@ -319,6 +330,7 @@ export function emptyEvent(name = ""): EventDetails {
     skinNotes: "",
     notes: "",
     productsUsed: "",
+    products: [],
     contractorLocked: false,
     peopleLocked: false,
   };
@@ -441,6 +453,19 @@ function asHistory(value: unknown): HistoryEntry | null {
   };
 }
 
+function asProducts(value: unknown): UsedProduct[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((row) => {
+    if (!row || typeof row !== "object") return [];
+    const item = row as UsedProduct;
+    const brand = String(item.brand ?? "").trim();
+    const shade = String(item.shade ?? "").trim();
+    const zone = String(item.zone ?? "").trim();
+    if (!brand && !shade && !zone) return [];
+    return [{ brand, shade, zone: zone || "Otra" }];
+  });
+}
+
 export function normalizeClient(client: ClientRecord): ClientRecord {
   const count = Math.min(20, Math.max(0, Number(client.event?.peopleCount) || 0));
   const existing = Array.isArray(client.event?.people) ? client.event.people : [];
@@ -455,6 +480,7 @@ export function normalizeClient(client: ClientRecord): ClientRecord {
       skinNotes: row.skinNotes ?? "",
       notes: row.notes ?? "",
       productsUsed: row.productsUsed ?? "",
+      products: asProducts(row.products),
       budgetAmount: row.budgetAmount ?? "",
       budgetNumber: row.budgetNumber ?? "",
     };
@@ -467,6 +493,7 @@ export function normalizeClient(client: ClientRecord): ClientRecord {
       peopleCount: count,
       people,
       productsUsed: client.event?.productsUsed ?? "",
+      products: asProducts(client.event?.products),
       clientLastName: client.event?.clientLastName ?? "",
       contractorLocked: Boolean(client.event?.contractorLocked),
       peopleLocked: Boolean(client.event?.peopleLocked),

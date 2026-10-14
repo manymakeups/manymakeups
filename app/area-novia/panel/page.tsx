@@ -127,6 +127,7 @@ export default async function BridePanelPage({
             <div className="mt-8">
               <WorkView
                 products={client.event.productsUsed}
+                productLines={client.event.products}
                 photos={filesFor(client.workPhotos, CONTRACTOR_TRIAL_PHOTOS)}
                 clientId={client.id}
                 copy={t}

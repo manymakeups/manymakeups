@@ -140,8 +140,9 @@ export default async function StudioClientPage({
               <WorkForm
                 clientId={client.id}
                 personKey={CONTRACTOR_TRIAL_PHOTOS}
-                productsName="productsUsed"
+                fieldPrefix="products."
                 products={event.productsUsed}
+                productLines={event.products}
                 photos={client.workPhotos}
                 tab="contratante"
               />
@@ -196,8 +197,9 @@ export default async function StudioClientPage({
                       <WorkForm
                         clientId={client.id}
                         personKey={personTrialPhotoKey(i)}
-                        productsName={`people.${i}.productsUsed`}
+                        fieldPrefix={`people.${i}.products.`}
                         products={person.productsUsed}
+                        productLines={person.products}
                         photos={client.workPhotos}
                         tab="acompanantes"
                       />

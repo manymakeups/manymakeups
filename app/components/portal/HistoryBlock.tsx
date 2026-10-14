@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { dateLocale, portalEs, type PortalCopy } from "@/lib/i18n/portal-messages";
 import type { Locale } from "@/lib/i18n/config";
 import { clientBudget } from "@/lib/portal/budget";
@@ -136,6 +136,13 @@ export function BudgetView({
   const eventServices = history.services.filter((entry) => !isCareService(entry.title));
   const careServices = history.services.filter((entry) => isCareService(entry.title));
   const care = sumServices(careServices);
+  const bar = useRef<HTMLDivElement>(null);
+  const show = (next: "evento" | "otros") => {
+    setPane(next);
+    requestAnimationFrame(() => {
+      bar.current?.scrollIntoView({ block: "start" });
+    });
+  };
   const tabClass = (on: boolean) =>
     on
       ? "border-b-2 border-gilt px-1 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ink"
@@ -143,13 +150,15 @@ export function BudgetView({
   return (
     <div>
       <MoneyBoxes total={budget.total} paid={budget.paid} pending={budget.pending} copy={copy} />
-      <div className="mt-10 flex gap-6 border-b border-ink/10">
-        <button className={tabClass(pane === "evento")} type="button" onClick={() => setPane("evento")}>
-          {copy.budgetEvent}
-        </button>
-        <button className={tabClass(pane === "otros")} type="button" onClick={() => setPane("otros")}>
-          {copy.budgetCare}
-        </button>
+      <div ref={bar} className="sticky top-14 z-20 mt-10 scroll-mt-14 border-b border-ink/10 bg-porcelain">
+        <div className="flex gap-6">
+          <button className={tabClass(pane === "evento")} type="button" onClick={() => show("evento")}>
+            {copy.budgetEvent}
+          </button>
+          <button className={tabClass(pane === "otros")} type="button" onClick={() => show("otros")}>
+            {copy.budgetCare}
+          </button>
+        </div>
       </div>
       {pane === "evento" ? (
         <div className="pt-8">

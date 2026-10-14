@@ -135,6 +135,7 @@ export type PortalCopy = {
   pending: string;
   productsUsed: string;
   productsEmpty: string;
+  productZones: Record<string, string>;
   trialPhotos: string;
   trialPhotosEmpty: string;
   remove: string;
@@ -374,6 +375,15 @@ export const portalEs: PortalCopy = {
   pending: "Pendiente de pagar: {amount}",
   productsUsed: "Productos utilizados",
   productsEmpty: "Aún no hay productos anotados.",
+  productZones: {
+    Ojos: "Ojos",
+    Labios: "Labios",
+    Piel: "Piel",
+    Acabado: "Acabado",
+    Cejas: "Cejas",
+    Pestañas: "Pestañas",
+    Mejillas: "Mejillas",
+  },
   trialPhotos: "Fotos de la prueba",
   trialPhotosEmpty: "Todavía no hay fotos de la prueba.",
   remove: "Quitar",
@@ -630,6 +640,15 @@ export const portalEn: PortalCopy = {
   pending: "Outstanding: {amount}",
   productsUsed: "Products used",
   productsEmpty: "No products noted yet.",
+  productZones: {
+    Ojos: "Eyes",
+    Labios: "Lips",
+    Piel: "Skin",
+    Acabado: "Finish",
+    Cejas: "Brows",
+    Pestañas: "Lashes",
+    Mejillas: "Cheeks",
+  },
   trialPhotos: "Trial photos",
   trialPhotosEmpty: "No trial photos yet.",
   remove: "Remove",
@@ -885,6 +904,15 @@ export const portalFr: PortalCopy = {
   pending: "Reste à payer : {amount}",
   productsUsed: "Produits utilisés",
   productsEmpty: "Aucun produit noté pour l’instant.",
+  productZones: {
+    Ojos: "Yeux",
+    Labios: "Lèvres",
+    Piel: "Peau",
+    Acabado: "Fini",
+    Cejas: "Sourcils",
+    Pestañas: "Cils",
+    Mejillas: "Joues",
+  },
   trialPhotos: "Photos de l’essai",
   trialPhotosEmpty: "Pas encore de photos de l’essai.",
   remove: "Retirer",

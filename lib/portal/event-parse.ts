@@ -31,6 +31,7 @@ function peopleFromForm(form: FormData, count: number, fallback: Attendee[]): At
       skinNotes: text(form.get(`people.${i}.skinNotes`)),
       notes: text(form.get(`people.${i}.notes`)),
       productsUsed: prev.productsUsed,
+      products: prev.products ?? [],
       budgetAmount: prev.budgetAmount,
       budgetNumber: prev.budgetNumber,
     };

@@ -111,6 +111,7 @@ function PersonCard({
         <div className="mt-6 border-t border-ink/10 pt-6">
           <WorkView
             products={person.productsUsed}
+            productLines={person.products}
             photos={filesFor(workPhotos, personTrialPhotoKey(index))}
             clientId={clientId}
             copy={t}
@@ -169,6 +170,7 @@ export function CompanionsForm({
       skinNotes: "",
       notes: "",
       productsUsed: "",
+      products: [],
       budgetAmount: "",
       budgetNumber: "",
     });
