@@ -64,6 +64,7 @@ export type PortalCopy = {
   agendaLead: string;
   historyTitle: string;
   historyLead: string;
+  contactsTitle: string;
   historyEmpty: string;
   budgetTitle: string;
   budgetLead: string;
@@ -248,6 +249,7 @@ export const portalEs: PortalCopy = {
   agendaLead: "Las citas que tenemos planificadas: prueba, evento y lo que vayamos sumando.",
   historyTitle: "Histórico de contactos o solicitudes",
   historyLead: "Aquí encontrarás un extracto de tus solicitudes o cambios.",
+  contactsTitle: "Contactos y solicitudes",
   historyEmpty: "Todavía no hay contactos, solicitudes ni servicios.",
   budgetTitle: "Budget",
   budgetLead: "Ten controlados los pagos y conoce el detalle de todos los servicios realizados.",
@@ -477,6 +479,7 @@ export const portalEn: PortalCopy = {
   agendaLead: "The appointments we have planned: trial, event, and anything we add.",
   historyTitle: "History of contacts and requests",
   historyLead: "Here you will find a summary of your requests and changes.",
+  contactsTitle: "Contacts and requests",
   historyEmpty: "There are no contacts, requests or services yet.",
   budgetTitle: "Budget",
   budgetLead: "Keep your payments in view and see every service that has been carried out.",
@@ -705,6 +708,7 @@ export const portalFr: PortalCopy = {
   agendaLead: "Les rendez-vous prévus : essai, événement, et ce que nous ajouterons.",
   historyTitle: "Historique des contacts ou demandes",
   historyLead: "Tu trouveras ici un extrait de tes demandes ou changements.",
+  contactsTitle: "Contacts et demandes",
   historyEmpty: "Il n’y a pas encore de contacts, de demandes ni de services.",
   budgetTitle: "Budget",
   budgetLead: "Garde le contrôle des paiements et le détail de tous les services réalisés.",
