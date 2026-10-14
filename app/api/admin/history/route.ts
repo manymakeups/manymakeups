@@ -29,7 +29,8 @@ export async function POST(request: Request) {
     const allowed: readonly string[] = kind === "contacto" ? CONTACT_TITLES : SERVICE_TITLES;
     const picked = text(form.get("title"));
     const custom = text(form.get("customTitle"));
-    const title = picked === "Otro" ? custom || "Otro" : allowed.includes(picked) ? picked : allowed[0];
+    const named = picked === "Otro" || picked === "Tratamiento de piel";
+    const title = named ? custom || picked : allowed.includes(picked) ? picked : allowed[0];
     client.history.push({
       id: newId(),
       kind,

@@ -23,6 +23,8 @@ function formatWhen(date: string, locale: Locale, copy: PortalCopy) {
   });
 }
 
+const CATALOG = new Set<string>([...CONTACT_TITLES, ...SERVICE_TITLES]);
+
 function labelFor(title: string, copy: PortalCopy) {
   return copy.historyTitles[title] || title;
 }
@@ -66,16 +68,24 @@ export function HistoryView({
         </section>
       ) : null}
       <ul className="divide-y divide-ink/10 border border-ink/10">
-        {ordered.map((entry) => (
-          <li key={entry.id} className="px-4 py-4">
-            <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">
-              {copy.historyKinds[entry.kind]} · {labelFor(entry.title, copy)}
-            </p>
-            <p className="mt-1 font-serif text-2xl capitalize">{formatWhen(entry.date, locale, copy)}</p>
-            {entry.kind === "servicio" ? <p className="mt-2 text-sm">{euros(entry.amount)}</p> : null}
-            {entry.notes ? <p className="mt-2 whitespace-pre-wrap text-sm text-ash">{entry.notes}</p> : null}
-          </li>
-        ))}
+        {ordered.map((entry) => {
+          const name = labelFor(entry.title, copy);
+          const named = !CATALOG.has(entry.title);
+          return (
+            <li key={entry.id} className="px-4 py-4">
+              <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">
+                {copy.historyKinds[entry.kind]}
+                {named ? "" : ` · ${name}`}
+              </p>
+              {named ? <p className="mt-1 font-serif text-2xl">{name}</p> : null}
+              <p className={`${named ? "mt-1 text-sm text-ash" : "mt-1 font-serif text-2xl"} capitalize`}>
+                {formatWhen(entry.date, locale, copy)}
+              </p>
+              {entry.kind === "servicio" ? <p className="mt-2 text-sm">{euros(entry.amount)}</p> : null}
+              {entry.notes ? <p className="mt-2 whitespace-pre-wrap text-sm text-ash">{entry.notes}</p> : null}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
@@ -113,9 +123,9 @@ export function HistoryForm({ clientId, entries, payments }: { clientId: string;
             ))}
           </select>
         </label>
-        {title === "Otro" ? (
+        {title === "Otro" || title === "Tratamiento de piel" ? (
           <label className="field-label">
-            Nombre
+            {title === "Tratamiento de piel" ? "Nombre del tratamiento" : "Nombre"}
             <input className="field" name="customTitle" required />
           </label>
         ) : null}

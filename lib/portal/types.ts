@@ -321,10 +321,11 @@ export function pendingAmount(slice: PaymentSlice) {
 }
 
 export function euros(value: number) {
-  return new Intl.NumberFormat("es-ES", {
-    style: "currency",
-    currency: "EUR",
+  const formatted = new Intl.NumberFormat("es-ES", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(value || 0);
+  return `${formatted.replace(/\s/g, "")} €`;
 }
 
 export function paidTotal(payments: Payments) {
