@@ -1,7 +1,9 @@
 import { ClientMenu } from "@/app/components/portal/ClientMenu";
+import { ClientSearch } from "@/app/components/portal/ClientSearch";
 import { MailSetupNotice } from "@/app/components/portal/MailSetupNotice";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { StudioAside } from "@/app/components/portal/StudioAside";
+import { clientMatchesSearch, clientSearchMode } from "@/lib/portal/client-search";
 import { fullName } from "@/lib/portal/names";
 import { requireAdmin } from "@/lib/portal/session";
 import { listClients, portalStorageReady } from "@/lib/portal/store";
@@ -18,12 +20,16 @@ export const metadata: Metadata = {
 export default async function StudioClientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; ok?: string }>;
+  searchParams: Promise<{ error?: string; ok?: string; por?: string; q?: string; partida?: string }>;
 }) {
   const admin = await requireAdmin();
   if (!admin) redirect("/privado");
   const clients = await listClients();
-  const { error, ok } = await searchParams;
+  const { error, ok, por, q, partida } = await searchParams;
+  const mode = clientSearchMode(por);
+  const query = q ?? "";
+  const service = partida ?? "";
+  const visible = clients.filter((client) => clientMatchesSearch(client, mode, query, service));
 
   return (
     <PortalFrame
@@ -57,11 +63,15 @@ export default async function StudioClientsPage({
         </button>
       </form>
 
+      <ClientSearch mode={mode} query={query} partida={service} />
+
       <ul className="mt-12 divide-y divide-ink/10 border-t border-ink/10">
         {clients.length === 0 ? (
           <li className="py-6 text-sm text-ash">Todavía no hay clientas en el área.</li>
+        ) : visible.length === 0 ? (
+          <li className="py-6 text-sm text-ash">Ninguna clienta coincide con la búsqueda.</li>
         ) : (
-          clients.map((client) => (
+          visible.map((client) => (
             <li key={client.id} className="flex flex-wrap items-center justify-between gap-3 py-5">
               <div>
                 <p className="font-serif text-2xl">{fullName(client.event, client.name)}</p>
