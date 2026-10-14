@@ -172,7 +172,7 @@ function AppointmentFields() {
     <>
       <label className="field-label">
         Tipo de cita
-        <select className="field" name="title" defaultValue="Prueba">
+        <select className="field" name="title" defaultValue={APPOINTMENT_TITLES[0]}>
           {APPOINTMENT_TITLES.map((title) => (
             <option key={title} value={title}>
               {title}

@@ -2,7 +2,7 @@ import { newId } from "@/lib/portal/crypto";
 import { go } from "@/lib/portal/http";
 import { requireAdmin } from "@/lib/portal/session";
 import { getClient, saveClient } from "@/lib/portal/store";
-import { APPOINTMENT_STATUSES, type AppointmentStatus } from "@/lib/portal/types";
+import { APPOINTMENT_STATUSES, APPOINTMENT_TITLES, type AppointmentStatus } from "@/lib/portal/types";
 
 function text(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
@@ -25,9 +25,13 @@ export async function POST(request: Request) {
     )
       ? (statusRaw as AppointmentStatus)
       : "planificada";
+    const titleRaw = text(form.get("title"));
+    const title = (APPOINTMENT_TITLES as readonly string[]).includes(titleRaw)
+      ? titleRaw
+      : APPOINTMENT_TITLES[0];
     client.appointments.push({
       id: newId(),
-      title: text(form.get("title")) || "Cita",
+      title,
       date: text(form.get("date")),
       time: text(form.get("time")),
       place: text(form.get("place")),

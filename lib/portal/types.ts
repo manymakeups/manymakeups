@@ -24,7 +24,16 @@ export const PERSON_SERVICE_OPTIONS = [
   "Sólo peinado",
 ] as const;
 
-export const APPOINTMENT_TITLES = ["Prueba", "Evento", "Reserva", "Otra"] as const;
+export const APPOINTMENT_TITLES = [
+  "Tratamiento facial",
+  "Maquillaje",
+  "Peinado",
+  "Maquillaje y peinado",
+  "Curso",
+  "Entrevista",
+  "Prueba",
+  "Tratamientos de ojos",
+] as const;
 export const APPOINTMENT_STATUSES = ["planificada", "confirmada", "hecha", "anulada"] as const;
 export type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];
 
