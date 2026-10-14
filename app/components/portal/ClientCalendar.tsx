@@ -78,7 +78,8 @@ export function ClientCalendar({
           if (!date) {
             return <div key={`empty-${index}`} className="min-h-16 border-b border-r border-ink/10 bg-linen/40 sm:min-h-24" />;
           }
-          const free = date >= today && !busy.has(date);
+          const weekday = new Date(Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8)))).getUTCDay();
+          const free = date >= today && weekday !== 0 && !busy.has(date);
           const isToday = date === today;
           const isSelected = date === selected;
           const className = `flex min-h-16 flex-col gap-1 border-b border-r border-ink/10 p-2 text-left sm:min-h-24 ${

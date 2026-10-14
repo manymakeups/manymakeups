@@ -137,6 +137,8 @@ export type PortalCopy = {
   agendaEmpty: string;
   agendaBook: string;
   agendaBookLead: string;
+  photoOpen: string;
+  photoClose: string;
   agendaFree: string;
   agendaClose: string;
   agendaPrev: string;
@@ -367,7 +369,9 @@ export const portalEs: PortalCopy = {
   removeConfirm: "¿Quitar este archivo?",
   agendaEmpty: "Todavía no hay citas en la agenda.",
   agendaBook: "Pide una cita",
-  agendaBookLead: "Los días con hueco llevan la marca Libre. Al pinchar uno, se abre el calendario para elegir la hora.",
+  agendaBookLead: "De lunes a viernes, de 10:00 a 14:00 y de 16:00 a 19:00. Los sábados, de 10:00 a 14:00. El día lleva la marca Libre cuando queda hueco. Al pinchar, se abren las horas de ese día.",
+  photoOpen: "Ver fotos",
+  photoClose: "Cerrar",
   agendaFree: "Libre",
   agendaClose: "Cerrar",
   agendaPrev: "Anterior",
@@ -615,7 +619,9 @@ export const portalEn: PortalCopy = {
   removeConfirm: "Remove this file?",
   agendaEmpty: "There are no appointments in the diary yet.",
   agendaBook: "Book an appointment",
-  agendaBookLead: "Days with an opening are marked Open. Tap one and the calendar opens so you can choose a time.",
+  agendaBookLead: "Monday to Friday, 10:00–14:00 and 16:00–19:00. Saturdays, 10:00–14:00. A day is marked Open when there is still a gap. Tap it and that day's times open.",
+  photoOpen: "View photos",
+  photoClose: "Close",
   agendaFree: "Open",
   agendaClose: "Close",
   agendaPrev: "Previous",
@@ -862,7 +868,9 @@ export const portalFr: PortalCopy = {
   removeConfirm: "Retirer ce fichier ?",
   agendaEmpty: "Il n’y a pas encore de rendez-vous dans l’agenda.",
   agendaBook: "Demande un rendez-vous",
-  agendaBookLead: "Les jours avec un créneau portent la marque Libre. En touchant l’un d’eux, le calendrier s’ouvre pour choisir l’heure.",
+  agendaBookLead: "Du lundi au vendredi, de 10:00 à 14:00 et de 16:00 à 19:00. Le samedi, de 10:00 à 14:00. Le jour porte la marque Libre s’il reste un créneau. En le touchant, les heures de ce jour s’ouvrent.",
+  photoOpen: "Voir les photos",
+  photoClose: "Fermer",
   agendaFree: "Libre",
   agendaClose: "Fermer",
   agendaPrev: "Précédent",

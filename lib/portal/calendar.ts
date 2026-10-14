@@ -6,6 +6,8 @@ export type RemoteEvent = {
   place: string;
   notes: string;
   source?: string;
+  /** Minutes the event occupies from its start. All-day events use whole days. */
+  durationMin?: number;
 };
 
 const WEEKDAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
@@ -193,6 +195,42 @@ function wallTime(value: string, params: Record<string, string>) {
   return madridParts(new Date(`${date}T${match[2].slice(0, 2)}:${match[2].slice(2, 4)}:${match[2].slice(4, 6)}Z`));
 }
 
+function clockMinutes(time: string) {
+  const [hour, minute] = time.split(":").map(Number);
+  return hour * 60 + minute;
+}
+
+function eventDurationMinutes(
+  start: { date: string; time: string },
+  end: { date: string; time: string } | null,
+) {
+  const allDay = !start.time && !end?.time;
+  if (allDay) {
+    const days = end ? dayDiff(start.date, end.date) : 1;
+    return Math.max(1, days) * 1440;
+  }
+  const startAbs = clockMinutes(start.time || "00:00");
+  if (!end) return 60;
+  const endAbs = dayDiff(start.date, end.date) * 1440 + clockMinutes(end.time || "00:00");
+  return endAbs > startAbs ? endAbs - startAbs : 60;
+}
+
+export function eventSpans(event: RemoteEvent) {
+  const duration = event.durationMin && event.durationMin > 0 ? event.durationMin : event.time ? 60 : 1440;
+  const spans: Array<{ date: string; start: number; end: number }> = [];
+  let left = duration;
+  let date = event.date;
+  let from = event.time ? clockMinutes(event.time) : 0;
+  for (let guard = 0; left > 0 && guard < 21; guard += 1) {
+    const take = Math.min(1440 - from, left);
+    if (take > 0) spans.push({ date, start: from, end: from + take });
+    left -= take;
+    from = 0;
+    date = addDays(date, 1);
+  }
+  return spans;
+}
+
 function unescapeIcs(value: string) {
   return value.replace(/\\([nN,;\\])/g, (_, char: string) => {
     if (char === "n" || char === "N") return "\n";
@@ -204,7 +242,7 @@ function unfold(text: string) {
   return text.replace(/^\uFEFF/, "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").replace(/\n[ \t]/g, "");
 }
 
-function addDays(date: string, days: number) {
+export function addDays(date: string, days: number) {
   const [year, month, day] = date.split("-").map(Number);
   return new Date(Date.UTC(year, month - 1, day + days)).toISOString().slice(0, 10);
 }
@@ -337,6 +375,9 @@ export function parseIcsEvents(source: string): RemoteEvent[] {
     if (!startRaw) continue;
     const start = wallTime(startRaw.value, startRaw.params);
     if (!start?.date) continue;
+    const endRaw = fields.get("DTEND");
+    const end = endRaw ? wallTime(endRaw.value, endRaw.params) : null;
+    const durationMin = eventDurationMinutes(start, end);
     const untilRaw = rule?.until ? wallTime(rule.until, {}) : null;
     const title = unescapeIcs(fields.get("SUMMARY")?.value || "Cita");
     const place = unescapeIcs(fields.get("LOCATION")?.value || "");
@@ -351,6 +392,7 @@ export function parseIcsEvents(source: string): RemoteEvent[] {
         title,
         place,
         notes,
+        durationMin,
       });
     }
   }

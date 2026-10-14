@@ -28,7 +28,7 @@ export function WorkView({
         <p className="text-[0.68rem] uppercase tracking-[0.16em] text-ash">{copy.trialPhotos}</p>
         <div className="mt-3">
           {photos.length ? (
-            <PhotoGrid files={photos} clientId={clientId} kind="work" />
+            <PhotoGrid files={photos} clientId={clientId} kind="work" openLabel={copy.photoOpen} closeLabel={copy.photoClose} />
           ) : (
             <p className="text-sm text-ash">{copy.trialPhotosEmpty}</p>
           )}
