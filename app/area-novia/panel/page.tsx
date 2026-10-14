@@ -14,7 +14,7 @@ import { WorkView } from "@/app/components/portal/WorkBlock";
 import { studioBusyDates } from "@/lib/portal/availability";
 import { madridToday, parseMonth } from "@/lib/portal/calendar";
 import { INSPIRATION_MAX } from "@/lib/portal/files";
-import { mailName } from "@/lib/portal/names";
+import { fullName, mailName } from "@/lib/portal/names";
 import { getLocale, getPortalCopy, interpolate, localePath } from "@/lib/i18n";
 import { requireClient } from "@/lib/portal/session";
 import { getClient, listNotices } from "@/lib/portal/store";
@@ -182,7 +182,13 @@ export default async function BridePanelPage({
           <h2 className="font-serif text-3xl">{t.historyTitle}</h2>
           <p className="mt-3 max-w-2xl text-sm text-ash">{t.historyLead}</p>
           <div className="mt-8">
-            <HistoryView entries={client.history} requests={requests} copy={t} locale={locale} />
+            <HistoryView
+              entries={client.history}
+              requests={requests}
+              clientName={fullName(client.event, client.name)}
+              copy={t}
+              locale={locale}
+            />
           </div>
         </section>
       ) : null}

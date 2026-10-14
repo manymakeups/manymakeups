@@ -291,7 +291,12 @@ export default async function StudioClientPage({
             pasan al budget.
           </p>
           <div className="mt-8">
-            <HistoryForm clientId={client.id} entries={client.history} requests={requests} />
+            <HistoryForm
+              clientId={client.id}
+              entries={client.history}
+              requests={requests}
+              clientName={fullName(event, client.name)}
+            />
           </div>
         </section>
       ) : null}

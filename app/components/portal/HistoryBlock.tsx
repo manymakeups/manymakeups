@@ -217,11 +217,13 @@ export function BudgetView({
 export function HistoryView({
   entries,
   requests = [],
+  clientName = "",
   copy = portalEs,
   locale = "es",
 }: {
   entries: HistoryEntry[];
   requests?: StudioNotice[];
+  clientName?: string;
   copy?: PortalCopy;
   locale?: Locale;
 }) {
@@ -239,6 +241,7 @@ export function HistoryView({
       ? []
       : asked.filter((notice) => whoMatches(contactWho, notice.scope === "acompanante" ? "acompanante" : "contratante"));
   const contactFiltering = Boolean(contact || contactWho);
+  const person = clientName.trim() || copy.threadClient;
   return (
     <div>
       <h3 className="font-serif text-3xl">{copy.contactsTitle}</h3>
@@ -276,7 +279,7 @@ export function HistoryView({
                     </p>
                     <div className="mt-3 flex items-baseline justify-between gap-4">
                       <p className="text-sm">
-                        {copy.threadClient}
+                        {person}
                         <span className="text-ash"> → {copy.threadStudio}</span>
                       </p>
                       <p className="text-sm capitalize text-ash">{formatWhen(notice.createdAt.slice(0, 10), locale, copy)}</p>
@@ -291,7 +294,7 @@ export function HistoryView({
                             <div className="mt-2 flex items-baseline justify-between gap-4">
                               <p className="text-sm">
                                 {copy.threadAuthor}
-                                <span className="text-ash"> → {copy.threadClient}</span>
+                                <span className="text-ash"> → {person}</span>
                               </p>
                               <p className="text-sm capitalize text-ash">{formatWhen(reply.createdAt.slice(0, 10), locale, copy)}</p>
                             </div>
@@ -343,10 +346,12 @@ export function HistoryForm({
   clientId,
   entries,
   requests = [],
+  clientName = "",
 }: {
   clientId: string;
   entries: HistoryEntry[];
   requests?: StudioNotice[];
+  clientName?: string;
 }) {
   const [kind, setKind] = useState<HistoryKind>("servicio");
   const [title, setTitle] = useState<string>(SERVICE_TITLES[0]);
@@ -359,7 +364,7 @@ export function HistoryForm({
 
   return (
     <div className="flex flex-col gap-10">
-      <HistoryView entries={entries} requests={requests} />
+      <HistoryView entries={entries} requests={requests} clientName={clientName} />
       <form action="/api/admin/history" method="post" className="grid max-w-xl gap-4">
         <input type="hidden" name="clientId" value={clientId} />
         <label className="field-label">
