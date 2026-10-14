@@ -21,6 +21,17 @@ export function fullName(event: NamedEvent, fallback = "") {
   return [first, last].filter(Boolean).join(" ") || fallback.trim();
 }
 
+export function companionHeading(
+  person: { name?: string; who?: string },
+  relations: Record<string, string>,
+  fallback: string,
+) {
+  const relation = (person.who && relations[person.who]) || person.who || "";
+  const name = person.name?.trim() || "";
+  if (name && relation) return `${name} · ${relation}`;
+  return name || relation || fallback;
+}
+
 export function mailName(event: NamedEvent, fallback = "") {
   const { first } = nameParts(event);
   if (first) return first;

@@ -5,9 +5,11 @@ import { useState, type ReactNode } from "react";
 export function SubTabs({
   tabs,
   initial,
+  pinned = false,
 }: {
   tabs: { id: string; label: string; body: ReactNode }[];
   initial?: string;
+  pinned?: boolean;
 }) {
   const start = initial && tabs.some((tab) => tab.id === initial) ? initial : tabs[0]?.id;
   const [current, setCurrent] = useState(start);
@@ -15,7 +17,9 @@ export function SubTabs({
   if (!active) return null;
   return (
     <div>
-      <div className="flex flex-wrap gap-x-6 border-b border-ink/10">
+      <div
+        className={`flex flex-wrap gap-x-6 border-b border-ink/10 ${pinned ? "sticky top-0 z-20 bg-porcelain" : ""}`}
+      >
         {tabs.map((tab) => {
           const on = tab.id === active.id;
           return (
@@ -43,29 +47,34 @@ export function EventSections({
   labels,
   section,
   details,
-  inspiration,
+  makeupInspiration,
+  hairInspiration,
   photos,
-  products,
+  makeupProducts,
+  hairProducts,
 }: {
   labels: {
     data: string;
     inspirations: string;
-    look: string;
+    makeup: string;
+    hair: string;
     trial: string;
     photos: string;
     products: string;
   };
   section?: string;
   details: ReactNode;
-  inspiration: ReactNode;
+  makeupInspiration: ReactNode;
+  hairInspiration: ReactNode;
   photos: ReactNode;
-  products: ReactNode;
+  makeupProducts: ReactNode;
+  hairProducts: ReactNode;
 }) {
-  const inInspiration = section === "look" || section === "fotos" || section === "productos";
-  const inTrial = section === "fotos" || section === "productos";
+  const inTrial = section === "fotos" || section === "productos" || section?.startsWith("productos-");
+  const inInspiration = section === "maquillaje" || section === "peinado";
   return (
     <SubTabs
-      initial={inInspiration ? "inspiraciones" : "datos"}
+      initial={inTrial ? "prueba" : inInspiration ? "inspiraciones" : "datos"}
       tabs={[
         { id: "datos", label: labels.data, body: details },
         {
@@ -73,18 +82,31 @@ export function EventSections({
           label: labels.inspirations,
           body: (
             <SubTabs
-              initial={inTrial ? "prueba" : "look"}
+              initial={section === "peinado" ? "peinado" : "maquillaje"}
               tabs={[
-                { id: "look", label: labels.look, body: inspiration },
+                { id: "maquillaje", label: labels.makeup, body: makeupInspiration },
+                { id: "peinado", label: labels.hair, body: hairInspiration },
+              ]}
+            />
+          ),
+        },
+        {
+          id: "prueba",
+          label: labels.trial,
+          body: (
+            <SubTabs
+              initial={section?.startsWith("productos") ? "productos" : "fotos"}
+              tabs={[
+                { id: "fotos", label: labels.photos, body: photos },
                 {
-                  id: "prueba",
-                  label: labels.trial,
+                  id: "productos",
+                  label: labels.products,
                   body: (
                     <SubTabs
-                      initial={section === "productos" ? "productos" : "fotos"}
+                      initial={section === "productos-peinado" ? "peinado" : "maquillaje"}
                       tabs={[
-                        { id: "fotos", label: labels.photos, body: photos },
-                        { id: "productos", label: labels.products, body: products },
+                        { id: "maquillaje", label: labels.makeup, body: makeupProducts },
+                        { id: "peinado", label: labels.hair, body: hairProducts },
                       ]}
                     />
                   ),

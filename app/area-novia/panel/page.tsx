@@ -3,7 +3,7 @@ import { ClientCalendar } from "@/app/components/portal/ClientCalendar";
 import { BudgetView, HistoryView } from "@/app/components/portal/HistoryBlock";
 import { ChangeRequestForm } from "@/app/components/portal/ChangeRequestForm";
 import { CompanionView } from "@/app/components/portal/CompanionView";
-import { CompanionsForm } from "@/app/components/portal/CompanionsForm";
+import { AddCompanionForm, CompanionsForm } from "@/app/components/portal/CompanionsForm";
 import { EventForm } from "@/app/components/portal/EventForm";
 import { EventView } from "@/app/components/portal/EventView";
 import { PaymentsView } from "@/app/components/portal/PaymentsBlock";
@@ -15,15 +15,16 @@ import { WorkView } from "@/app/components/portal/WorkBlock";
 import { studioBusyDates } from "@/lib/portal/availability";
 import { madridToday, parseMonth } from "@/lib/portal/calendar";
 import { INSPIRATION_MAX } from "@/lib/portal/files";
-import { fullName, mailName } from "@/lib/portal/names";
+import { companionHeading, fullName, mailName } from "@/lib/portal/names";
 import { getLocale, getPortalCopy, interpolate, localePath } from "@/lib/i18n";
 import { requireClient } from "@/lib/portal/session";
 import { getClient, listNotices } from "@/lib/portal/store";
 import {
-  CONTRACTOR_INSPIRATION,
   CONTRACTOR_TRIAL_PHOTOS,
+  contractorInspirationKey,
   filesFor,
   portalTab,
+  productsFor,
 } from "@/lib/portal/types";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
@@ -101,7 +102,8 @@ export default async function BridePanelPage({
             labels={{
               data: t.eventData,
               inspirations: t.inspirationsTab,
-              look: t.lookTab,
+              makeup: t.makeupTab,
+              hair: t.hairTab,
               trial: t.trialHeading,
               photos: t.photosTab,
               products: t.productsTab,
@@ -127,14 +129,25 @@ export default async function BridePanelPage({
                 </div>
               </div>
             }
-            inspiration={
+            makeupInspiration={
               <PhotoPicker
-                personKey={CONTRACTOR_INSPIRATION}
+                personKey={contractorInspirationKey("maquillaje")}
                 files={client.inspiration}
                 clientId={client.id}
                 action="/api/portal/inspiration"
                 tab="contratante"
-                section="look"
+                section="maquillaje"
+                localize
+              />
+            }
+            hairInspiration={
+              <PhotoPicker
+                personKey={contractorInspirationKey("peinado")}
+                files={client.inspiration}
+                clientId={client.id}
+                action="/api/portal/inspiration"
+                tab="contratante"
+                section="peinado"
                 localize
               />
             }
@@ -145,7 +158,6 @@ export default async function BridePanelPage({
                   <WorkView
                     part="photos"
                     products={client.event.productsUsed}
-                    productLines={client.event.products}
                     photos={filesFor(client.workPhotos, CONTRACTOR_TRIAL_PHOTOS)}
                     clientId={client.id}
                     copy={t}
@@ -153,14 +165,26 @@ export default async function BridePanelPage({
                 </div>
               </div>
             }
-            products={
+            makeupProducts={
               <WorkView
                 part="products"
                 products={client.event.productsUsed}
-                productLines={client.event.products}
-                photos={filesFor(client.workPhotos, CONTRACTOR_TRIAL_PHOTOS)}
+                productLines={productsFor(client.event.products, "maquillaje")}
+                photos={[]}
                 clientId={client.id}
                 copy={t}
+                notes={client.event.makeupNotes}
+              />
+            }
+            hairProducts={
+              <WorkView
+                part="products"
+                products={client.event.productsUsed}
+                productLines={productsFor(client.event.products, "peinado")}
+                photos={[]}
+                clientId={client.id}
+                copy={t}
+                notes={client.event.hairNotes}
               />
             }
           />
@@ -175,23 +199,21 @@ export default async function BridePanelPage({
           </p>
           <div className="mt-8">
             {client.event.peopleLocked ? (
-              client.event.people.length ? (
-                <div className="flex flex-col gap-8">
-                  {client.event.people.map((person, i) => (
-                    <CompanionView
-                      key={i}
-                      index={i}
-                      person={person}
-                      clientId={client.id}
-                      inspiration={client.inspiration}
-                      workPhotos={client.workPhotos}
-                      copy={t}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-ash">{t.noCompanions}</p>
-              )
+              <div className="flex flex-col gap-8">
+                {client.event.people.map((person, i) => (
+                  <CompanionView
+                    key={i}
+                    index={i}
+                    person={person}
+                    clientId={client.id}
+                    inspiration={client.inspiration}
+                    workPhotos={client.workPhotos}
+                    copy={t}
+                    section={sec?.startsWith(`${i}-`) ? sec.slice(`${i}-`.length) : undefined}
+                  />
+                ))}
+                <AddCompanionForm clientId={client.id} action="/api/portal/companions" copy={t} />
+              </div>
             ) : (
               <CompanionsForm
                 event={client.event}
@@ -199,6 +221,8 @@ export default async function BridePanelPage({
                 inspiration={client.inspiration}
                 workPhotos={client.workPhotos}
                 action="/api/portal/companions"
+                showInspiration={false}
+                showTrialWork={false}
               />
             )}
           </div>
@@ -210,6 +234,7 @@ export default async function BridePanelPage({
           <h2 className="font-serif text-3xl">{t.historyTitle}</h2>
           <div className="mt-8">
             <SubTabs
+              pinned
               initial={com === "nueva" || ok === "cambio" || error === "cambio" ? "nueva" : "historico"}
               tabs={[
                 {
@@ -240,8 +265,7 @@ export default async function BridePanelPage({
                         ? client.event.people.map((person, index) => (
                             <div key={index}>
                               <h3 className="font-serif text-2xl">
-                                {t.whoOptions[person.who] || person.who || t.companionsTitle}
-                                {client.event.people.length > 1 ? ` ${index + 1}` : ""}
+                                {companionHeading(person, t.whoOptions, interpolate(t.personN, { n: index + 1 }))}
                               </h3>
                               <ChangeRequestForm copy={t} scope="acompanante" personIndex={index} />
                             </div>

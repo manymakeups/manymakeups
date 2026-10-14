@@ -33,7 +33,9 @@ export function companionsSummary(event: EventDetails) {
 
 export function personLine(person: Attendee, index: number) {
   const trial = person.wantsTrial ? "con prueba" : "sin prueba";
-  return `${index + 1}. ${person.who || "—"} · ${person.service} · ${trial}`;
+  const name = person.name?.trim();
+  const who = person.who || "—";
+  return `${index + 1}. ${name ? `${name} · ${who}` : who} · ${person.service} · ${trial}`;
 }
 
 export function noticeTitle(notice: StudioNotice) {

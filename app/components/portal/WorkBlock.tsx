@@ -56,6 +56,7 @@ export function WorkView({
   clientId,
   copy = portalEs,
   part = "both",
+  notes = "",
 }: {
   title?: string;
   products: string;
@@ -64,6 +65,7 @@ export function WorkView({
   clientId: string;
   copy?: PortalCopy;
   part?: "both" | "photos" | "products";
+  notes?: string;
 }) {
   const showProducts = part !== "photos";
   const showPhotos = part !== "products";
@@ -78,6 +80,7 @@ export function WorkView({
           <p className="text-[0.68rem] uppercase tracking-[0.16em] text-ash">{copy.productsUsed}</p>
         ) : null}
         <ProductList products={productLines} legacy={products} copy={copy} />
+        {notes ? <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed">{notes}</p> : null}
       </div>
       ) : null}
       {showPhotos ? (
@@ -98,105 +101,84 @@ export function WorkView({
   );
 }
 
-function ProductFields({ prefix, products }: { prefix: string; products: UsedProduct[] }) {
-  const blank = (): UsedProduct => ({ brand: "", name: "", shade: "", zone: "Ojos" });
-  const [rows, setRows] = useState<UsedProduct[]>(products.length ? products : [blank()]);
+function ProductFields({ prefix, products, look }: { prefix: string; products: UsedProduct[]; look: "maquillaje" | "peinado" }) {
+  const blank = (): UsedProduct => ({ brand: "", name: "", shade: "", zone: "Ojos", look });
+  const [rows, setRows] = useState<UsedProduct[]>(products);
+  const [draft, setDraft] = useState<UsedProduct>(blank());
+  const known = PRODUCT_ZONES.includes(draft.zone as (typeof PRODUCT_ZONES)[number]);
+  const picked = known || !draft.zone ? draft.zone || "Ojos" : "Otra";
+  function addDraft() {
+    const zone = picked === "Otra" ? draft.zone.trim() : picked;
+    if (!draft.brand.trim() && !draft.name.trim() && !draft.shade.trim() && !zone) return;
+    setRows([...rows, { ...draft, zone: zone || "Otra", look }]);
+    setDraft(blank());
+  }
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-[0.68rem] uppercase tracking-[0.16em] text-ash">Productos utilizados</p>
-      {rows.map((row, index) => {
-        const known = PRODUCT_ZONES.includes(row.zone as (typeof PRODUCT_ZONES)[number]);
-        const picked = known || !row.zone ? row.zone || "Ojos" : "Otra";
-        return (
-          <div key={index} className="grid gap-3 border border-ink/10 p-4 sm:grid-cols-2 sm:items-end">
-            <label className="field-label">
-              Marca
-              <input
-                className="field"
-                name={`${prefix}${index}.brand`}
-                value={row.brand}
-                onChange={(event) => {
-                  const next = [...rows];
-                  next[index] = { ...row, brand: event.target.value };
-                  setRows(next);
-                }}
-              />
-            </label>
-            <label className="field-label">
-              Producto
-              <input
-                className="field"
-                name={`${prefix}${index}.name`}
-                value={row.name}
-                onChange={(event) => {
-                  const next = [...rows];
-                  next[index] = { ...row, name: event.target.value };
-                  setRows(next);
-                }}
-              />
-            </label>
-            <label className="field-label">
-              Tono
-              <input
-                className="field"
-                name={`${prefix}${index}.shade`}
-                value={row.shade}
-                onChange={(event) => {
-                  const next = [...rows];
-                  next[index] = { ...row, shade: event.target.value };
-                  setRows(next);
-                }}
-              />
-            </label>
-            <label className="field-label">
-              Área
-              <select
-                className="field"
-                name={`${prefix}${index}.zone`}
-                value={picked}
-                onChange={(event) => {
-                  const next = [...rows];
-                  const zone = event.target.value;
-                  next[index] = { ...row, zone: zone === "Otra" ? row.zone && !known ? row.zone : "" : zone };
-                  setRows(next);
-                }}
+      <div className="sticky top-0 z-10 grid gap-3 border border-ink/10 bg-porcelain p-4 sm:grid-cols-2">
+        <label className="field-label">
+          Marca
+          <input className="field" value={draft.brand} onChange={(event) => setDraft({ ...draft, brand: event.target.value })} />
+        </label>
+        <label className="field-label">
+          Producto
+          <input className="field" value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} />
+        </label>
+        <label className="field-label">
+          Tono
+          <input className="field" value={draft.shade} onChange={(event) => setDraft({ ...draft, shade: event.target.value })} />
+        </label>
+        <label className="field-label">
+          Área
+          <select
+            className="field"
+            value={picked}
+            onChange={(event) => {
+              const zone = event.target.value;
+              setDraft({ ...draft, zone: zone === "Otra" ? "" : zone });
+            }}
+          >
+            {PRODUCT_ZONES.map((zone) => (
+              <option key={zone} value={zone}>
+                {zone}
+              </option>
+            ))}
+            <option value="Otra">Otra</option>
+          </select>
+        </label>
+        {picked === "Otra" ? (
+          <label className="field-label sm:col-span-2">
+            Qué área
+            <input className="field" value={draft.zone} onChange={(event) => setDraft({ ...draft, zone: event.target.value })} />
+          </label>
+        ) : null}
+        <button className="btn-atelier self-end justify-self-start" type="button" onClick={addDraft}>
+          Añadir producto
+        </button>
+      </div>
+      {rows.length ? (
+        <ul className="divide-y divide-ink/10 border border-ink/10">
+          {rows.map((row, index) => (
+            <li key={`${row.brand}-${row.name}-${index}`} className="flex items-center justify-between gap-4 px-4 py-3 text-sm">
+              <span>{[row.brand, row.name, row.shade].filter(Boolean).join(" · ") || "—"}</span>
+              <span className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">{row.zone || "Otra"}</span>
+              <input type="hidden" name={`${prefix}${index}.brand`} value={row.brand} />
+              <input type="hidden" name={`${prefix}${index}.name`} value={row.name} />
+              <input type="hidden" name={`${prefix}${index}.shade`} value={row.shade} />
+              <input type="hidden" name={`${prefix}${index}.zone`} value={row.zone || "Otra"} />
+              <button
+                className="btn-atelier"
+                type="button"
+                onClick={() => setRows(rows.filter((_, i) => i !== index))}
               >
-                {PRODUCT_ZONES.map((zone) => (
-                  <option key={zone} value={zone}>
-                    {zone}
-                  </option>
-                ))}
-                <option value="Otra">Otra</option>
-              </select>
-            </label>
-            <button
-              className="btn-atelier self-end"
-              type="button"
-              onClick={() => setRows(rows.length === 1 ? [blank()] : rows.filter((_, i) => i !== index))}
-            >
-              Quitar
-            </button>
-            {picked === "Otra" ? (
-              <label className="field-label sm:col-span-2">
-                Qué área
-                <input
-                  className="field"
-                  name={`${prefix}${index}.zoneCustom`}
-                  value={known ? "" : row.zone}
-                  onChange={(event) => {
-                    const next = [...rows];
-                    next[index] = { ...row, zone: event.target.value };
-                    setRows(next);
-                  }}
-                />
-              </label>
-            ) : null}
-          </div>
-        );
-      })}
-      <button className="btn-atelier self-start" type="button" onClick={() => setRows([...rows, blank()])}>
-        Añadir producto
-      </button>
+                Quitar
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-sm text-ash">Todavía no hay productos en esta lista.</p>
+      )}
     </div>
   );
 }
@@ -210,6 +192,11 @@ export function WorkForm({
   photos,
   tab,
   mode = "both",
+  look = "maquillaje",
+  notes = "",
+  section = "productos",
+  photoSection = "fotos",
+  personIndex,
 }: {
   clientId: string;
   personKey: string;
@@ -219,6 +206,11 @@ export function WorkForm({
   photos: PortalFile[];
   tab: string;
   mode?: "both" | "photos" | "products";
+  look?: "maquillaje" | "peinado";
+  notes?: string;
+  section?: string;
+  photoSection?: string;
+  personIndex?: number;
 }) {
   const shown = filesFor(photos, personKey);
   return (
@@ -227,11 +219,18 @@ export function WorkForm({
         <form action="/api/admin/studio" method="post" className="flex flex-col gap-4">
           <input type="hidden" name="clientId" value={clientId} />
           <input type="hidden" name="tab" value={tab} />
-          <input type="hidden" name="section" value="productos" />
+          <input type="hidden" name="section" value={section} />
+          <input type="hidden" name="productLook" value={look} />
+          <input type="hidden" name="productTarget" value={personIndex == null ? "event" : "person"} />
+          {personIndex != null ? <input type="hidden" name="personIndex" value={personIndex} /> : null}
           {products && !productLines.length ? (
             <p className="whitespace-pre-wrap text-sm text-ash">{products}</p>
           ) : null}
-          <ProductFields prefix={fieldPrefix} products={productLines} />
+          <ProductFields prefix={fieldPrefix} products={productLines} look={look} />
+          <label className="field-label">
+            Notas para clonar el look
+            <textarea className="field min-h-28" name="lookNotes" defaultValue={notes} />
+          </label>
           <button className="btn-atelier self-start" type="submit">
             Guardar productos
           </button>
@@ -247,7 +246,7 @@ export function WorkForm({
             fieldName="person"
             label="Fotos de la prueba"
             tab={tab}
-            section="fotos"
+            section={photoSection}
             kind="work"
           />
           {!shown.length ? (

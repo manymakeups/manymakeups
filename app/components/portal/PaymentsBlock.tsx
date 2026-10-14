@@ -62,7 +62,11 @@ export function PaymentsView({
       {people.map((person, i) => (
         <PersonPayView
           key={i}
-          title={t.whoOptions[person.who] || person.who || interpolate(t.guestN, { n: i + 1 })}
+          title={
+            person.name
+              ? `${person.name}${person.who ? ` · ${t.whoOptions[person.who] || person.who}` : ""}`
+              : t.whoOptions[person.who] || person.who || interpolate(t.guestN, { n: i + 1 })
+          }
           payments={payments.guests[i] ?? emptyPersonPayments()}
           showTrial={person.wantsTrial}
         />
@@ -148,7 +152,9 @@ export function PaymentsForm({
         };
         return (
           <div key={i}>
-            <h3 className="font-serif text-2xl">{person.who || `Acompañante ${i + 1}`}</h3>
+            <h3 className="font-serif text-2xl">
+              {person.name ? `${person.name}${person.who ? ` · ${person.who}` : ""}` : person.who || `Acompañante ${i + 1}`}
+            </h3>
             <div className="mt-4 grid gap-6 sm:grid-cols-3">
               <SliceFields
                 title="Reserva"

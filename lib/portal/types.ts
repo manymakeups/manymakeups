@@ -30,9 +30,18 @@ export type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];
 
 export const CONTRACTOR_INSPIRATION = "contratante";
 export const CONTRACTOR_TRIAL_PHOTOS = "prueba-contratante";
+export type ProductLook = "maquillaje" | "peinado";
+
+export function contractorInspirationKey(look: ProductLook) {
+  return look === "peinado" ? "contratante-peinado" : "contratante-maquillaje";
+}
 
 export function personInspirationKey(index: number) {
   return `persona-${index}`;
+}
+
+export function personInspirationLookKey(index: number, look: ProductLook) {
+  return `persona-${index}-${look}`;
 }
 
 export function personTrialPhotoKey(index: number) {
@@ -40,10 +49,16 @@ export function personTrialPhotoKey(index: number) {
 }
 
 export function filesFor(files: PortalFile[], key: string) {
-  if (key === CONTRACTOR_INSPIRATION) {
+  if (key === CONTRACTOR_INSPIRATION || key === "contratante-maquillaje") {
     return files.filter(
-      (file) => file.label === CONTRACTOR_INSPIRATION || file.label === "Inspiración",
+      (file) =>
+        file.label === key || file.label === CONTRACTOR_INSPIRATION || file.label === "Inspiración",
     );
+  }
+  const legacy = /^persona-(\d+)-maquillaje$/.exec(key);
+  if (legacy) {
+    const previous = `persona-${legacy[1]}`;
+    return files.filter((file) => file.label === key || file.label === previous);
   }
   return files.filter((file) => file.label === key);
 }
@@ -64,7 +79,7 @@ export const DOCUMENT_KINDS = [
 ] as const;
 
 export const PORTAL_TABS = [
-  { id: "contratante", label: "Contratante" },
+  { id: "contratante", label: "Evento" },
   { id: "acompanantes", label: "Acompañantes" },
   { id: "historico", label: "Comunicaciones" },
   { id: "budget", label: "Budget" },
@@ -87,9 +102,15 @@ export type UsedProduct = {
   name: string;
   shade: string;
   zone: string;
+  look: ProductLook;
 };
 
+export function productsFor(products: UsedProduct[], look: ProductLook) {
+  return products.filter((product) => (product.look || "maquillaje") === look);
+}
+
 export type Attendee = {
+  name: string;
   who: string;
   service: string;
   wantsTrial: boolean;
@@ -98,6 +119,8 @@ export type Attendee = {
   notes: string;
   productsUsed: string;
   products: UsedProduct[];
+  makeupNotes: string;
+  hairNotes: string;
   budgetAmount: string;
   budgetNumber: string;
 };
@@ -211,6 +234,8 @@ export type EventDetails = {
   notes: string;
   productsUsed: string;
   products: UsedProduct[];
+  makeupNotes: string;
+  hairNotes: string;
   contractorLocked: boolean;
   peopleLocked: boolean;
 };
@@ -278,6 +303,7 @@ export type PortalDb = {
 
 export function emptyAttendee(who = ""): Attendee {
   return {
+    name: "",
     who,
     service: "Maquillaje y peinado",
     wantsTrial: false,
@@ -286,6 +312,8 @@ export function emptyAttendee(who = ""): Attendee {
     notes: "",
     productsUsed: "",
     products: [],
+    makeupNotes: "",
+    hairNotes: "",
     budgetAmount: "",
     budgetNumber: "",
   };
@@ -333,6 +361,8 @@ export function emptyEvent(name = ""): EventDetails {
     notes: "",
     productsUsed: "",
     products: [],
+    makeupNotes: "",
+    hairNotes: "",
     contractorLocked: false,
     peopleLocked: false,
   };
@@ -465,8 +495,9 @@ function asProducts(value: unknown): UsedProduct[] {
     const name = String(item.name ?? "").trim();
     const shade = String(item.shade ?? "").trim();
     const zone = String(item.zone ?? "").trim();
+    const look = item.look === "peinado" ? "peinado" : "maquillaje";
     if (!brand && !name && !shade && !zone) return [];
-    return [{ brand, name, shade, zone: zone || "Otra" }];
+    return [{ brand, name, shade, zone: zone || "Otra", look }];
   });
 }
 
@@ -477,6 +508,7 @@ export function normalizeClient(client: ClientRecord): ClientRecord {
     const row = existing[i];
     if (!row) return emptyAttendee();
     return {
+      name: row.name ?? "",
       who: row.who ?? "",
       service: normalizePersonService(row.service || ""),
       wantsTrial: Boolean(row.wantsTrial),
@@ -485,6 +517,8 @@ export function normalizeClient(client: ClientRecord): ClientRecord {
       notes: row.notes ?? "",
       productsUsed: row.productsUsed ?? "",
       products: asProducts(row.products),
+      makeupNotes: row.makeupNotes ?? "",
+      hairNotes: row.hairNotes ?? "",
       budgetAmount: row.budgetAmount ?? "",
       budgetNumber: row.budgetNumber ?? "",
     };
@@ -498,6 +532,8 @@ export function normalizeClient(client: ClientRecord): ClientRecord {
       people,
       productsUsed: client.event?.productsUsed ?? "",
       products: asProducts(client.event?.products),
+      makeupNotes: client.event?.makeupNotes ?? "",
+      hairNotes: client.event?.hairNotes ?? "",
       clientLastName: client.event?.clientLastName ?? "",
       contractorLocked: Boolean(client.event?.contractorLocked),
       peopleLocked: Boolean(client.event?.peopleLocked),

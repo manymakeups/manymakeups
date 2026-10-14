@@ -19,11 +19,16 @@ function eventType(value: string): EventType {
   return "boda";
 }
 
+export function peopleFields(form: FormData, index: number, prev: Attendee): Attendee {
+  return peopleFromForm(form, index + 1, [...Array.from({ length: index }, () => prev), prev])[index];
+}
+
 function peopleFromForm(form: FormData, count: number, fallback: Attendee[]): Attendee[] {
   return Array.from({ length: count }, (_, i) => {
     const prev = fallback[i] ?? emptyAttendee();
     const wantsTrial = flag(form.get(`people.${i}.wantsTrial`));
     return {
+      name: text(form.get(`people.${i}.name`)),
       who: text(form.get(`people.${i}.who`)),
       service: normalizePersonService(text(form.get(`people.${i}.service`)) || prev.service),
       wantsTrial,
@@ -32,6 +37,8 @@ function peopleFromForm(form: FormData, count: number, fallback: Attendee[]): At
       notes: text(form.get(`people.${i}.notes`)),
       productsUsed: prev.productsUsed,
       products: prev.products ?? [],
+      makeupNotes: prev.makeupNotes ?? "",
+      hairNotes: prev.hairNotes ?? "",
       budgetAmount: prev.budgetAmount,
       budgetNumber: prev.budgetNumber,
     };

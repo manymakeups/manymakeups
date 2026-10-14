@@ -1,27 +1,29 @@
 import { AgendaForm } from "@/app/components/portal/AgendaBlock";
 import { BudgetView, HistoryForm } from "@/app/components/portal/HistoryBlock";
-import { CompanionsForm } from "@/app/components/portal/CompanionsForm";
-import { CopyInvite, DeleteFileButton } from "@/app/components/portal/FileActions";
+import { AddCompanionForm, PersonDataForm } from "@/app/components/portal/CompanionsForm";
+import { DeleteFileButton } from "@/app/components/portal/FileActions";
 import { EventForm } from "@/app/components/portal/EventForm";
 import { MailSetupNotice } from "@/app/components/portal/MailSetupNotice";
 import { PaymentsForm } from "@/app/components/portal/PaymentsBlock";
 import { PhotoGrid } from "@/app/components/portal/PhotoPicker";
+import { InviteModal } from "@/app/components/portal/InviteModal";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { PortalTabs } from "@/app/components/portal/PortalTabs";
 import { EventSections, SubTabs } from "@/app/components/portal/SubTabs";
 import { StudioAside } from "@/app/components/portal/StudioAside";
 import { WorkForm } from "@/app/components/portal/WorkBlock";
 import { portalEs } from "@/lib/i18n/portal-messages";
-import { fullName } from "@/lib/portal/names";
+import { companionHeading, fullName } from "@/lib/portal/names";
 import { portalFileHref } from "@/lib/portal/files";
 import {
-  CONTRACTOR_INSPIRATION,
   CONTRACTOR_TRIAL_PHOTOS,
   DOCUMENT_KINDS,
+  contractorInspirationKey,
   filesFor,
-  personInspirationKey,
+  personInspirationLookKey,
   personTrialPhotoKey,
   portalTab,
+  productsFor,
 } from "@/lib/portal/types";
 import { requireAdmin } from "@/lib/portal/session";
 import { getClient, listNotices } from "@/lib/portal/store";
@@ -69,13 +71,9 @@ export default async function StudioClientPage({
       }
     >
       <div className="shrink-0">
-      <form action="/api/admin/invite" method="post" className="mt-8">
-        <input type="hidden" name="id" value={client.id} />
-        <button className="btn-atelier" type="submit">
-          Generar enlace nuevo
-        </button>
-      </form>
-
+      <div className="mt-6">
+        <InviteModal clientId={client.id} invite={invite} />
+      </div>
       <PortalTabs basePath={`/privado/novias/${client.id}`} active={tab} />
       </div>
       <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
@@ -102,15 +100,6 @@ export default async function StudioClientPage({
         </PortalNotice>
       ) : null}
       {error === "archivo" ? <PortalNotice>Ese archivo no se puede colgar.</PortalNotice> : null}
-      {invite ? (
-        <PortalNotice>
-          Enlace de activación (21 días, un uso). Envíaselo por WhatsApp o correo:
-          <span className="mt-3 block break-all normal-case tracking-normal text-sm">{invite}</span>
-          <span className="mt-3 block">
-            <CopyInvite url={invite} />
-          </span>
-        </PortalNotice>
-      ) : null}
       </div>
 
       {tab === "contratante" ? (
@@ -120,9 +109,10 @@ export default async function StudioClientPage({
             labels={{
               data: "Datos del evento",
               inspirations: "Inspiraciones",
-              look: "Maquillaje y Peinado",
+              makeup: "Maquillaje",
+              hair: "Peinado",
               trial: "Prueba",
-              photos: "Fotos",
+              photos: "Fotografías",
               products: "Productos",
             }}
             details={
@@ -144,15 +134,26 @@ export default async function StudioClientPage({
                 </div>
               </div>
             }
-            inspiration={
-              filesFor(client.inspiration, CONTRACTOR_INSPIRATION).length ? (
+            makeupInspiration={
+              filesFor(client.inspiration, contractorInspirationKey("maquillaje")).length ? (
                 <PhotoGrid
-                  files={filesFor(client.inspiration, CONTRACTOR_INSPIRATION)}
+                  files={filesFor(client.inspiration, contractorInspirationKey("maquillaje"))}
                   clientId={client.id}
                   kind="inspiration"
                 />
               ) : (
-                <p className="text-sm text-ash">Todavía no ha colgado fotos de inspiración.</p>
+                <p className="text-sm text-ash">Todavía no ha colgado fotos de maquillaje.</p>
+              )
+            }
+            hairInspiration={
+              filesFor(client.inspiration, contractorInspirationKey("peinado")).length ? (
+                <PhotoGrid
+                  files={filesFor(client.inspiration, contractorInspirationKey("peinado"))}
+                  clientId={client.id}
+                  kind="inspiration"
+                />
+              ) : (
+                <p className="text-sm text-ash">Todavía no ha colgado fotos de peinado.</p>
               )
             }
             photos={
@@ -165,16 +166,35 @@ export default async function StudioClientPage({
                 productLines={event.products}
                 photos={client.workPhotos}
                 tab="contratante"
+                photoSection="fotos"
               />
             }
-            products={
+            makeupProducts={
               <WorkForm
                 mode="products"
+                look="maquillaje"
+                notes={event.makeupNotes}
+                section="productos-maquillaje"
                 clientId={client.id}
                 personKey={CONTRACTOR_TRIAL_PHOTOS}
                 fieldPrefix="products."
                 products={event.productsUsed}
-                productLines={event.products}
+                productLines={productsFor(event.products, "maquillaje")}
+                photos={client.workPhotos}
+                tab="contratante"
+              />
+            }
+            hairProducts={
+              <WorkForm
+                mode="products"
+                look="peinado"
+                notes={event.hairNotes}
+                section="productos-peinado"
+                clientId={client.id}
+                personKey={CONTRACTOR_TRIAL_PHOTOS}
+                fieldPrefix="products."
+                products={event.productsUsed}
+                productLines={productsFor(event.products, "peinado")}
                 photos={client.workPhotos}
                 tab="contratante"
               />
@@ -184,63 +204,110 @@ export default async function StudioClientPage({
       ) : null}
 
       {tab === "acompanantes" ? (
-        <section className="pt-10">
+        <section className="pt-8">
           <h2 className="font-serif text-3xl">Acompañantes</h2>
           <p className="mt-3 max-w-2xl text-sm text-ash">
-            Corrige quiénes son, servicios y prueba. Al guardar, ella lo ve actualizado en su área.
+            Corrige nombre, parentesco y servicio en Datos. Inspiraciones y prueba van en sus pestañas.
           </p>
-          <div className="mt-8">
-            <CompanionsForm
-              event={event}
+          <div className="mt-8 flex flex-col gap-10">
+            {event.people.map((person, i) => {
+              const piece = sec?.startsWith(`${i}-`) ? sec.slice(`${i}-`.length) : undefined;
+              const makeupPhotos = filesFor(client.inspiration, personInspirationLookKey(i, "maquillaje"));
+              const hairPhotos = filesFor(client.inspiration, personInspirationLookKey(i, "peinado"));
+              return (
+                <article key={i} className="border border-ink/10 p-5">
+                  <p className="font-serif text-2xl">{companionHeading(person, portalEs.whoOptions, `Persona ${i + 1}`)}</p>
+                  <div className="mt-6">
+                    <EventSections
+                      section={piece}
+                      labels={{
+                        data: "Datos del evento",
+                        inspirations: "Inspiraciones",
+                        makeup: "Maquillaje",
+                        hair: "Peinado",
+                        trial: "Prueba",
+                        photos: "Fotografías",
+                        products: "Productos",
+                      }}
+                      details={
+                        <PersonDataForm
+                          person={person}
+                          index={i}
+                          clientId={client.id}
+                          action="/api/admin/companions"
+                          copy={portalEs}
+                        />
+                      }
+                      makeupInspiration={
+                        makeupPhotos.length ? (
+                          <PhotoGrid files={makeupPhotos} clientId={client.id} kind="inspiration" />
+                        ) : (
+                          <p className="text-sm text-ash">Todavía no ha colgado fotos de maquillaje.</p>
+                        )
+                      }
+                      hairInspiration={
+                        hairPhotos.length ? (
+                          <PhotoGrid files={hairPhotos} clientId={client.id} kind="inspiration" />
+                        ) : (
+                          <p className="text-sm text-ash">Todavía no ha colgado fotos de peinado.</p>
+                        )
+                      }
+                      photos={
+                        <WorkForm
+                          mode="photos"
+                          clientId={client.id}
+                          personKey={personTrialPhotoKey(i)}
+                          fieldPrefix={`people.${i}.products.`}
+                          products={person.productsUsed}
+                          photos={client.workPhotos}
+                          tab="acompanantes"
+                          photoSection={`${i}-fotos`}
+                        />
+                      }
+                      makeupProducts={
+                        <WorkForm
+                          mode="products"
+                          look="maquillaje"
+                          notes={person.makeupNotes}
+                          section={`${i}-productos-maquillaje`}
+                          personIndex={i}
+                          clientId={client.id}
+                          personKey={personTrialPhotoKey(i)}
+                          fieldPrefix={`people.${i}.products.`}
+                          products={person.productsUsed}
+                          productLines={productsFor(person.products, "maquillaje")}
+                          photos={client.workPhotos}
+                          tab="acompanantes"
+                        />
+                      }
+                      hairProducts={
+                        <WorkForm
+                          mode="products"
+                          look="peinado"
+                          notes={person.hairNotes}
+                          section={`${i}-productos-peinado`}
+                          personIndex={i}
+                          clientId={client.id}
+                          personKey={personTrialPhotoKey(i)}
+                          fieldPrefix={`people.${i}.products.`}
+                          products={person.productsUsed}
+                          productLines={productsFor(person.products, "peinado")}
+                          photos={client.workPhotos}
+                          tab="acompanantes"
+                        />
+                      }
+                    />
+                  </div>
+                </article>
+              );
+            })}
+            <AddCompanionForm
               clientId={client.id}
-              inspiration={client.inspiration}
-              workPhotos={client.workPhotos}
               action="/api/admin/companions"
               copy={portalEs}
               includeClientId
-              showInspiration={false}
-              showTrialWork={false}
-              submitLabel="Guardar acompañantes"
             />
           </div>
-          {event.people.length ? (
-            <div className="mt-12 flex flex-col gap-10 border-t border-ink/10 pt-10">
-              {event.people.map((person, i) => (
-                <article key={i} className="border border-ink/10 p-5">
-                  <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">
-                    Persona {i + 1} · {person.who || "—"}
-                  </p>
-                  <div className="mt-6">
-                    <p className="text-[0.68rem] uppercase tracking-[0.16em] text-ash">Inspiraciones</p>
-                    <div className="mt-3">
-                      {filesFor(client.inspiration, personInspirationKey(i)).length ? (
-                        <PhotoGrid
-                          files={filesFor(client.inspiration, personInspirationKey(i))}
-                          clientId={client.id}
-                          kind="inspiration"
-                        />
-                      ) : (
-                        <p className="text-sm text-ash">Todavía no ha colgado fotos de inspiración.</p>
-                      )}
-                    </div>
-                  </div>
-                  {person.wantsTrial ? (
-                    <div className="mt-6 border-t border-ink/10 pt-6">
-                      <WorkForm
-                        clientId={client.id}
-                        personKey={personTrialPhotoKey(i)}
-                        fieldPrefix={`people.${i}.products.`}
-                        products={person.productsUsed}
-                        productLines={person.products}
-                        photos={client.workPhotos}
-                        tab="acompanantes"
-                      />
-                    </div>
-                  ) : null}
-                </article>
-              ))}
-            </div>
-          ) : null}
         </section>
       ) : null}
 
@@ -306,6 +373,7 @@ export default async function StudioClientPage({
           <h2 className="font-serif text-3xl">Comunicaciones</h2>
           <div className="mt-8">
             <SubTabs
+              pinned
               initial={com === "nueva" || ok === "mensaje" ? "nueva" : "historico"}
               tabs={[
                 {

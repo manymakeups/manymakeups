@@ -65,8 +65,12 @@ export type PortalCopy = {
   historyTitle: string;
   eventData: string;
   inspirationsTab: string;
-  lookTab: string;
+  makeupTab: string;
+  hairTab: string;
   photosTab: string;
+  personName: string;
+  addCompanion: string;
+  lookNotes: string;
   productsTab: string;
   commsHistory: string;
   commsWrite: string;
@@ -277,8 +281,12 @@ export const portalEs: PortalCopy = {
   historyTitle: "Comunicaciones",
   eventData: "Datos del evento",
   inspirationsTab: "Inspiraciones",
-  lookTab: "Maquillaje y Peinado",
-  photosTab: "Fotos",
+  makeupTab: "Maquillaje",
+  hairTab: "Peinado",
+  photosTab: "Fotografías",
+  personName: "Nombre",
+  addCompanion: "Añadir acompañante",
+  lookNotes: "Notas para clonar el look",
   productsTab: "Productos",
   commsHistory: "Histórico",
   commsWrite: "Nueva comunicación",
@@ -361,7 +369,7 @@ export const portalEs: PortalCopy = {
   uploading: "Subiendo…",
   peopleCount: "Nº de personas a atender",
   personN: "Persona {n}",
-  who: "Quién es",
+  who: "Parentesco",
   choose: "Elige…",
   service: "Servicio",
   allergies: "Alergias o sensibilidad",
@@ -550,8 +558,12 @@ export const portalEn: PortalCopy = {
   historyTitle: "Communications",
   eventData: "Event details",
   inspirationsTab: "Inspiration",
-  lookTab: "Makeup and hair",
-  photosTab: "Photos",
+  makeupTab: "Makeup",
+  hairTab: "Hair",
+  photosTab: "Photographs",
+  personName: "Name",
+  addCompanion: "Add a guest",
+  lookNotes: "Notes to recreate the look",
   productsTab: "Products",
   commsHistory: "History",
   commsWrite: "New message",
@@ -634,7 +646,7 @@ export const portalEn: PortalCopy = {
   uploading: "Uploading…",
   peopleCount: "Number of people to style",
   personN: "Person {n}",
-  who: "Who they are",
+  who: "Relationship",
   choose: "Choose…",
   service: "Service",
   allergies: "Allergies or sensitivity",
@@ -822,8 +834,12 @@ export const portalFr: PortalCopy = {
   historyTitle: "Communications",
   eventData: "Données de l’événement",
   inspirationsTab: "Inspirations",
-  lookTab: "Maquillage et coiffure",
-  photosTab: "Photos",
+  makeupTab: "Maquillage",
+  hairTab: "Coiffure",
+  photosTab: "Photographies",
+  personName: "Nom",
+  addCompanion: "Ajouter un accompagnant",
+  lookNotes: "Notes pour reproduire le look",
   productsTab: "Produits",
   commsHistory: "Historique",
   commsWrite: "Nouveau message",
@@ -906,7 +922,7 @@ export const portalFr: PortalCopy = {
   uploading: "Envoi…",
   peopleCount: "Nombre de personnes à coiffer / maquiller",
   personN: "Personne {n}",
-  who: "Qui c’est",
+  who: "Lien",
   choose: "Choisis…",
   service: "Service",
   allergies: "Allergies ou sensibilité",

@@ -5,20 +5,18 @@ import { goPortal } from "@/lib/portal/http";
 import { clientLabel, notifyStudio } from "@/lib/portal/notify";
 import { requireClient } from "@/lib/portal/session";
 import { deletePortalFile, getClient, putPortalFile, saveClient } from "@/lib/portal/store";
-import {
-  CONTRACTOR_INSPIRATION,
-  personInspirationKey,
-  type PortalFile,
-} from "@/lib/portal/types";
+import { CONTRACTOR_INSPIRATION, type PortalFile } from "@/lib/portal/types";
 
 function personLabel(value: FormDataEntryValue | null) {
   if (typeof value !== "string") return CONTRACTOR_INSPIRATION;
-  if (value === CONTRACTOR_INSPIRATION) return value;
-  const match = /^persona-(\d+)$/.exec(value);
+  if (value === CONTRACTOR_INSPIRATION || value === "contratante-maquillaje" || value === "contratante-peinado") {
+    return value;
+  }
+  const match = /^persona-(\d+)(?:-(maquillaje|peinado))?$/.exec(value);
   if (!match) return CONTRACTOR_INSPIRATION;
   const index = Number(match[1]);
   if (!Number.isInteger(index) || index < 0 || index > 19) return CONTRACTOR_INSPIRATION;
-  return personInspirationKey(index);
+  return value;
 }
 
 export async function POST(request: Request) {
