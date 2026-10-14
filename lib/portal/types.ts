@@ -66,6 +66,7 @@ export const DOCUMENT_KINDS = [
 export const PORTAL_TABS = [
   { id: "contratante", label: "Contratante" },
   { id: "acompanantes", label: "Acompañantes" },
+  { id: "historico", label: "Histórico" },
   { id: "facturacion", label: "Facturación" },
   { id: "documentacion", label: "Documentación" },
   { id: "agenda", label: "Agenda" },
@@ -114,6 +115,28 @@ export type Appointment = {
   place: string;
   notes: string;
   status: AppointmentStatus;
+};
+
+export const HISTORY_KINDS = ["contacto", "servicio"] as const;
+export type HistoryKind = (typeof HISTORY_KINDS)[number];
+
+export const CONTACT_TITLES = ["Llamada", "WhatsApp", "Reunión", "Correo", "Otro"] as const;
+export const SERVICE_TITLES = [
+  "Maquillaje y peinado",
+  "Maquillaje",
+  "Peinado",
+  "Prueba",
+  "Tratamiento de piel",
+  "Otro",
+] as const;
+
+export type HistoryEntry = {
+  id: string;
+  kind: HistoryKind;
+  title: string;
+  date: string;
+  notes: string;
+  amount: number;
 };
 
 export type EventDetails = {
@@ -190,6 +213,7 @@ export type ClientRecord = {
   documents: PortalFile[];
   workPhotos: PortalFile[];
   appointments: Appointment[];
+  history: HistoryEntry[];
 };
 
 export type PortalDb = {
@@ -303,6 +327,18 @@ export function euros(value: number) {
   }).format(value || 0);
 }
 
+export function paidTotal(payments: Payments) {
+  const slices = [payments.contractor.deposit, payments.contractor.trial, payments.contractor.event];
+  return slices.reduce((sum, slice) => sum + (slice.paid ? Math.max(0, Number(slice.amount) || 0) : 0), 0);
+}
+
+export function historyBudget(entries: HistoryEntry[], payments: Payments) {
+  const services = entries.filter((entry) => entry.kind === "servicio");
+  const total = services.reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0);
+  const paid = paidTotal(payments);
+  return { services, total, paid, pending: Math.max(0, total - paid) };
+}
+
 function asSlice(value: unknown): PaymentSlice {
   const row = value && typeof value === "object" ? (value as PaymentSlice) : emptySlice();
   return {
@@ -352,6 +388,21 @@ function asAppointment(value: unknown): Appointment | null {
   };
 }
 
+function asHistory(value: unknown): HistoryEntry | null {
+  if (!value || typeof value !== "object") return null;
+  const row = value as HistoryEntry;
+  if (!row.id) return null;
+  if (row.kind !== "contacto" && row.kind !== "servicio") return null;
+  return {
+    id: String(row.id),
+    kind: row.kind,
+    title: row.title ?? "",
+    date: row.date ?? "",
+    notes: row.notes ?? "",
+    amount: row.kind === "servicio" ? Math.max(0, Number(row.amount) || 0) : 0,
+  };
+}
+
 export function normalizeClient(client: ClientRecord): ClientRecord {
   const count = Math.min(20, Math.max(0, Number(client.event?.peopleCount) || 0));
   const existing = Array.isArray(client.event?.people) ? client.event.people : [];
@@ -387,5 +438,6 @@ export function normalizeClient(client: ClientRecord): ClientRecord {
     documents: client.documents ?? [],
     workPhotos: client.workPhotos ?? [],
     appointments: (client.appointments ?? []).map(asAppointment).filter(Boolean) as Appointment[],
+    history: (client.history ?? []).map(asHistory).filter(Boolean) as HistoryEntry[],
   };
 }

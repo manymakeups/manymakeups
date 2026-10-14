@@ -1,4 +1,5 @@
 import { AgendaForm } from "@/app/components/portal/AgendaBlock";
+import { HistoryForm } from "@/app/components/portal/HistoryBlock";
 import { CompanionsForm } from "@/app/components/portal/CompanionsForm";
 import { CopyInvite, DeleteFileButton } from "@/app/components/portal/FileActions";
 import { EventForm } from "@/app/components/portal/EventForm";
@@ -67,6 +68,7 @@ export default async function StudioClientPage({
       {ok === "doc" ? <PortalNotice>Documento colgado.</PortalNotice> : null}
       {ok === "pagos" ? <PortalNotice>Pagos actualizados.</PortalNotice> : null}
       {ok === "agenda" ? <PortalNotice>Agenda actualizada.</PortalNotice> : null}
+      {ok === "historico" ? <PortalNotice>Histórico actualizado. Ella ya lo ve en su área.</PortalNotice> : null}
       {ok === "estudio" ? <PortalNotice>Productos guardados.</PortalNotice> : null}
       {ok === "fotos" ? <PortalNotice>Fotos de la prueba colgadas.</PortalNotice> : null}
       <MailSetupNotice />
@@ -277,6 +279,19 @@ export default async function StudioClientPage({
               ))}
             </ul>
           ) : null}
+        </section>
+      ) : null}
+
+      {tab === "historico" ? (
+        <section className="pt-10">
+          <h2 className="font-serif text-3xl">Histórico y budget</h2>
+          <p className="mt-3 max-w-2xl text-sm text-ash">
+            Anota cada contacto y cada servicio. Ella ve lo mismo. El budget suma los servicios; lo abonado se marca en
+            Facturación.
+          </p>
+          <div className="mt-8">
+            <HistoryForm clientId={client.id} entries={client.history} payments={client.payments} />
+          </div>
         </section>
       ) : null}
 

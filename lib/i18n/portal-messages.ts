@@ -44,6 +44,7 @@ export type PortalCopy = {
     facturacion: string;
     documentacion: string;
     agenda: string;
+    historico: string;
   };
   yourDetails: string;
   yourDetailsLead: string;
@@ -61,6 +62,16 @@ export type PortalCopy = {
   download: string;
   agendaTitle: string;
   agendaLead: string;
+  historyTitle: string;
+  historyLead: string;
+  historyEmpty: string;
+  budgetTitle: string;
+  budgetLead: string;
+  budgetTotal: string;
+  budgetPaid: string;
+  budgetPending: string;
+  historyKinds: { contacto: string; servicio: string };
+  historyTitles: Record<string, string>;
   yourName: string;
   lastName: string;
   partnerName: string;
@@ -160,7 +171,7 @@ export const portalEs: PortalCopy = {
   backToSite: "Volver a la web",
   logout: "Salir",
   hello: "Hola, {name}.",
-  panelLead: "Tu ficha, la de tus acompañantes, los pagos, los papeles y la agenda de citas.",
+  panelLead: "Tu ficha, la de tus acompañantes, el histórico, los pagos, los papeles y la agenda de citas.",
   email: "Correo",
   password: "Contraseña",
   confirmPassword: "Repite la contraseña",
@@ -201,6 +212,7 @@ export const portalEs: PortalCopy = {
     facturacion: "Facturación",
     documentacion: "Documentación",
     agenda: "Agenda",
+    historico: "Histórico",
   },
   yourDetails: "Tus datos",
   yourDetailsLead: "Cuanto más concreto, más fácil organizo horarios y equipo.",
@@ -220,6 +232,27 @@ export const portalEs: PortalCopy = {
   download: "Descargar",
   agendaTitle: "Agenda",
   agendaLead: "Las citas que tenemos planificadas: prueba, evento y lo que vayamos sumando.",
+  historyTitle: "Histórico",
+  historyLead: "Los contactos y los servicios que vamos anotando. El budget suma solo los servicios.",
+  historyEmpty: "Todavía no hay contactos ni servicios anotados.",
+  budgetTitle: "Budget",
+  budgetLead: "Lo abonado sale de facturación: reserva, prueba y día del evento.",
+  budgetTotal: "Total",
+  budgetPaid: "Abonado",
+  budgetPending: "Pendiente",
+  historyKinds: { contacto: "Contacto", servicio: "Servicio" },
+  historyTitles: {
+    Llamada: "Llamada",
+    WhatsApp: "WhatsApp",
+    Reunión: "Reunión",
+    Correo: "Correo",
+    Otro: "Otro",
+    "Maquillaje y peinado": "Maquillaje y peinado",
+    Maquillaje: "Maquillaje",
+    Peinado: "Peinado",
+    Prueba: "Prueba",
+    "Tratamiento de piel": "Tratamiento de piel",
+  },
   yourName: "Nombre",
   lastName: "Apellidos",
   partnerName: "Nombre de tu pareja",
@@ -349,7 +382,7 @@ export const portalEn: PortalCopy = {
   backToSite: "Back to the site",
   logout: "Log out",
   hello: "Hello, {name}.",
-  panelLead: "Your details, your guests, payments, documents and the appointment diary.",
+  panelLead: "Your details, your guests, your history, payments, documents and the appointment diary.",
   email: "Email",
   password: "Password",
   confirmPassword: "Repeat password",
@@ -389,6 +422,7 @@ export const portalEn: PortalCopy = {
     facturacion: "Billing",
     documentacion: "Documents",
     agenda: "Diary",
+    historico: "History",
   },
   yourDetails: "Your details",
   yourDetailsLead: "The more specific you are, the easier it is to plan timing and team.",
@@ -407,6 +441,27 @@ export const portalEn: PortalCopy = {
   download: "Download",
   agendaTitle: "Diary",
   agendaLead: "The appointments we have planned: trial, event, and anything we add.",
+  historyTitle: "History",
+  historyLead: "The contacts and services we record. The budget adds up the services only.",
+  historyEmpty: "There are no contacts or services recorded yet.",
+  budgetTitle: "Budget",
+  budgetLead: "What is paid comes from billing: deposit, trial and event day.",
+  budgetTotal: "Total",
+  budgetPaid: "Paid",
+  budgetPending: "Outstanding",
+  historyKinds: { contacto: "Contact", servicio: "Service" },
+  historyTitles: {
+    Llamada: "Call",
+    WhatsApp: "WhatsApp",
+    Reunión: "Meeting",
+    Correo: "Email",
+    Otro: "Other",
+    "Maquillaje y peinado": "Makeup and hair",
+    Maquillaje: "Makeup",
+    Peinado: "Hair",
+    Prueba: "Trial",
+    "Tratamiento de piel": "Skin treatment",
+  },
   yourName: "First name",
   lastName: "Last name",
   partnerName: "Your partner’s name",
@@ -533,7 +588,7 @@ export const portalFr: PortalCopy = {
   backToSite: "Retour au site",
   logout: "Sortir",
   hello: "Bonjour, {name}.",
-  panelLead: "Ta fiche, celle de tes accompagnants, les paiements, les papiers et l’agenda des rendez-vous.",
+  panelLead: "Ta fiche, celle de tes accompagnants, l’historique, les paiements, les papiers et l’agenda des rendez-vous.",
   email: "E-mail",
   password: "Mot de passe",
   confirmPassword: "Répète le mot de passe",
@@ -574,6 +629,7 @@ export const portalFr: PortalCopy = {
     facturacion: "Facturation",
     documentacion: "Documents",
     agenda: "Agenda",
+    historico: "Historique",
   },
   yourDetails: "Tes informations",
   yourDetailsLead: "Plus c’est précis, plus j’organise facilement les horaires et l’équipe.",
@@ -593,6 +649,27 @@ export const portalFr: PortalCopy = {
   download: "Télécharger",
   agendaTitle: "Agenda",
   agendaLead: "Les rendez-vous prévus : essai, événement, et ce que nous ajouterons.",
+  historyTitle: "Historique",
+  historyLead: "Les contacts et les services que nous notons. Le budget additionne seulement les services.",
+  historyEmpty: "Il n’y a pas encore de contacts ni de services notés.",
+  budgetTitle: "Budget",
+  budgetLead: "Ce qui est payé vient de la facturation : acompte, essai et jour de l’événement.",
+  budgetTotal: "Total",
+  budgetPaid: "Payé",
+  budgetPending: "Reste",
+  historyKinds: { contacto: "Contact", servicio: "Service" },
+  historyTitles: {
+    Llamada: "Appel",
+    WhatsApp: "WhatsApp",
+    Reunión: "Réunion",
+    Correo: "E-mail",
+    Otro: "Autre",
+    "Maquillaje y peinado": "Maquillage et coiffure",
+    Maquillaje: "Maquillage",
+    Peinado: "Coiffure",
+    Prueba: "Essai",
+    "Tratamiento de piel": "Soin de la peau",
+  },
   yourName: "Prénom",
   lastName: "Nom",
   partnerName: "Prénom de ta/ton partenaire",

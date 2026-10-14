@@ -33,6 +33,7 @@ export async function POST(request: Request) {
     documents: [],
     workPhotos: [],
     appointments: [],
+    history: [],
   };
   await saveClient(client);
   const invite = `${site.url}/area-novia/activar?token=${encodeURIComponent(token)}`;

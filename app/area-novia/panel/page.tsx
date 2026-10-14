@@ -1,4 +1,5 @@
 import { AgendaView } from "@/app/components/portal/AgendaBlock";
+import { HistoryView } from "@/app/components/portal/HistoryBlock";
 import { ChangeRequestForm } from "@/app/components/portal/ChangeRequestForm";
 import { CompanionView } from "@/app/components/portal/CompanionView";
 import { CompanionsForm } from "@/app/components/portal/CompanionsForm";
@@ -165,6 +166,16 @@ export default async function BridePanelPage({
                 action="/api/portal/companions"
               />
             )}
+          </div>
+        </section>
+      ) : null}
+
+      {tab === "historico" ? (
+        <section className="pt-10">
+          <h2 className="font-serif text-3xl">{t.historyTitle}</h2>
+          <p className="mt-3 max-w-2xl text-sm text-ash">{t.historyLead}</p>
+          <div className="mt-8">
+            <HistoryView entries={client.history} payments={client.payments} copy={t} locale={locale} />
           </div>
         </section>
       ) : null}
