@@ -1,5 +1,5 @@
-import { CalendlyEmbed } from "@/app/components/CalendlyEmbed";
 import { AgendaView } from "@/app/components/portal/AgendaBlock";
+import { ClientCalendar } from "@/app/components/portal/ClientCalendar";
 import { HistoryView } from "@/app/components/portal/HistoryBlock";
 import { ChangeRequestForm } from "@/app/components/portal/ChangeRequestForm";
 import { CompanionView } from "@/app/components/portal/CompanionView";
@@ -11,6 +11,8 @@ import { PhotoPicker } from "@/app/components/portal/PhotoPicker";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { PortalTabs } from "@/app/components/portal/PortalTabs";
 import { WorkView } from "@/app/components/portal/WorkBlock";
+import { studioBusyDates } from "@/lib/portal/availability";
+import { madridToday, parseMonth } from "@/lib/portal/calendar";
 import { INSPIRATION_MAX } from "@/lib/portal/files";
 import { mailName } from "@/lib/portal/names";
 import { getLocale, getPortalCopy, interpolate, localePath } from "@/lib/i18n";
@@ -40,7 +42,7 @@ function fileHref(clientId: string, id: string, download = false) {
 export default async function BridePanelPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ok?: string; error?: string; tab?: string }>;
+  searchParams: Promise<{ ok?: string; error?: string; tab?: string; mes?: string }>;
 }) {
   const locale = await getLocale();
   const t = getPortalCopy(locale);
@@ -49,8 +51,11 @@ export default async function BridePanelPage({
   const client = await getClient(session.sub);
   if (!client) redirect(localePath(locale, "/area-novia"));
   const requests = (await listNotices()).filter((notice) => notice.clientId === client.id && notice.kind === "cambio");
-  const { ok, error, tab: tabRaw } = await searchParams;
+  const { ok, error, tab: tabRaw, mes } = await searchParams;
   const tab = portalTab(tabRaw);
+  const today = madridToday();
+  const { year: initialYear, month: initialMonth } = parseMonth(mes, today);
+  const busyDates = tab === "agenda" ? await studioBusyDates() : [];
   const okText: Record<string, string> = {
     evento: t.savedEvent,
     fotos: t.savedPhotos,
@@ -229,15 +234,22 @@ export default async function BridePanelPage({
         <section className="pt-10">
           <h2 className="font-serif text-3xl">{t.agendaTitle}</h2>
           <p className="mt-3 max-w-2xl text-sm text-ash">{t.agendaLead}</p>
-          <div className="mt-8">
-            <AgendaView appointments={client.appointments} copy={t} locale={locale} />
-          </div>
-          <div className="mt-12">
+          <div className="mt-10">
             <h3 className="font-serif text-3xl">{t.agendaBook}</h3>
             <p className="mt-3 max-w-2xl text-sm text-ash">{t.agendaBookLead}</p>
-            <div className="mt-6">
-              <CalendlyEmbed eager />
-            </div>
+            <ClientCalendar
+              busyDates={busyDates}
+              today={today}
+              initialYear={initialYear}
+              initialMonth={initialMonth}
+              freeLabel={t.agendaFree}
+              closeLabel={t.agendaClose}
+              previousLabel={t.agendaPrev}
+              nextLabel={t.agendaNext}
+            />
+          </div>
+          <div className="mt-12">
+            <AgendaView appointments={client.appointments} copy={t} locale={locale} />
           </div>
         </section>
       ) : null}

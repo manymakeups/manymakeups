@@ -137,6 +137,14 @@ export type PortalCopy = {
   agendaEmpty: string;
   agendaBook: string;
   agendaBookLead: string;
+  agendaFree: string;
+  agendaClose: string;
+  agendaPrev: string;
+  agendaNext: string;
+  mailLabel: string;
+  threadClient: string;
+  threadStudio: string;
+  threadReply: string;
   noDate: string;
   appointment: string;
   appointmentTitles: Record<string, string>;
@@ -359,7 +367,15 @@ export const portalEs: PortalCopy = {
   removeConfirm: "¿Quitar este archivo?",
   agendaEmpty: "Todavía no hay citas en la agenda.",
   agendaBook: "Pide una cita",
-  agendaBookLead: "Elige el día y la hora en el calendario. La cita queda pedida.",
+  agendaBookLead: "Los días con hueco llevan la marca Libre. Al pinchar uno, se abre el calendario para elegir la hora.",
+  agendaFree: "Libre",
+  agendaClose: "Cerrar",
+  agendaPrev: "Anterior",
+  agendaNext: "Siguiente",
+  mailLabel: "Correo",
+  threadClient: "Clienta",
+  threadStudio: "Estudio",
+  threadReply: "Respuesta",
   noDate: "Sin fecha",
   appointment: "Cita",
   appointmentTitles: {
@@ -599,7 +615,15 @@ export const portalEn: PortalCopy = {
   removeConfirm: "Remove this file?",
   agendaEmpty: "There are no appointments in the diary yet.",
   agendaBook: "Book an appointment",
-  agendaBookLead: "Choose the day and time on the calendar. The appointment is requested.",
+  agendaBookLead: "Days with an opening are marked Open. Tap one and the calendar opens so you can choose a time.",
+  agendaFree: "Open",
+  agendaClose: "Close",
+  agendaPrev: "Previous",
+  agendaNext: "Next",
+  mailLabel: "Email",
+  threadClient: "Client",
+  threadStudio: "Studio",
+  threadReply: "Reply",
   noDate: "No date",
   appointment: "Appointment",
   appointmentTitles: {
@@ -838,7 +862,15 @@ export const portalFr: PortalCopy = {
   removeConfirm: "Retirer ce fichier ?",
   agendaEmpty: "Il n’y a pas encore de rendez-vous dans l’agenda.",
   agendaBook: "Demande un rendez-vous",
-  agendaBookLead: "Choisis le jour et l’heure dans le calendrier. Le rendez-vous est demandé.",
+  agendaBookLead: "Les jours avec un créneau portent la marque Libre. En touchant l’un d’eux, le calendrier s’ouvre pour choisir l’heure.",
+  agendaFree: "Libre",
+  agendaClose: "Fermer",
+  agendaPrev: "Précédent",
+  agendaNext: "Suivant",
+  mailLabel: "Courrier",
+  threadClient: "Cliente",
+  threadStudio: "Atelier",
+  threadReply: "Réponse",
   noDate: "Sans date",
   appointment: "Rendez-vous",
   appointmentTitles: {

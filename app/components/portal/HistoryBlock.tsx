@@ -148,9 +148,10 @@ export function HistoryView({
     if (contactWho === "acompanante") return false;
     return !contact || entry.title === contact;
   });
-  const visibleRequests = contact
-    ? []
-    : asked.filter((notice) => whoMatches(contactWho, notice.scope === "acompanante" ? "acompanante" : "contratante"));
+  const visibleRequests =
+    contact && contact !== "Correo"
+      ? []
+      : asked.filter((notice) => whoMatches(contactWho, notice.scope === "acompanante" ? "acompanante" : "contratante"));
   const budgetFiltering = Boolean(service || pay || budgetWho);
   const contactFiltering = Boolean(contact || contactWho);
   if (!ordered.length && !asked.length && !showBudget) {
@@ -265,16 +266,38 @@ export function HistoryView({
               const [heading, ...rest] = notice.message.split(/\n\n/);
               const body = rest.join("\n\n").trim();
               return (
-                <li key={notice.id} className="px-4 py-4">
-                  <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">{copy.requestLabel}</p>
-                  <p className="mt-1 font-serif text-2xl">{heading || copy.requestLabel}</p>
-                  <p className="mt-1 text-sm capitalize text-ash">{formatWhen(notice.createdAt.slice(0, 10), locale, copy)}</p>
-                  {body ? <p className="mt-2 whitespace-pre-wrap text-sm text-ash">{body}</p> : null}
-                  {notice.replies.map((reply) => (
-                    <p key={reply.id} className="mt-2 whitespace-pre-wrap text-sm">
-                      {reply.text}
+                <li key={notice.id} className="px-4 py-5">
+                  <article>
+                    <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">
+                      {copy.mailLabel} · {copy.requestLabel}
                     </p>
-                  ))}
+                    <div className="mt-3 flex items-baseline justify-between gap-4">
+                      <p className="text-sm">
+                        {copy.threadClient}
+                        <span className="text-ash"> → {copy.threadStudio}</span>
+                      </p>
+                      <p className="text-sm capitalize text-ash">{formatWhen(notice.createdAt.slice(0, 10), locale, copy)}</p>
+                    </div>
+                    <p className="mt-2 font-serif text-2xl">{heading || copy.requestLabel}</p>
+                    {body ? <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{body}</p> : null}
+                    {notice.replies.length ? (
+                      <ul className="mt-5 space-y-5 border-l border-gilt/50 pl-4 sm:ml-6">
+                        {notice.replies.map((reply) => (
+                          <li key={reply.id}>
+                            <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">{copy.threadReply}</p>
+                            <div className="mt-2 flex items-baseline justify-between gap-4">
+                              <p className="text-sm">
+                                {copy.threadStudio}
+                                <span className="text-ash"> → {copy.threadClient}</span>
+                              </p>
+                              <p className="text-sm capitalize text-ash">{formatWhen(reply.createdAt.slice(0, 10), locale, copy)}</p>
+                            </div>
+                            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{reply.text}</p>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </article>
                 </li>
               );
             })}
