@@ -1,5 +1,5 @@
 import { AgendaForm } from "@/app/components/portal/AgendaBlock";
-import { BudgetView, HistoryForm } from "@/app/components/portal/HistoryBlock";
+import { BudgetView, HistoryComposer, HistoryForm } from "@/app/components/portal/HistoryBlock";
 import { AddCompanionModal, PersonDataForm } from "@/app/components/portal/CompanionsForm";
 import { DeleteFileButton } from "@/app/components/portal/FileActions";
 import { EventForm } from "@/app/components/portal/EventForm";
@@ -52,7 +52,6 @@ export default async function StudioClientPage({
   const { ok, error, tab: tabRaw, com, sec } = await searchParams;
   const event = client.event;
   const tab = portalTab(tabRaw);
-  const panel = tab === "contratante" || tab === "acompanantes" || tab === "historico";
 
   return (
     <PortalFrame
@@ -73,14 +72,7 @@ export default async function StudioClientPage({
       <div className="shrink-0">
         <PortalTabs basePath={`/privado/novias/${client.id}`} active={tab} />
       </div>
-      <div
-        className={
-          panel
-            ? "flex min-h-0 flex-1 flex-col overflow-hidden pb-4"
-            : "min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16"
-        }
-        {...(panel ? {} : { "data-portal-scroll": "" })}
-      >
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden pb-4">
       <div className="shrink-0 pt-6">
       {ok === "doc" ? <PortalNotice>Documento colgado.</PortalNotice> : null}
       {ok === "pagos" ? <PortalNotice>Pagos actualizados.</PortalNotice> : null}
@@ -338,11 +330,12 @@ export default async function StudioClientPage({
       ) : null}
 
       {tab === "documentacion" ? (
-        <section className="pt-10">
-          <h2 className="font-serif text-3xl">Documentación</h2>
-          <p className="mt-3 max-w-2xl text-sm text-ash">
+        <section className="flex min-h-0 flex-1 flex-col pt-4">
+          <h2 className="shrink-0 font-serif text-3xl">Documentación</h2>
+          <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">
             Presupuestos, contratos, facturas y el resto de papeles. Ella los ve en su área.
           </p>
+          <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
           <form
             action="/api/admin/documents"
             method="post"
@@ -391,6 +384,7 @@ export default async function StudioClientPage({
               ))}
             </ul>
           ) : null}
+          </div>
         </section>
       ) : null}
 
@@ -417,21 +411,7 @@ export default async function StudioClientPage({
                 {
                   id: "nueva",
                   label: "Nueva comunicación",
-                  body: (
-                    <form action="/api/admin/notices" method="post" className="flex max-w-xl flex-col gap-3">
-                      <input type="hidden" name="intent" value="compose" />
-                      <input type="hidden" name="clientId" value={client.id} />
-                      <input type="hidden" name="next" value={`/privado/novias/${client.id}?tab=historico&com=nueva`} />
-                      <p className="text-sm text-ash">Ella lo lee en comunicaciones, firmado como Ana Zarza.</p>
-                      <label className="field-label">
-                        Mensaje
-                        <textarea className="field min-h-28" name="message" required minLength={2} />
-                      </label>
-                      <button className="btn-atelier self-start" type="submit">
-                        Enviar
-                      </button>
-                    </form>
-                  ),
+                  body: <HistoryComposer clientId={client.id} />,
                 },
               ]}
             />
@@ -440,12 +420,12 @@ export default async function StudioClientPage({
       ) : null}
 
       {tab === "budget" ? (
-        <section className="pt-10">
-          <h2 className="font-serif text-3xl">Budget</h2>
-          <p className="mt-3 max-w-2xl text-sm text-ash">
+        <section className="flex min-h-0 flex-1 flex-col pt-4">
+          <h2 className="shrink-0 font-serif text-3xl">Budget</h2>
+          <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">
             El resumen junta el evento y los otros gastos, estén pagados o pendientes. Ella lo ve igual en su budget.
           </p>
-          <div className="mt-8">
+          <div className="mt-6 min-h-0 flex-1">
             <BudgetView
               entries={client.history}
               event={client.event}
@@ -457,12 +437,12 @@ export default async function StudioClientPage({
       ) : null}
 
       {tab === "agenda" ? (
-        <section className="pt-10">
-          <h2 className="font-serif text-3xl">Agenda</h2>
-          <p className="mt-3 max-w-2xl text-sm text-ash">
+        <section className="flex min-h-0 flex-1 flex-col pt-4">
+          <h2 className="shrink-0 font-serif text-3xl">Agenda</h2>
+          <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">
             Citas planificadas y las que ya hayáis tenido. Ella las ve en su panel.
           </p>
-          <div className="mt-8">
+          <div data-portal-scroll className="mt-6 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
             <AgendaForm clientId={client.id} appointments={client.appointments} />
           </div>
         </section>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { SubTabs } from "@/app/components/portal/SubTabs";
 import { dateLocale, portalEs, type PortalCopy } from "@/lib/i18n/portal-messages";
 import type { Locale } from "@/lib/i18n/config";
 import { clientBudget } from "@/lib/portal/budget";
@@ -129,52 +130,48 @@ export function BudgetView({
   copy?: PortalCopy;
   billing?: ReactNode;
 }) {
-  const [pane, setPane] = useState<"evento" | "otros">("evento");
   const booked = event && payments ? clientBudget({ history: entries, event, payments }) : null;
   const history = booked?.history ?? historyBudget(entries);
   const budget = booked ?? { ...history, groups: [], total: history.total, pending: history.pending, paid: history.paid };
   const eventServices = history.services.filter((entry) => !isCareService(entry.title));
   const careServices = history.services.filter((entry) => isCareService(entry.title));
   const care = sumServices(careServices);
-  const bar = useRef<HTMLDivElement>(null);
-  const show = (next: "evento" | "otros") => {
-    setPane(next);
-    requestAnimationFrame(() => {
-      bar.current?.scrollIntoView({ block: "start" });
-    });
-  };
-  const tabClass = (on: boolean) =>
-    on
-      ? "border-b-2 border-gilt px-1 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ink"
-      : "border-b-2 border-transparent px-1 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ash hover:text-ink";
   return (
-    <div>
-      <MoneyBoxes total={budget.total} paid={budget.paid} pending={budget.pending} copy={copy} />
-      <div ref={bar} className="sticky top-0 z-20 mt-10 scroll-mt-0 border-b border-ink/10 bg-porcelain">
-        <div className="flex gap-6">
-          <button className={tabClass(pane === "evento")} type="button" onClick={() => show("evento")}>
-            {copy.budgetEvent}
-          </button>
-          <button className={tabClass(pane === "otros")} type="button" onClick={() => show("otros")}>
-            {copy.budgetCare}
-          </button>
-        </div>
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="shrink-0">
+        <MoneyBoxes total={budget.total} paid={budget.paid} pending={budget.pending} copy={copy} />
       </div>
-      {pane === "evento" ? (
-        <div className="pt-8">
-          {billing}
-          <ServiceLines entries={eventServices} copy={copy} />
-        </div>
-      ) : (
-        <div className="pt-8">
-          <MoneyBoxes total={care.total} paid={care.paid} pending={care.pending} copy={copy} />
-          {careServices.length ? (
-            <ServiceLines entries={careServices} copy={copy} />
-          ) : (
-            <p className="mt-8 text-sm text-ash">{copy.budgetCareEmpty}</p>
-          )}
-        </div>
-      )}
+      <div className="mt-6 min-h-0 flex-1">
+        <SubTabs
+          fill
+          tabs={[
+            {
+              id: "evento",
+              label: copy.budgetEvent,
+              body: (
+                <>
+                  {billing}
+                  <ServiceLines entries={eventServices} copy={copy} />
+                </>
+              ),
+            },
+            {
+              id: "otros",
+              label: copy.budgetCare,
+              body: (
+                <>
+                  <MoneyBoxes total={care.total} paid={care.paid} pending={care.pending} copy={copy} />
+                  {careServices.length ? (
+                    <ServiceLines entries={careServices} copy={copy} />
+                  ) : (
+                    <p className="text-sm text-ash">{copy.budgetCareEmpty}</p>
+                  )}
+                </>
+              ),
+            },
+          ]}
+        />
+      </div>
     </div>
   );
 }
@@ -192,35 +189,22 @@ export function HistoryView({
   copy?: PortalCopy;
   locale?: Locale;
 }) {
-  const [contact, setContact] = useState("");
   const [contactWho, setContactWho] = useState<WhoFilter>("");
   const ordered = [...entries].sort((a, b) => `${b.date}${b.title}`.localeCompare(`${a.date}${a.title}`));
   const asked = [...requests].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const contacts = ordered.filter((entry) => {
     if (entry.kind !== "contacto") return false;
     if (contactWho === "acompanante") return false;
-    return !contact || entry.title === contact;
+    return true;
   });
-  const visibleRequests =
-    contact && contact !== "Correo"
-      ? []
-      : asked.filter((notice) => whoMatches(contactWho, notice.scope === "acompanante" ? "acompanante" : "contratante"));
-  const contactFiltering = Boolean(contact || contactWho);
+  const visibleRequests = asked.filter((notice) =>
+    whoMatches(contactWho, notice.scope === "acompanante" ? "acompanante" : "contratante"),
+  );
+  const contactFiltering = Boolean(contactWho);
   const person = clientName.trim() || copy.threadClient;
   return (
     <div>
         <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
-          <label className="field-label sm:w-52">
-            {copy.filterContact}
-            <select className="field" value={contact} onChange={(event) => setContact(event.target.value)}>
-              <option value="">{copy.filterAll}</option>
-              {CONTACT_TITLES.map((title) => (
-                <option key={title} value={title}>
-                  {labelFor(title, copy)}
-                </option>
-              ))}
-            </select>
-          </label>
           <label className="field-label sm:w-44">
             {copy.filterWho}
             <select className="field" value={contactWho} onChange={(event) => setContactWho(event.target.value as WhoFilter)}>
@@ -336,6 +320,35 @@ export function HistoryForm({
   requests?: StudioNotice[];
   clientName?: string;
 }) {
+  return (
+    <div className="flex flex-col gap-10">
+      <HistoryView entries={entries} requests={requests} clientName={clientName} />
+      {entries.length ? (
+        <ul className="divide-y divide-ink/10 border border-ink/10">
+          {[...entries]
+            .sort((a, b) => `${b.date}${b.title}`.localeCompare(`${a.date}${a.title}`))
+            .map((entry) => (
+              <li key={entry.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                <p className="text-sm">
+                  {entry.kind === "servicio" ? "Servicio" : "Contacto"} · {entry.name || entry.title} · {entry.date || "sin fecha"}
+                  {entry.kind === "servicio" ? ` · ${euros(entry.amount)} · ${entry.paid ? "abonado" : "lo paga después"}` : ""}
+                </p>
+                <form action="/api/admin/history" method="post">
+                  <input type="hidden" name="clientId" value={clientId} />
+                  <input type="hidden" name="deleteId" value={entry.id} />
+                  <button className="text-[0.68rem] uppercase tracking-[0.16em] text-ash hover:text-ink" type="submit">
+                    Quitar
+                  </button>
+                </form>
+              </li>
+            ))}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
+
+export function HistoryComposer({ clientId }: { clientId: string }) {
   const [kind, setKind] = useState<HistoryKind>("servicio");
   const [title, setTitle] = useState<string>(SERVICE_TITLES[0]);
   const titles = kind === "servicio" ? SERVICE_TITLES : CONTACT_TITLES;
@@ -346,8 +359,6 @@ export function HistoryForm({
   }
 
   return (
-    <div className="flex flex-col gap-10">
-      <HistoryView entries={entries} requests={requests} clientName={clientName} />
       <form action="/api/admin/history" method="post" className="grid max-w-xl gap-4">
         <input type="hidden" name="clientId" value={clientId} />
         <label className="field-label">
@@ -399,27 +410,5 @@ export function HistoryForm({
           Añadir al histórico
         </button>
       </form>
-      {entries.length ? (
-        <ul className="divide-y divide-ink/10 border border-ink/10">
-          {[...entries]
-            .sort((a, b) => `${b.date}${b.title}`.localeCompare(`${a.date}${a.title}`))
-            .map((entry) => (
-              <li key={entry.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-                <p className="text-sm">
-                  {entry.kind === "servicio" ? "Servicio" : "Contacto"} · {entry.name || entry.title} · {entry.date || "sin fecha"}
-                  {entry.kind === "servicio" ? ` · ${euros(entry.amount)} · ${entry.paid ? "abonado" : "lo paga después"}` : ""}
-                </p>
-                <form action="/api/admin/history" method="post">
-                  <input type="hidden" name="clientId" value={clientId} />
-                  <input type="hidden" name="deleteId" value={entry.id} />
-                  <button className="text-[0.68rem] uppercase tracking-[0.16em] text-ash hover:text-ink" type="submit">
-                    Quitar
-                  </button>
-                </form>
-              </li>
-            ))}
-        </ul>
-      ) : null}
-    </div>
   );
 }

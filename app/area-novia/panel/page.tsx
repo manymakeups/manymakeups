@@ -1,4 +1,5 @@
 import { AgendaView } from "@/app/components/portal/AgendaBlock";
+import { SendDocumentModal } from "@/app/components/portal/SendDocumentModal";
 import { ClientCalendar } from "@/app/components/portal/ClientCalendar";
 import { BudgetView, HistoryView } from "@/app/components/portal/HistoryBlock";
 import { ChangeRequestForm } from "@/app/components/portal/ChangeRequestForm";
@@ -55,8 +56,6 @@ export default async function BridePanelPage({
   const requests = (await listNotices()).filter((notice) => notice.clientId === client.id && notice.kind === "cambio");
   const { ok, error, tab: tabRaw, mes, com, sec } = await searchParams;
   const tab = portalTab(tabRaw);
-  const lockedPanels =
-    tab === "contratante" || tab === "historico" || (tab === "acompanantes" && client.event.peopleLocked);
   const today = madridToday();
   const { year: initialYear, month: initialMonth } = parseMonth(mes, today);
   const busyDates = tab === "agenda" ? await studioBusyDates() : [];
@@ -64,6 +63,7 @@ export default async function BridePanelPage({
     evento: t.savedEvent,
     fotos: t.savedPhotos,
     cambio: t.changeSent,
+    doc: t.sendDocumentHint,
   };
   const errorText: Record<string, string> = {
     limite: interpolate(t.errorLimit, { max: INSPIRATION_MAX }),
@@ -93,16 +93,9 @@ export default async function BridePanelPage({
           labels={t.tabs}
         />
       </div>
-      <div
-        className={
-          lockedPanels
-            ? "flex min-h-0 flex-1 flex-col overflow-hidden"
-            : "min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16"
-        }
-        {...(lockedPanels ? {} : { "data-portal-scroll": "" })}
-      >
-      {ok && okText[ok] ? <div className="pt-6"><PortalNotice>{okText[ok]}</PortalNotice></div> : null}
-      {error && errorText[error] ? <div className="pt-6"><PortalNotice>{errorText[error]}</PortalNotice></div> : null}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      {ok && okText[ok] ? <div className="shrink-0 pt-6"><PortalNotice>{okText[ok]}</PortalNotice></div> : null}
+      {error && errorText[error] ? <div className="shrink-0 pt-6"><PortalNotice>{errorText[error]}</PortalNotice></div> : null}
 
       {tab === "contratante" ? (
         <section className="flex min-h-0 flex-1 flex-col pt-4">
@@ -209,7 +202,7 @@ export default async function BridePanelPage({
       ) : null}
 
       {tab === "acompanantes" ? (
-        <section className={client.event.peopleLocked ? "flex min-h-0 flex-1 flex-col pt-4" : "pt-10"}>
+        <section className="flex min-h-0 flex-1 flex-col pt-4">
           <div className="flex shrink-0 items-center justify-between gap-4">
             <h2 className="font-serif text-3xl">{t.companionsTitle}</h2>
             {client.event.peopleLocked ? (
@@ -219,7 +212,14 @@ export default async function BridePanelPage({
           <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">
             {client.event.peopleLocked ? t.lockedLead : t.companionsLead}
           </p>
-          <div className={client.event.peopleLocked ? "mt-4 min-h-0 flex-1" : "mt-8"}>
+          <div
+            className={
+              client.event.peopleLocked
+                ? "mt-4 min-h-0 flex-1"
+                : "mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16"
+            }
+            {...(client.event.peopleLocked ? {} : { "data-portal-scroll": "" })}
+          >
             {client.event.peopleLocked ? (
               client.event.people.length ? (
                 <SubTabs
@@ -321,10 +321,10 @@ export default async function BridePanelPage({
       ) : null}
 
       {tab === "budget" ? (
-        <section className="pt-10">
-          <h2 className="font-serif text-3xl">{t.budgetTitle}</h2>
-          <p className="mt-3 max-w-2xl text-sm text-ash">{t.budgetLead}</p>
-          <div className="mt-8">
+        <section className="flex min-h-0 flex-1 flex-col pt-4">
+          <h2 className="shrink-0 font-serif text-3xl">{t.budgetTitle}</h2>
+          <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">{t.budgetLead}</p>
+          <div className="mt-6 min-h-0 flex-1">
             <BudgetView
               entries={client.history}
               event={client.event}
@@ -337,9 +337,13 @@ export default async function BridePanelPage({
       ) : null}
 
       {tab === "documentacion" ? (
-        <section className="pt-10">
-          <h2 className="font-serif text-3xl">{t.docsTitle}</h2>
-          <p className="mt-3 max-w-2xl text-sm text-ash">{t.docsLead}</p>
+        <section className="flex min-h-0 flex-1 flex-col pt-4">
+          <div className="flex shrink-0 items-center justify-between gap-4">
+            <h2 className="font-serif text-3xl">{t.docsTitle}</h2>
+            <SendDocumentModal label={t.sendDocument} hint={t.sendDocumentHint} closeLabel={t.agendaClose} fileLabel={t.sendDocumentFile} />
+          </div>
+          <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">{t.docsLead}</p>
+          <div data-portal-scroll className="mt-6 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
           {client.documents.length ? (
             <ul className="mt-8 divide-y divide-ink/10 border border-ink/10">
               {client.documents.map((file) => (
@@ -359,16 +363,15 @@ export default async function BridePanelPage({
           ) : (
             <p className="mt-6 text-sm text-ash">{t.docsEmpty}</p>
           )}
+          </div>
         </section>
       ) : null}
 
       {tab === "agenda" ? (
-        <section className="pt-10">
-          <h2 className="font-serif text-3xl">{t.agendaTitle}</h2>
-          <p className="mt-3 max-w-2xl text-sm text-ash">{t.agendaLead}</p>
-          <div className="mt-10">
-            <h3 className="font-serif text-3xl">{t.agendaBook}</h3>
-            <p className="mt-3 max-w-2xl text-sm text-ash">{t.agendaBookLead}</p>
+        <section className="flex min-h-0 flex-1 flex-col pt-4">
+          <h2 className="shrink-0 font-serif text-3xl">{t.agendaBook}</h2>
+          <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">{t.agendaBookLead}</p>
+          <div data-portal-scroll className="mt-6 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
             <ClientCalendar
               busyDates={busyDates}
               today={today}
@@ -379,9 +382,9 @@ export default async function BridePanelPage({
               previousLabel={t.agendaPrev}
               nextLabel={t.agendaNext}
             />
-          </div>
-          <div className="mt-12">
-            <AgendaView appointments={client.appointments} copy={t} locale={locale} />
+            <div className="mt-12">
+              <AgendaView appointments={client.appointments} copy={t} locale={locale} />
+            </div>
           </div>
         </section>
       ) : null}

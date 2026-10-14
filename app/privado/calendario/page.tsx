@@ -96,6 +96,7 @@ export default async function StudioCalendarPage({
 
   return (
     <PortalFrame
+      pinned
       kicker="Estudio"
       title="Agenda"
       lead="Las citas del iPhone, de Google y las reservas que Calendly escribe en ese Google."
@@ -109,6 +110,7 @@ export default async function StudioCalendarPage({
         />
       }
     >
+      <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
       {ok === "enlace" ? <PortalNotice>Calendario conectado. Las citas nuevas salen al abrir esta página.</PortalNotice> : null}
       {ok === "quitado" ? <PortalNotice>He quitado el enlace. Esta agenda ya no lee el móvil.</PortalNotice> : null}
       {error === "enlace" ? (
@@ -140,6 +142,7 @@ export default async function StudioCalendarPage({
       {ready ? (
         <AgendaBoard events={events} today={today} initialYear={year} initialMonth={month} initialDay={selected} />
       ) : null}
+      </div>
     </PortalFrame>
   );
 }

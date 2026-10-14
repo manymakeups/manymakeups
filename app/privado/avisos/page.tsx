@@ -29,6 +29,7 @@ export default async function StudioInboxPage({
 
   return (
     <PortalFrame
+      pinned
       kicker="Estudio"
       title="Avisos"
       lead={
@@ -46,6 +47,7 @@ export default async function StudioInboxPage({
         />
       }
     >
+      <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
       <MailSetupNotice />
       {ok === "respuesta" ? (
         <PortalNotice>Respuesta enviada a su correo.</PortalNotice>
@@ -69,6 +71,7 @@ export default async function StudioInboxPage({
       ) : (
         <p className="text-sm text-ash">Todavía no hay avisos.</p>
       )}
+      </div>
     </PortalFrame>
   );
 }

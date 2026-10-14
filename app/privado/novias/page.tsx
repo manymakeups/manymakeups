@@ -1,4 +1,5 @@
 import { ClientMenu } from "@/app/components/portal/ClientMenu";
+import { NewClientModal } from "@/app/components/portal/NewClientModal";
 import { InviteModal } from "@/app/components/portal/InviteModal";
 import { ClientSearch } from "@/app/components/portal/ClientSearch";
 import { MailSetupNotice } from "@/app/components/portal/MailSetupNotice";
@@ -42,11 +43,16 @@ export default async function StudioClientsPage({
 
   return (
     <PortalFrame
+      pinned
       kicker="Estudio"
       title="Área clientes"
       lead="Creas la cuenta con su correo, le envías el enlace y ella elige la contraseña. Luego ves la ficha, las fotos y cuelgas los papeles."
       aside={<StudioAside />}
     >
+      <div className="shrink-0 pb-6">
+        <NewClientModal />
+      </div>
+      <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
       <MailSetupNotice />
       {!portalStorageReady() ? (
         <PortalNotice>
@@ -57,20 +63,6 @@ export default async function StudioClientsPage({
       {error === "datos" ? <PortalNotice>Nombre y correo válidos, por favor.</PortalNotice> : null}
       {error === "existe" ? <PortalNotice>Ese correo ya tiene cuenta.</PortalNotice> : null}
       {ok === "eliminada" ? <PortalNotice>Clienta eliminada.</PortalNotice> : null}
-
-      <form action="/api/admin/clients" method="post" className="grid max-w-xl gap-4 sm:grid-cols-2">
-        <label className="field-label sm:col-span-1">
-          Nombre
-          <input className="field" name="name" required />
-        </label>
-        <label className="field-label sm:col-span-1">
-          Correo
-          <input className="field" name="email" type="email" required />
-        </label>
-        <button className="btn-atelier-solid btn-atelier sm:col-span-2 self-start" type="submit">
-          Crear invitación
-        </button>
-      </form>
 
       <ClientSearch mode={mode} query={query} partida={service} />
 
@@ -112,6 +104,7 @@ export default async function StudioClientsPage({
           ))
         )}
       </ul>
+      </div>
     </PortalFrame>
   );
 }

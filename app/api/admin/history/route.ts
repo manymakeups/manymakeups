@@ -42,5 +42,6 @@ export async function POST(request: Request) {
     });
   }
   await saveClient(client);
-  return go(request, `/privado/novias/${client.id}?tab=historico&ok=historico`);
+  const stay = deleteId ? "" : "&com=nueva";
+  return go(request, `/privado/novias/${client.id}?tab=historico${stay}&ok=historico`);
 }

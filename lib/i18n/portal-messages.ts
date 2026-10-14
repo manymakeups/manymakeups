@@ -59,6 +59,9 @@ export type PortalCopy = {
   docsTitle: string;
   docsLead: string;
   docsEmpty: string;
+  sendDocument: string;
+  sendDocumentHint: string;
+  sendDocumentFile: string;
   download: string;
   agendaTitle: string;
   agendaLead: string;
@@ -276,6 +279,9 @@ export const portalEs: PortalCopy = {
   docsTitle: "Presupuestos, contratos y papeles",
   docsLead: "Aquí cuelgo presupuestos, contratos y el resto de documentación.",
   docsEmpty: "Aún no hay documentos. Cuando haya presupuesto o contrato, aparecerá aquí.",
+  sendDocument: "Enviar documentación",
+  sendDocumentHint: "PDF o imagen. Lo veré aquí, en tu documentación.",
+  sendDocumentFile: "Archivo",
   download: "Descargar",
   agendaTitle: "Agenda",
   agendaLead: "Las citas que tenemos planificadas: prueba, evento y lo que vayamos sumando.",
@@ -416,7 +422,8 @@ export const portalEs: PortalCopy = {
   removeConfirm: "¿Quitar este archivo?",
   agendaEmpty: "Todavía no hay citas en la agenda.",
   agendaBook: "Pide una cita",
-  agendaBookLead: "De lunes a viernes, de 10:00 a 14:00 y de 16:00 a 19:00. Los sábados, de 10:00 a 14:00. El día pone Citas disponibles cuando queda hueco. Al pinchar, se abren las horas de ese día.",
+  agendaBookLead:
+    "Las casillas que estén marcadas tienen huecos disponibles. Selecciona el que mejor se adapte a tu agenda. Recuerda que hasta que no recibas mi confirmación de cita, esta no está bloqueada.",
   photoOpen: "Ver fotos",
   photoClose: "Cerrar",
   agendaFree: "Citas disponibles",
@@ -554,6 +561,9 @@ export const portalEn: PortalCopy = {
   docsTitle: "Quotes, contracts and papers",
   docsLead: "I upload quotes, contracts and the rest of the paperwork here.",
   docsEmpty: "No documents yet. When there is a quote or contract, it will appear here.",
+  sendDocument: "Send a document",
+  sendDocumentHint: "PDF or image. I will see it here, in your documents.",
+  sendDocumentFile: "File",
   download: "Download",
   agendaTitle: "Diary",
   agendaLead: "The appointments we have planned: trial, event, and anything we add.",
@@ -694,7 +704,8 @@ export const portalEn: PortalCopy = {
   removeConfirm: "Remove this file?",
   agendaEmpty: "There are no appointments in the diary yet.",
   agendaBook: "Book an appointment",
-  agendaBookLead: "Monday to Friday, 10:00–14:00 and 16:00–19:00. Saturdays, 10:00–14:00. A day says Appointments available when there is still a gap. Tap it and that day's times open.",
+  agendaBookLead:
+    "Marked days have openings. Choose the one that fits your diary. Until you receive my confirmation, the appointment is not held.",
   photoOpen: "View photos",
   photoClose: "Close",
   agendaFree: "Appointments available",
@@ -831,6 +842,9 @@ export const portalFr: PortalCopy = {
   docsTitle: "Devis, contrats et papiers",
   docsLead: "J’y dépose les devis, contrats et le reste des documents.",
   docsEmpty: "Pas encore de documents. Quand il y aura un devis ou un contrat, il apparaîtra ici.",
+  sendDocument: "Envoyer un document",
+  sendDocumentHint: "PDF ou image. Je le verrai ici, dans tes documents.",
+  sendDocumentFile: "Fichier",
   download: "Télécharger",
   agendaTitle: "Agenda",
   agendaLead: "Les rendez-vous prévus : essai, événement, et ce que nous ajouterons.",
@@ -971,7 +985,8 @@ export const portalFr: PortalCopy = {
   removeConfirm: "Retirer ce fichier ?",
   agendaEmpty: "Il n’y a pas encore de rendez-vous dans l’agenda.",
   agendaBook: "Demande un rendez-vous",
-  agendaBookLead: "Du lundi au vendredi, de 10:00 à 14:00 et de 16:00 à 19:00. Le samedi, de 10:00 à 14:00. Le jour indique Rendez-vous disponibles s’il reste un créneau. En le touchant, les heures de ce jour s’ouvrent.",
+  agendaBookLead:
+    "Les cases marquées ont des créneaux. Choisis celui qui convient le mieux à ton agenda. Tant que tu n’as pas reçu ma confirmation, le rendez-vous n’est pas bloqué.",
   photoOpen: "Voir les photos",
   photoClose: "Fermer",
   agendaFree: "Rendez-vous disponibles",
