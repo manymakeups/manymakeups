@@ -280,7 +280,7 @@ export function HistoryView({
                     <div className="mt-3 flex items-baseline justify-between gap-4">
                       <p className="text-sm">
                         {person}
-                        <span className="text-ash"> → {copy.threadStudio}</span>
+                        <span className="text-ash"> → {copy.threadAuthor}</span>
                       </p>
                       <p className="text-sm capitalize text-ash">{formatWhen(notice.createdAt.slice(0, 10), locale, copy)}</p>
                     </div>
