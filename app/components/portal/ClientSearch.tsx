@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { type ClientSearchMode } from "@/lib/portal/client-search";
-import { SERVICE_TITLES } from "@/lib/portal/types";
+import { DOCUMENT_KINDS } from "@/lib/portal/types";
 
 const MODES: { id: ClientSearchMode; label: string }[] = [
   { id: "nombre", label: "Nombre" },
@@ -43,25 +43,25 @@ export function ClientSearch({
         </label>
         {current === "presupuesto" ? (
           <label className="field-label sm:w-64">
-            Partida
+            Tipo
             <select className="field" name="partida" defaultValue={partida}>
               <option value="">Cualquiera</option>
-              {SERVICE_TITLES.map((title) => (
-                <option key={title} value={title}>
-                  {title}
+              {DOCUMENT_KINDS.map((kind) => (
+                <option key={kind} value={kind}>
+                  {kind}
                 </option>
               ))}
             </select>
           </label>
         ) : null}
         <label className="field-label min-w-0 flex-1">
-          {current === "fecha" ? "Fecha" : current === "presupuesto" ? "Nombre o importe" : current === "telefono" ? "Teléfono" : "Nombre"}
+          {current === "fecha" ? "Fecha" : current === "presupuesto" ? "Nombre del documento" : current === "telefono" ? "Teléfono" : "Nombre"}
           <input
             className="field"
             name="q"
             type={current === "fecha" ? "date" : "search"}
             defaultValue={query}
-            placeholder={current === "presupuesto" ? "Limpieza, 180…" : ""}
+            placeholder={current === "presupuesto" ? "Presupuesto Laura.pdf" : ""}
           />
         </label>
         <button className="btn-atelier btn-atelier-solid self-start sm:self-auto" type="submit">

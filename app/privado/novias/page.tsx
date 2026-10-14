@@ -3,10 +3,8 @@ import { ClientSearch } from "@/app/components/portal/ClientSearch";
 import { MailSetupNotice } from "@/app/components/portal/MailSetupNotice";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { StudioAside } from "@/app/components/portal/StudioAside";
-import { clientBudget } from "@/lib/portal/budget";
-import { clientMatchesSearch, clientSearchMode } from "@/lib/portal/client-search";
+import { clientMatchesSearch, clientSearchMode, presupuestoDocumentNames } from "@/lib/portal/client-search";
 import { fullName } from "@/lib/portal/names";
-import { euros } from "@/lib/portal/types";
 import { requireAdmin } from "@/lib/portal/session";
 import { listClients, portalStorageReady } from "@/lib/portal/store";
 import { redirect } from "next/navigation";
@@ -87,7 +85,9 @@ export default async function StudioClientsPage({
                 <p className="font-serif text-2xl">{fullName(client.event, client.name)}</p>
                 <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
                   <span>Tlf. {client.event.phone || "—"}</span>
-                  <span>Presupuesto {euros(clientBudget(client).total)}</span>
+                  <span>
+                    Presupuesto {presupuestoDocumentNames(client).join(" · ") || "—"}
+                  </span>
                   <span>Evento {client.event.eventDate ? formatEventDate(client.event.eventDate) : "—"}</span>
                 </p>
                 <p className="mt-1 text-sm text-ash">

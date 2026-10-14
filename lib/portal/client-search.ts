@@ -1,4 +1,3 @@
-import { bookingGroups, clientBudget } from "./budget";
 import { fullName } from "./names";
 import type { ClientRecord } from "./types";
 
@@ -21,43 +20,16 @@ function digits(value: string) {
   return value.replace(/\D/g, "");
 }
 
-function moneyNeedle(value: string) {
-  const normalized = value.replace(/\s/g, "").replace(",", ".");
-  return /^\d+(\.\d+)?$/.test(normalized) ? normalized : "";
+export function presupuestoDocumentNames(client: ClientRecord) {
+  return (client.documents ?? []).filter((file) => file.label === "Presupuesto").map((file) => file.name);
 }
 
-function partidaHits(titles: string[], partida: string) {
-  const wanted = fold(partida);
-  return titles.some((title) => {
-    const name = fold(title);
-    return name === wanted || name.includes(wanted) || wanted.includes(name);
-  });
-}
-
-function matchesBudget(client: ClientRecord, partida: string, query: string) {
-  const services = (client.history ?? []).filter((entry) => entry.kind === "servicio");
-  const groups = bookingGroups(client);
-  const scopedServices = partida ? services.filter((entry) => partidaHits([entry.title, entry.name], partida)) : services;
-  const scopedGroups = partida
-    ? groups.filter((group) => partidaHits(group.services, partida) || (partida === "Prueba" && group.slices.some((slice) => slice.kind === "trial")))
-    : groups;
-  if (!query) return partida ? scopedServices.length > 0 || scopedGroups.length > 0 : true;
+function matchesBudget(client: ClientRecord, tipo: string, query: string) {
+  const documents = client.documents ?? [];
+  const scoped = tipo ? documents.filter((file) => file.label === tipo) : documents;
+  if (!query) return tipo ? scoped.length > 0 : true;
   const needle = fold(query);
-  const amount = moneyNeedle(query);
-  const lineHit = scopedServices.some((entry) => {
-    const text = fold(`${entry.name} ${entry.title} ${entry.notes}`);
-    if (needle && text.includes(needle)) return true;
-    return amount ? Number(amount) === Number(entry.amount) : false;
-  });
-  if (lineHit) return true;
-  const bookingHit = scopedGroups.some((group) => {
-    const text = fold(`${group.who} ${group.services.join(" ")}`);
-    if (needle && text.includes(needle)) return true;
-    return amount ? group.slices.some((slice) => Number(amount) === slice.amount) : false;
-  });
-  if (bookingHit) return true;
-  if (!amount || partida) return false;
-  return Number(amount) === clientBudget(client).total;
+  return scoped.some((file) => fold(`${file.name} ${file.label}`).includes(needle));
 }
 
 export function clientMatchesSearch(client: ClientRecord, mode: ClientSearchMode, query: string, partida: string) {
