@@ -148,6 +148,7 @@ export type PortalCopy = {
   mailLabel: string;
   threadClient: string;
   threadStudio: string;
+  threadAuthor: string;
   threadReply: string;
   noDate: string;
   appointment: string;
@@ -383,6 +384,7 @@ export const portalEs: PortalCopy = {
   mailLabel: "Correo",
   threadClient: "Clienta",
   threadStudio: "Estudio",
+  threadAuthor: "Ana Zarza",
   threadReply: "Respuesta",
   noDate: "Sin fecha",
   appointment: "Cita",
@@ -635,6 +637,7 @@ export const portalEn: PortalCopy = {
   mailLabel: "Email",
   threadClient: "Client",
   threadStudio: "Studio",
+  threadAuthor: "Ana Zarza",
   threadReply: "Reply",
   noDate: "No date",
   appointment: "Appointment",
@@ -886,6 +889,7 @@ export const portalFr: PortalCopy = {
   mailLabel: "Courrier",
   threadClient: "Cliente",
   threadStudio: "Atelier",
+  threadAuthor: "Ana Zarza",
   threadReply: "Réponse",
   noDate: "Sans date",
   appointment: "Rendez-vous",

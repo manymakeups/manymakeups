@@ -290,7 +290,7 @@ export function HistoryView({
                             <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">{copy.threadReply}</p>
                             <div className="mt-2 flex items-baseline justify-between gap-4">
                               <p className="text-sm">
-                                {copy.threadStudio}
+                                {copy.threadAuthor}
                                 <span className="text-ash"> → {copy.threadClient}</span>
                               </p>
                               <p className="text-sm capitalize text-ash">{formatWhen(reply.createdAt.slice(0, 10), locale, copy)}</p>
