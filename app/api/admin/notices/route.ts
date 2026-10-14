@@ -2,7 +2,7 @@ import { mailClient } from "@/lib/portal/client-mail";
 import { newId } from "@/lib/portal/crypto";
 import { go } from "@/lib/portal/http";
 import { requireAdmin } from "@/lib/portal/session";
-import { getClient, mutateNotices } from "@/lib/portal/store";
+import { addStudioNotice, getClient, mutateNotices } from "@/lib/portal/store";
 
 function idsFrom(form: FormData) {
   const listed = form.getAll("ids").map((value) => String(value)).filter(Boolean);
@@ -19,6 +19,23 @@ export async function POST(request: Request) {
   const next = String(form.get("next") ?? "/privado/avisos");
   const safeNext = next.startsWith("/privado") ? next : "/privado/avisos";
   const ids = idsFrom(form);
+
+  if (intent === "compose") {
+    const clientId = String(form.get("clientId") ?? "");
+    const message = String(form.get("message") ?? "").trim();
+    const join = safeNext.includes("?") ? "&" : "?";
+    if (message.length < 2 || !clientId) return go(request, `${safeNext}${join}error=mensaje`);
+    const client = await getClient(clientId);
+    if (!client) return go(request, safeNext);
+    await addStudioNotice(clientId, {
+      kind: "cambio",
+      scope: "contratante",
+      message,
+      fromStudio: true,
+    });
+    const sent = await mailClient(client, "reply", { reply: message, original: "" });
+    return go(request, sent ? `${safeNext}${join}ok=mensaje` : `${safeNext}${join}ok=mensaje&error=correo`);
+  }
 
   if (intent === "readAll") {
     await mutateNotices((notices) => notices.map((notice) => ({ ...notice, read: true })));

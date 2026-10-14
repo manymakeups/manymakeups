@@ -431,6 +431,7 @@ export function PhotoPicker({
   fieldName = "person",
   label,
   tab,
+  section,
   kind = "inspiration",
   localize = false,
 }: {
@@ -441,6 +442,7 @@ export function PhotoPicker({
   fieldName?: string;
   label?: string;
   tab?: string;
+  section?: string;
   kind?: FileKind;
   localize?: boolean;
 }) {
@@ -507,6 +509,7 @@ export function PhotoPicker({
         const body = new FormData();
         body.set(fieldName, personKey);
         if (tab) body.set("tab", tab);
+        if (section) body.set("sec", section);
         body.set("clientId", clientId);
         for (const file of group) body.append("files", file);
         const response = await fetch(action, { method: "POST", body });

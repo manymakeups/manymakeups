@@ -23,7 +23,7 @@ export default async function StudioInboxPage({
   const admin = await requireAdmin();
   if (!admin) redirect("/privado");
   const clients = await listClients();
-  const notices = await listNotices();
+  const notices = (await listNotices()).filter((notice) => !notice.fromStudio);
   const unread = notices.filter((notice) => !notice.read).length;
   const { ok, error } = await searchParams;
 

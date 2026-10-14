@@ -15,13 +15,13 @@ export async function POST(request: Request) {
   const rawIndex = Number.parseInt(String(form.get("personIndex") ?? ""), 10);
   const personIndex =
     scope === "acompanante" && Number.isFinite(rawIndex) && rawIndex >= 0 ? rawIndex : undefined;
-  const tab = scope === "acompanante" ? "acompanantes" : "contratante";
-  if (message.length < 4) return goPortal(request, `/area-novia/panel?tab=${tab}&error=cambio`);
+  const back = "/area-novia/panel?tab=historico&com=nueva";
+  if (message.length < 4) return goPortal(request, `${back}&error=cambio`);
   if (scope === "contratante" && !client.event.contractorLocked) {
-    return goPortal(request, `/area-novia/panel?tab=${tab}`);
+    return goPortal(request, back);
   }
   if (scope === "acompanante" && !client.event.peopleLocked) {
-    return goPortal(request, `/area-novia/panel?tab=${tab}`);
+    return goPortal(request, back);
   }
   const person = personIndex != null ? client.event.people[personIndex] : null;
   const heading =
@@ -37,5 +37,5 @@ export async function POST(request: Request) {
     message: `${heading}\n\n${message}`,
   });
   await notifyStudio(`Cambio solicitado · ${clientLabel(client)}`, [heading, "", message]);
-  return goPortal(request, `/area-novia/panel?tab=${tab}&ok=cambio`);
+  return goPortal(request, `${back}&ok=cambio`);
 }

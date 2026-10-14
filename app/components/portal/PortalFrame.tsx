@@ -11,6 +11,7 @@ export async function PortalFrame({
   aside,
   children,
   localize = false,
+  pinned = false,
 }: {
   kicker: string;
   title: string;
@@ -18,14 +19,14 @@ export async function PortalFrame({
   aside?: ReactNode;
   children: ReactNode;
   localize?: boolean;
+  pinned?: boolean;
 }) {
   const locale = localize ? await getLocale() : "es";
   const copy = getPortalCopy(locale);
   const path = localize ? await getRequestPathname() : "/";
 
-  return (
-    <div className="min-h-full bg-porcelain text-ink">
-      <header className="border-b border-ink/5">
+  const header = (
+      <header className="shrink-0 border-b border-ink/5">
         <div className="mx-auto flex max-w-[960px] items-center justify-between gap-4 px-5 py-4 md:px-10">
           <a
             href={localize ? localePath(locale, "/") : "/"}
@@ -50,12 +51,32 @@ export async function PortalFrame({
           </div>
         </div>
       </header>
+  );
+  const intro = (
+    <>
+      <p className="text-[0.68rem] uppercase tracking-[0.32em] text-gilt">{kicker}</p>
+      <h1 className="mt-4 font-serif text-4xl leading-tight tracking-tight md:text-5xl">{title}</h1>
+      {lead ? <p className="mt-4 max-w-2xl text-ash">{lead}</p> : null}
+    </>
+  );
+
+  if (pinned) {
+    return (
+      <div className="flex h-dvh flex-col overflow-hidden bg-porcelain text-ink">
+        {header}
+        <div className="mx-auto flex min-h-0 w-full max-w-[960px] flex-1 flex-col px-5 md:px-10">
+          <div className="shrink-0 pt-8 md:pt-10">{intro}</div>
+          {children}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-full bg-porcelain text-ink">
+      {header}
       <main className="mx-auto max-w-[960px] px-5 pb-24 pt-10 md:px-10">
-        <p className="text-[0.68rem] uppercase tracking-[0.32em] text-gilt">{kicker}</p>
-        <h1 className="mt-4 font-serif text-4xl leading-tight tracking-tight md:text-5xl">
-          {title}
-        </h1>
-        {lead ? <p className="mt-4 max-w-2xl text-ash">{lead}</p> : null}
+        {intro}
         <div className="mt-10">{children}</div>
       </main>
     </div>

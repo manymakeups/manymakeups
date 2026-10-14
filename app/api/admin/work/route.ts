@@ -26,6 +26,8 @@ export async function POST(request: Request) {
   const form = await request.formData();
   const clientId = String(form.get("clientId") ?? "");
   const tab = typeof form.get("tab") === "string" ? form.get("tab") : "contratante";
+  const sec = typeof form.get("sec") === "string" ? String(form.get("sec")) : "";
+  const section = sec ? `&sec=${encodeURIComponent(sec)}` : "";
   const client = await getClient(clientId);
   if (!client) return go(request, "/privado/novias?error=datos");
   const uploads = form
@@ -33,7 +35,7 @@ export async function POST(request: Request) {
     .filter((item): item is File => item instanceof File && item.size > 0);
   for (const upload of uploads) {
     if (!isImageUpload(upload) || upload.size > maxBytes("work")) {
-      return go(request, `/privado/novias/${client.id}?tab=${tab}&error=archivo`);
+      return go(request, `/privado/novias/${client.id}?tab=${tab}${section}&error=archivo`);
     }
     const id = newId();
     const record: PortalFile = {
@@ -50,7 +52,7 @@ export async function POST(request: Request) {
     client.workPhotos.push(record);
   }
   await saveClient(client);
-  return go(request, `/privado/novias/${client.id}?tab=${tab}&ok=fotos`);
+  return go(request, `/privado/novias/${client.id}?tab=${tab}${section}&ok=fotos`);
 }
 
 export async function DELETE(request: Request) {

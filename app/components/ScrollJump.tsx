@@ -18,13 +18,24 @@ function viewport() {
   };
 }
 
+function portalScroll() {
+  return document.querySelector<HTMLElement>("[data-portal-scroll]");
+}
+
 export function ScrollJump() {
   const { messages: t } = useI18n();
   const [showUp, setShowUp] = useState(false);
   const [showDown, setShowDown] = useState(true);
 
   useEffect(() => {
+    let box: HTMLElement | null = null;
     const update = () => {
+      const current = portalScroll();
+      if (current) {
+        setShowUp(current.scrollTop > Math.min(220, current.clientHeight * 0.3));
+        setShowDown(current.scrollTop + current.clientHeight < current.scrollHeight - 64);
+        return;
+      }
       const { y, height } = viewport();
       const max = Math.max(
         document.documentElement.scrollHeight,
@@ -33,12 +44,24 @@ export function ScrollJump() {
       setShowUp(y > Math.min(220, height * 0.3));
       setShowDown(y + height < max - 64);
     };
-    update();
+    const bind = () => {
+      const next = portalScroll();
+      if (next === box) return;
+      box?.removeEventListener("scroll", update);
+      box = next;
+      box?.addEventListener("scroll", update, { passive: true });
+      update();
+    };
+    bind();
+    const observer = new MutationObserver(bind);
+    observer.observe(document.body, { childList: true, subtree: true });
     window.addEventListener("scroll", update, { passive: true });
     window.addEventListener("resize", update);
     window.visualViewport?.addEventListener("resize", update);
     window.visualViewport?.addEventListener("scroll", update);
     return () => {
+      observer.disconnect();
+      box?.removeEventListener("scroll", update);
       window.removeEventListener("scroll", update);
       window.removeEventListener("resize", update);
       window.visualViewport?.removeEventListener("resize", update);
@@ -54,10 +77,13 @@ export function ScrollJump() {
           aria-label={t.common.scrollDown}
           className={`pointer-events-auto ${btnClass}`}
           onClick={() => {
-            window.scrollBy({
-              top: viewport().height * 0.9,
-              behavior: prefersReducedMotion() ? "auto" : "smooth",
-            });
+            const box = portalScroll();
+            const behavior = prefersReducedMotion() ? "auto" : "smooth";
+            if (box) {
+              box.scrollBy({ top: box.clientHeight * 0.9, behavior });
+              return;
+            }
+            window.scrollBy({ top: viewport().height * 0.9, behavior });
           }}
         >
           <span className="hidden md:inline">{t.common.scrollDown}</span>
@@ -79,10 +105,13 @@ export function ScrollJump() {
           aria-label={t.common.scrollUp}
           className={`pointer-events-auto ${btnClass}`}
           onClick={() => {
-            window.scrollTo({
-              top: 0,
-              behavior: prefersReducedMotion() ? "auto" : "smooth",
-            });
+            const behavior = prefersReducedMotion() ? "auto" : "smooth";
+            const box = portalScroll();
+            if (box) {
+              box.scrollTo({ top: 0, behavior });
+              return;
+            }
+            window.scrollTo({ top: 0, behavior });
           }}
         >
           <svg

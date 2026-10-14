@@ -10,14 +10,15 @@ function text(value: FormDataEntryValue | null) {
 function productsFrom(form: FormData, prefix: string): UsedProduct[] {
   const rows: UsedProduct[] = [];
   for (let i = 0; i < 40; i += 1) {
-    if (!form.has(`${prefix}${i}.brand`) && !form.has(`${prefix}${i}.zone`)) break;
+    if (!form.has(`${prefix}${i}.brand`) && !form.has(`${prefix}${i}.name`) && !form.has(`${prefix}${i}.zone`)) break;
     const brand = text(form.get(`${prefix}${i}.brand`));
+    const name = text(form.get(`${prefix}${i}.name`));
     const shade = text(form.get(`${prefix}${i}.shade`));
     const picked = text(form.get(`${prefix}${i}.zone`));
     const custom = text(form.get(`${prefix}${i}.zoneCustom`));
     const zone = picked === "Otra" ? custom : picked;
-    if (!brand && !shade && !zone) continue;
-    rows.push({ brand, shade, zone: zone || "Otra" });
+    if (!brand && !name && !shade && !zone) continue;
+    rows.push({ brand, name, shade, zone: zone || "Otra" });
   }
   return rows;
 }
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
   const tab = text(form.get("tab")) || "contratante";
   const client = await getClient(id);
   if (!client) return go(request, "/privado/novias?error=datos");
-  if (form.has("products.0.brand") || form.has("products.0.zone")) {
+  if (form.has("products.0.brand") || form.has("products.0.name") || form.has("products.0.zone")) {
     const products = productsFrom(form, "products.");
     client.event.products = products;
     if (products.length) client.event.productsUsed = "";
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
   }
   client.event.people = client.event.people.map((person, i) => {
     const prefix = `people.${i}.products.`;
-    if (!form.has(`${prefix}0.brand`) && !form.has(`${prefix}0.zone`)) {
+    if (!form.has(`${prefix}0.brand`) && !form.has(`${prefix}0.name`) && !form.has(`${prefix}0.zone`)) {
       const key = `people.${i}.productsUsed`;
       if (!form.has(key)) return person;
       return { ...person, productsUsed: text(form.get(key)) };
@@ -48,5 +49,7 @@ export async function POST(request: Request) {
     return { ...person, products, productsUsed: products.length ? "" : person.productsUsed };
   });
   await saveClient(client);
-  return go(request, `/privado/novias/${client.id}?tab=${encodeURIComponent(tab)}&ok=estudio`);
+  const section = text(form.get("section"));
+  const extra = section ? `&sec=${encodeURIComponent(section)}` : "";
+  return go(request, `/privado/novias/${client.id}?tab=${encodeURIComponent(tab)}${extra}&ok=estudio`);
 }

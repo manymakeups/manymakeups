@@ -1,4 +1,3 @@
-import { ChangeRequestForm } from "@/app/components/portal/ChangeRequestForm";
 import { PhotoPicker } from "@/app/components/portal/PhotoPicker";
 import { WorkView } from "@/app/components/portal/WorkBlock";
 import { interpolate, type PortalCopy } from "@/lib/i18n/portal-messages";
@@ -74,7 +73,6 @@ export function CompanionView({
           localize
         />
       </div>
-      <ChangeRequestForm copy={copy} scope="acompanante" personIndex={index} />
     </article>
   );
 }

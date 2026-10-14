@@ -66,7 +66,7 @@ export const DOCUMENT_KINDS = [
 export const PORTAL_TABS = [
   { id: "contratante", label: "Contratante" },
   { id: "acompanantes", label: "Acompañantes" },
-  { id: "historico", label: "Histórico" },
+  { id: "historico", label: "Comunicaciones" },
   { id: "budget", label: "Budget" },
   { id: "documentacion", label: "Documentación" },
   { id: "agenda", label: "Agenda" },
@@ -84,6 +84,7 @@ export const PRODUCT_ZONES = ["Ojos", "Labios", "Piel", "Acabado", "Cejas", "Pes
 
 export type UsedProduct = {
   brand: string;
+  name: string;
   shade: string;
   zone: string;
 };
@@ -232,6 +233,7 @@ export type StudioNotice = {
   personIndex?: number;
   message: string;
   read: boolean;
+  fromStudio?: boolean;
   replies: StudioNoticeReply[];
 };
 
@@ -355,6 +357,7 @@ export function asStudioNotice(value: unknown): StudioNotice | null {
     personIndex: Number.isFinite(row.personIndex) ? Number(row.personIndex) : undefined,
     message: row.message ?? "",
     read: Boolean(row.read),
+    fromStudio: Boolean(row.fromStudio),
     replies: Array.isArray(row.replies)
       ? row.replies
           .filter((item) => item && typeof item === "object" && item.text)
@@ -459,10 +462,11 @@ function asProducts(value: unknown): UsedProduct[] {
     if (!row || typeof row !== "object") return [];
     const item = row as UsedProduct;
     const brand = String(item.brand ?? "").trim();
+    const name = String(item.name ?? "").trim();
     const shade = String(item.shade ?? "").trim();
     const zone = String(item.zone ?? "").trim();
-    if (!brand && !shade && !zone) return [];
-    return [{ brand, shade, zone: zone || "Otra" }];
+    if (!brand && !name && !shade && !zone) return [];
+    return [{ brand, name, shade, zone: zone || "Otra" }];
   });
 }
 

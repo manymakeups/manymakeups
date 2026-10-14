@@ -63,6 +63,14 @@ export type PortalCopy = {
   agendaTitle: string;
   agendaLead: string;
   historyTitle: string;
+  eventData: string;
+  inspirationsTab: string;
+  lookTab: string;
+  photosTab: string;
+  productsTab: string;
+  commsHistory: string;
+  commsWrite: string;
+  commsWait: string;
   historyLead: string;
   contactsTitle: string;
   historyEmpty: string;
@@ -205,7 +213,7 @@ export const portalEs: PortalCopy = {
   backToSite: "Volver a la web",
   logout: "Salir",
   hello: "Hola, {name}.",
-  panelLead: "Tu ficha, la de tus acompañantes, el histórico, el budget, los papeles y la agenda de citas.",
+  panelLead: "Tu ficha, la de tus acompañantes, las comunicaciones, el budget, los papeles y la agenda de citas.",
   email: "Correo",
   password: "Contraseña",
   confirmPassword: "Repite la contraseña",
@@ -245,7 +253,7 @@ export const portalEs: PortalCopy = {
     acompanantes: "Acompañantes",
     documentacion: "Documentación",
     agenda: "Agenda",
-    historico: "Histórico",
+    historico: "Comunicaciones",
     budget: "Budget",
   },
   yourDetails: "Tus datos",
@@ -266,7 +274,15 @@ export const portalEs: PortalCopy = {
   download: "Descargar",
   agendaTitle: "Agenda",
   agendaLead: "Las citas que tenemos planificadas: prueba, evento y lo que vayamos sumando.",
-  historyTitle: "Histórico de nuestras comunicaciones",
+  historyTitle: "Comunicaciones",
+  eventData: "Datos del evento",
+  inspirationsTab: "Inspiraciones",
+  lookTab: "Maquillaje y Peinado",
+  photosTab: "Fotos",
+  productsTab: "Productos",
+  commsHistory: "Histórico",
+  commsWrite: "Nueva comunicación",
+  commsWait: "Cuando la ficha esté guardada, puedes escribirme desde aquí.",
   historyLead: "Aquí encontrarás un extracto de tus solicitudes o cambios.",
   contactsTitle: "Contactos y solicitudes",
   historyEmpty: "Todavía no hay contactos ni solicitudes.",
@@ -435,7 +451,7 @@ export const portalEs: PortalCopy = {
     "Si tú no has solicitado este cambio, puedes ignorar este mensaje; tu contraseña seguirá siendo la misma.",
   recoverMailSignoff: "Un abrazo,",
   lockedLead:
-    "Esta ficha ya está guardada y no se puede editar. Si algo cambia, escríbeme aquí y me llegará al estudio.",
+    "Esta ficha ya está guardada y no se puede editar. Si algo cambia, escríbeme en Comunicaciones.",
   notifyChanges: "Notificar cambios",
   notifyChangesLead: "Cuéntame qué hay que cambiar",
   notifyPlaceholder: "Fecha, hora, lugar, servicio…",
@@ -472,7 +488,7 @@ export const portalEn: PortalCopy = {
   backToSite: "Back to the site",
   logout: "Log out",
   hello: "Hello, {name}.",
-  panelLead: "Your details, your guests, your history, your budget, documents and the appointment diary.",
+  panelLead: "Your details, your guests, communications, your budget, documents and the appointment diary.",
   email: "Email",
   password: "Password",
   confirmPassword: "Repeat password",
@@ -511,7 +527,7 @@ export const portalEn: PortalCopy = {
     acompanantes: "Guests",
     documentacion: "Documents",
     agenda: "Diary",
-    historico: "History",
+    historico: "Communications",
     budget: "Budget",
   },
   yourDetails: "Your details",
@@ -531,7 +547,15 @@ export const portalEn: PortalCopy = {
   download: "Download",
   agendaTitle: "Diary",
   agendaLead: "The appointments we have planned: trial, event, and anything we add.",
-  historyTitle: "History of our communications",
+  historyTitle: "Communications",
+  eventData: "Event details",
+  inspirationsTab: "Inspiration",
+  lookTab: "Makeup and hair",
+  photosTab: "Photos",
+  productsTab: "Products",
+  commsHistory: "History",
+  commsWrite: "New message",
+  commsWait: "Once the details are saved, you can write to me from here.",
   historyLead: "Here you will find a summary of your requests and changes.",
   contactsTitle: "Contacts and requests",
   historyEmpty: "There are no contacts or requests yet.",
@@ -697,7 +721,7 @@ export const portalEn: PortalCopy = {
   recoverMailIgnore: "If you did not request this change, you can ignore this message; your password will stay the same.",
   recoverMailSignoff: "With love,",
   lockedLead:
-    "This form is saved and can no longer be edited. If something changes, write it here and it will reach the studio.",
+    "This form is saved and can no longer be edited. If something changes, write to me in Communications.",
   notifyChanges: "Request a change",
   notifyChangesLead: "Tell me what needs to change",
   notifyPlaceholder: "Date, time, venue, service…",
@@ -734,7 +758,7 @@ export const portalFr: PortalCopy = {
   backToSite: "Retour au site",
   logout: "Sortir",
   hello: "Bonjour, {name}.",
-  panelLead: "Ta fiche, celle de tes accompagnants, l’historique, le budget, les papiers et l’agenda des rendez-vous.",
+  panelLead: "Ta fiche, celle de tes accompagnants, les communications, le budget, les papiers et l’agenda des rendez-vous.",
   email: "E-mail",
   password: "Mot de passe",
   confirmPassword: "Répète le mot de passe",
@@ -774,7 +798,7 @@ export const portalFr: PortalCopy = {
     acompanantes: "Accompagnants",
     documentacion: "Documents",
     agenda: "Agenda",
-    historico: "Historique",
+    historico: "Communications",
     budget: "Budget",
   },
   yourDetails: "Tes informations",
@@ -795,7 +819,15 @@ export const portalFr: PortalCopy = {
   download: "Télécharger",
   agendaTitle: "Agenda",
   agendaLead: "Les rendez-vous prévus : essai, événement, et ce que nous ajouterons.",
-  historyTitle: "Historique de nos communications",
+  historyTitle: "Communications",
+  eventData: "Données de l’événement",
+  inspirationsTab: "Inspirations",
+  lookTab: "Maquillage et coiffure",
+  photosTab: "Photos",
+  productsTab: "Produits",
+  commsHistory: "Historique",
+  commsWrite: "Nouveau message",
+  commsWait: "Quand la fiche est enregistrée, tu peux m’écrire d’ici.",
   historyLead: "Tu trouveras ici un extrait de tes demandes ou changements.",
   contactsTitle: "Contacts et demandes",
   historyEmpty: "Il n’y a pas encore de contacts ni de demandes.",
@@ -964,7 +996,7 @@ export const portalFr: PortalCopy = {
     "Si tu n’as pas demandé ce changement, tu peux ignorer ce message ; ton mot de passe restera le même.",
   recoverMailSignoff: "Je t’embrasse,",
   lockedLead:
-    "Cette fiche est enregistrée et ne peut plus être modifiée. Si quelque chose change, écris-le ici et je le verrai à l’atelier.",
+    "Cette fiche est enregistrée et ne peut plus être modifiée. Si quelque chose change, écris-moi dans Communications.",
   notifyChanges: "Signaler un changement",
   notifyChangesLead: "Dis-moi ce qu’il faut changer",
   notifyPlaceholder: "Date, heure, lieu, service…",

@@ -10,6 +10,7 @@ import { PaymentsView } from "@/app/components/portal/PaymentsBlock";
 import { PhotoPicker } from "@/app/components/portal/PhotoPicker";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { PortalTabs } from "@/app/components/portal/PortalTabs";
+import { EventSections, SubTabs } from "@/app/components/portal/SubTabs";
 import { WorkView } from "@/app/components/portal/WorkBlock";
 import { studioBusyDates } from "@/lib/portal/availability";
 import { madridToday, parseMonth } from "@/lib/portal/calendar";
@@ -42,7 +43,7 @@ function fileHref(clientId: string, id: string, download = false) {
 export default async function BridePanelPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ok?: string; error?: string; tab?: string; mes?: string }>;
+  searchParams: Promise<{ ok?: string; error?: string; tab?: string; mes?: string; com?: string; sec?: string }>;
 }) {
   const locale = await getLocale();
   const t = getPortalCopy(locale);
@@ -51,7 +52,7 @@ export default async function BridePanelPage({
   const client = await getClient(session.sub);
   if (!client) redirect(localePath(locale, "/area-novia"));
   const requests = (await listNotices()).filter((notice) => notice.clientId === client.id && notice.kind === "cambio");
-  const { ok, error, tab: tabRaw, mes } = await searchParams;
+  const { ok, error, tab: tabRaw, mes, com, sec } = await searchParams;
   const tab = portalTab(tabRaw);
   const today = madridToday();
   const { year: initialYear, month: initialMonth } = parseMonth(mes, today);
@@ -69,6 +70,7 @@ export default async function BridePanelPage({
 
   return (
     <PortalFrame
+      pinned
       localize
       kicker={t.kicker}
       title={interpolate(t.hello, { name: mailName(client.event, client.name) })}
@@ -81,59 +83,87 @@ export default async function BridePanelPage({
         </form>
       }
     >
-      {ok && okText[ok] ? <PortalNotice>{okText[ok]}</PortalNotice> : null}
-      {error && errorText[error] ? <PortalNotice>{errorText[error]}</PortalNotice> : null}
-      <PortalTabs
-        basePath={localePath(locale, "/area-novia/panel")}
-        active={tab}
-        labels={t.tabs}
-      />
+      <div className="shrink-0">
+        <PortalTabs
+          basePath={localePath(locale, "/area-novia/panel")}
+          active={tab}
+          labels={t.tabs}
+        />
+      </div>
+      <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
+      {ok && okText[ok] ? <div className="pt-6"><PortalNotice>{okText[ok]}</PortalNotice></div> : null}
+      {error && errorText[error] ? <div className="pt-6"><PortalNotice>{errorText[error]}</PortalNotice></div> : null}
 
       {tab === "contratante" ? (
-        <section className="pt-10">
-          <h2 className="font-serif text-3xl">{t.yourDetails}</h2>
-          <p className="mt-3 max-w-2xl text-sm text-ash">
-            {client.event.contractorLocked ? t.lockedLead : t.yourDetailsLead}
-          </p>
-          <div className="mt-8">
-            {client.event.contractorLocked ? (
-              <>
-                <EventView event={client.event} copy={t} />
+        <section className="pt-8">
+          <EventSections
+            section={sec}
+            labels={{
+              data: t.eventData,
+              inspirations: t.inspirationsTab,
+              look: t.lookTab,
+              trial: t.trialHeading,
+              photos: t.photosTab,
+              products: t.productsTab,
+            }}
+            details={
+              <div>
+                <p className="max-w-2xl text-sm text-ash">
+                  {client.event.contractorLocked ? t.lockedLead : t.yourDetailsLead}
+                </p>
                 <div className="mt-8">
-                  <PhotoPicker
-                    personKey={CONTRACTOR_INSPIRATION}
-                    files={client.inspiration}
+                  {client.event.contractorLocked ? (
+                    <EventView event={client.event} copy={t} />
+                  ) : (
+                    <EventForm
+                      event={client.event}
+                      clientId={client.id}
+                      inspiration={client.inspiration}
+                      action="/api/portal/event"
+                      submitLabel={t.saveCard}
+                      showInspiration={false}
+                    />
+                  )}
+                </div>
+              </div>
+            }
+            inspiration={
+              <PhotoPicker
+                personKey={CONTRACTOR_INSPIRATION}
+                files={client.inspiration}
+                clientId={client.id}
+                action="/api/portal/inspiration"
+                tab="contratante"
+                section="look"
+                localize
+              />
+            }
+            photos={
+              <div>
+                <p className="max-w-2xl text-sm text-ash">{t.trialLead}</p>
+                <div className="mt-6">
+                  <WorkView
+                    part="photos"
+                    products={client.event.productsUsed}
+                    productLines={client.event.products}
+                    photos={filesFor(client.workPhotos, CONTRACTOR_TRIAL_PHOTOS)}
                     clientId={client.id}
-                    action="/api/portal/inspiration"
-                    tab="contratante"
-                    localize
+                    copy={t}
                   />
                 </div>
-                <ChangeRequestForm copy={t} scope="contratante" />
-              </>
-            ) : (
-              <EventForm
-                event={client.event}
-                clientId={client.id}
-                inspiration={client.inspiration}
-                action="/api/portal/event"
-                submitLabel={t.saveCard}
-              />
-            )}
-          </div>
-          <div className="mt-14 border-t border-ink/10 pt-10">
-            <h3 className="font-serif text-3xl">{t.trialHeading}</h3>
-            <p className="mt-3 max-w-2xl text-sm text-ash">{t.trialLead}</p>
-            <div className="mt-8">
+              </div>
+            }
+            products={
               <WorkView
+                part="products"
                 products={client.event.productsUsed}
                 productLines={client.event.products}
                 photos={filesFor(client.workPhotos, CONTRACTOR_TRIAL_PHOTOS)}
                 clientId={client.id}
                 copy={t}
               />
-            </div>
-          </div>
+            }
+          />
         </section>
       ) : null}
 
@@ -160,10 +190,7 @@ export default async function BridePanelPage({
                   ))}
                 </div>
               ) : (
-                <>
-                  <p className="text-sm text-ash">{t.noCompanions}</p>
-                  <ChangeRequestForm copy={t} scope="acompanante" />
-                </>
+                <p className="text-sm text-ash">{t.noCompanions}</p>
               )
             ) : (
               <CompanionsForm
@@ -179,15 +206,60 @@ export default async function BridePanelPage({
       ) : null}
 
       {tab === "historico" ? (
-        <section className="pt-10">
+        <section className="pt-8">
           <h2 className="font-serif text-3xl">{t.historyTitle}</h2>
           <div className="mt-8">
-            <HistoryView
-              entries={client.history}
-              requests={requests}
-              clientName={fullName(client.event, client.name)}
-              copy={t}
-              locale={locale}
+            <SubTabs
+              initial={com === "nueva" || ok === "cambio" || error === "cambio" ? "nueva" : "historico"}
+              tabs={[
+                {
+                  id: "historico",
+                  label: t.commsHistory,
+                  body: (
+                    <HistoryView
+                      entries={client.history}
+                      requests={requests}
+                      clientName={fullName(client.event, client.name)}
+                      copy={t}
+                      locale={locale}
+                    />
+                  ),
+                },
+                {
+                  id: "nueva",
+                  label: t.commsWrite,
+                  body: (
+                    <div className="flex max-w-xl flex-col gap-10">
+                      {client.event.contractorLocked ? (
+                        <div>
+                          <h3 className="font-serif text-2xl">{t.contractor}</h3>
+                          <ChangeRequestForm copy={t} scope="contratante" />
+                        </div>
+                      ) : null}
+                      {client.event.peopleLocked && client.event.people.length
+                        ? client.event.people.map((person, index) => (
+                            <div key={index}>
+                              <h3 className="font-serif text-2xl">
+                                {t.whoOptions[person.who] || person.who || t.companionsTitle}
+                                {client.event.people.length > 1 ? ` ${index + 1}` : ""}
+                              </h3>
+                              <ChangeRequestForm copy={t} scope="acompanante" personIndex={index} />
+                            </div>
+                          ))
+                        : null}
+                      {client.event.peopleLocked && !client.event.people.length ? (
+                        <div>
+                          <h3 className="font-serif text-2xl">{t.companionsTitle}</h3>
+                          <ChangeRequestForm copy={t} scope="acompanante" />
+                        </div>
+                      ) : null}
+                      {!client.event.contractorLocked && !client.event.peopleLocked ? (
+                        <p className="text-sm text-ash">{t.commsWait}</p>
+                      ) : null}
+                    </div>
+                  ),
+                },
+              ]}
             />
           </div>
         </section>
@@ -258,6 +330,7 @@ export default async function BridePanelPage({
           </div>
         </section>
       ) : null}
+      </div>
     </PortalFrame>
   );
 }

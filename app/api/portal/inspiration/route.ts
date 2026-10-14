@@ -60,7 +60,9 @@ export async function POST(request: Request) {
     ]);
   }
   const tab = typeof form.get("tab") === "string" && form.get("tab") ? String(form.get("tab")) : "contratante";
-  return goPortal(request, `/area-novia/panel?tab=${encodeURIComponent(tab)}&ok=fotos`);
+  const sec = typeof form.get("sec") === "string" ? String(form.get("sec")) : "";
+  const section = sec ? `&sec=${encodeURIComponent(sec)}` : "";
+  return goPortal(request, `/area-novia/panel?tab=${encodeURIComponent(tab)}${section}&ok=fotos`);
 }
 
 export async function DELETE(request: Request) {

@@ -150,7 +150,7 @@ export function BudgetView({
   return (
     <div>
       <MoneyBoxes total={budget.total} paid={budget.paid} pending={budget.pending} copy={copy} />
-      <div ref={bar} className="sticky top-14 z-20 mt-10 scroll-mt-14 border-b border-ink/10 bg-porcelain">
+      <div ref={bar} className="sticky top-0 z-20 mt-10 scroll-mt-0 border-b border-ink/10 bg-porcelain">
         <div className="flex gap-6">
           <button className={tabClass(pane === "evento")} type="button" onClick={() => show("evento")}>
             {copy.budgetEvent}
@@ -235,6 +235,41 @@ export function HistoryView({
             {visibleRequests.map((notice) => {
               const [heading, ...rest] = notice.message.split(/\n\n/);
               const body = rest.join("\n\n").trim();
+              const replies = notice.replies.length ? (
+                <ul className="mt-5 space-y-5 border-l border-gilt/50 pl-4 sm:ml-6">
+                  {notice.replies.map((reply) => (
+                    <li key={reply.id}>
+                      <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">{copy.threadReply}</p>
+                      <div className="mt-2 flex items-baseline justify-between gap-4">
+                        <p className="text-sm">
+                          {copy.threadAuthor}
+                          <span className="text-ash"> → {person}</span>
+                        </p>
+                        <p className="text-sm capitalize text-ash">{formatWhen(reply.createdAt.slice(0, 10), locale, copy)}</p>
+                      </div>
+                      <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{reply.text}</p>
+                    </li>
+                  ))}
+                </ul>
+              ) : null;
+              if (notice.fromStudio) {
+                return (
+                  <li key={notice.id} className="px-4 py-5">
+                    <article>
+                      <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">{copy.mailLabel}</p>
+                      <div className="mt-3 flex items-baseline justify-between gap-4">
+                        <p className="text-sm">
+                          {copy.threadAuthor}
+                          <span className="text-ash"> → {person}</span>
+                        </p>
+                        <p className="text-sm capitalize text-ash">{formatWhen(notice.createdAt.slice(0, 10), locale, copy)}</p>
+                      </div>
+                      <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{notice.message}</p>
+                      {replies}
+                    </article>
+                  </li>
+                );
+              }
               return (
                 <li key={notice.id} className="px-4 py-5">
                   <article>
@@ -250,23 +285,7 @@ export function HistoryView({
                     </div>
                     <p className="mt-2 font-serif text-2xl">{heading || copy.requestLabel}</p>
                     {body ? <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{body}</p> : null}
-                    {notice.replies.length ? (
-                      <ul className="mt-5 space-y-5 border-l border-gilt/50 pl-4 sm:ml-6">
-                        {notice.replies.map((reply) => (
-                          <li key={reply.id}>
-                            <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">{copy.threadReply}</p>
-                            <div className="mt-2 flex items-baseline justify-between gap-4">
-                              <p className="text-sm">
-                                {copy.threadAuthor}
-                                <span className="text-ash"> → {person}</span>
-                              </p>
-                              <p className="text-sm capitalize text-ash">{formatWhen(reply.createdAt.slice(0, 10), locale, copy)}</p>
-                            </div>
-                            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{reply.text}</p>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : null}
+                    {replies}
                   </article>
                 </li>
               );

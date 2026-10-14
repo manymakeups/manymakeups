@@ -8,6 +8,7 @@ import { PaymentsForm } from "@/app/components/portal/PaymentsBlock";
 import { PhotoGrid } from "@/app/components/portal/PhotoPicker";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { PortalTabs } from "@/app/components/portal/PortalTabs";
+import { EventSections, SubTabs } from "@/app/components/portal/SubTabs";
 import { StudioAside } from "@/app/components/portal/StudioAside";
 import { WorkForm } from "@/app/components/portal/WorkBlock";
 import { portalEs } from "@/lib/i18n/portal-messages";
@@ -39,7 +40,7 @@ export default async function StudioClientPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ invite?: string; ok?: string; error?: string; tab?: string }>;
+  searchParams: Promise<{ invite?: string; ok?: string; error?: string; tab?: string; com?: string; sec?: string }>;
 }) {
   const admin = await requireAdmin();
   if (!admin) redirect("/privado");
@@ -47,12 +48,13 @@ export default async function StudioClientPage({
   const client = await getClient(id);
   if (!client) notFound();
   const requests = (await listNotices()).filter((notice) => notice.clientId === client.id && notice.kind === "cambio");
-  const { invite, ok, error, tab: tabRaw } = await searchParams;
+  const { invite, ok, error, tab: tabRaw, com, sec } = await searchParams;
   const event = client.event;
   const tab = portalTab(tabRaw);
 
   return (
     <PortalFrame
+      pinned
       kicker="Estudio"
       title={fullName(event, client.name)}
       lead={client.email}
@@ -66,12 +68,29 @@ export default async function StudioClientPage({
         />
       }
     >
+      <div className="shrink-0">
+      <form action="/api/admin/invite" method="post" className="mt-8">
+        <input type="hidden" name="id" value={client.id} />
+        <button className="btn-atelier" type="submit">
+          Generar enlace nuevo
+        </button>
+      </form>
+
+      <PortalTabs basePath={`/privado/novias/${client.id}`} active={tab} />
+      </div>
+      <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
+      <div className="pt-6">
       {ok === "doc" ? <PortalNotice>Documento colgado.</PortalNotice> : null}
       {ok === "pagos" ? <PortalNotice>Pagos actualizados.</PortalNotice> : null}
       {ok === "agenda" ? <PortalNotice>Agenda actualizada.</PortalNotice> : null}
       {ok === "historico" ? <PortalNotice>Histórico actualizado. Ella ya lo ve en su área.</PortalNotice> : null}
       {ok === "estudio" ? <PortalNotice>Productos guardados.</PortalNotice> : null}
       {ok === "fotos" ? <PortalNotice>Fotos de la prueba colgadas.</PortalNotice> : null}
+      {ok === "mensaje" ? <PortalNotice>Mensaje enviado. Ella lo ve en comunicaciones.</PortalNotice> : null}
+      {error === "mensaje" ? <PortalNotice>Escribe el mensaje antes de enviarlo.</PortalNotice> : null}
+      {error === "correo" && ok === "mensaje" ? (
+        <PortalNotice>El mensaje está en comunicaciones, pero no he podido enviarle el correo.</PortalNotice>
+      ) : null}
       <MailSetupNotice />
       {ok === "ficha" && error !== "correo" ? (
         <PortalNotice>Ficha actualizada. Ella ya ve los cambios y le he enviado un correo.</PortalNotice>
@@ -92,38 +111,41 @@ export default async function StudioClientPage({
           </span>
         </PortalNotice>
       ) : null}
-
-      <form action="/api/admin/invite" method="post" className="mb-6">
-        <input type="hidden" name="id" value={client.id} />
-        <button className="btn-atelier" type="submit">
-          Generar enlace nuevo
-        </button>
-      </form>
-
-      <PortalTabs basePath={`/privado/novias/${client.id}`} active={tab} />
+      </div>
 
       {tab === "contratante" ? (
-        <section className="pt-10">
-          <h2 className="font-serif text-3xl">Ficha de la contratante</h2>
-          <p className="mt-3 max-w-2xl text-sm text-ash">
-            Si pide un cambio, corrige aquí y guarda. Ella lo verá en su área, sin poder editarlo.
-          </p>
-          <div className="mt-8">
-            <EventForm
-              event={event}
-              clientId={client.id}
-              inspiration={client.inspiration}
-              action="/api/admin/event"
-              submitLabel="Guardar ficha"
-              copy={portalEs}
-              includeClientId
-              showInspiration={false}
-            />
-          </div>
-          <div className="mt-12 border-t border-ink/10 pt-8">
-            <h3 className="font-serif text-2xl">Inspiraciones</h3>
-            <div className="mt-6">
-              {filesFor(client.inspiration, CONTRACTOR_INSPIRATION).length ? (
+        <section className="pt-8">
+          <EventSections
+            section={sec}
+            labels={{
+              data: "Datos del evento",
+              inspirations: "Inspiraciones",
+              look: "Maquillaje y Peinado",
+              trial: "Prueba",
+              photos: "Fotos",
+              products: "Productos",
+            }}
+            details={
+              <div>
+                <p className="max-w-2xl text-sm text-ash">
+                  Si pide un cambio, corrige aquí y guarda. Ella lo verá en su área, sin poder editarlo.
+                </p>
+                <div className="mt-8">
+                  <EventForm
+                    event={event}
+                    clientId={client.id}
+                    inspiration={client.inspiration}
+                    action="/api/admin/event"
+                    submitLabel="Guardar ficha"
+                    copy={portalEs}
+                    includeClientId
+                    showInspiration={false}
+                  />
+                </div>
+              </div>
+            }
+            inspiration={
+              filesFor(client.inspiration, CONTRACTOR_INSPIRATION).length ? (
                 <PhotoGrid
                   files={filesFor(client.inspiration, CONTRACTOR_INSPIRATION)}
                   clientId={client.id}
@@ -131,13 +153,11 @@ export default async function StudioClientPage({
                 />
               ) : (
                 <p className="text-sm text-ash">Todavía no ha colgado fotos de inspiración.</p>
-              )}
-            </div>
-          </div>
-          <div className="mt-12 border-t border-ink/10 pt-8">
-            <h3 className="font-serif text-3xl">Fotos de la prueba y productos</h3>
-            <div className="mt-6">
+              )
+            }
+            photos={
               <WorkForm
+                mode="photos"
                 clientId={client.id}
                 personKey={CONTRACTOR_TRIAL_PHOTOS}
                 fieldPrefix="products."
@@ -146,8 +166,20 @@ export default async function StudioClientPage({
                 photos={client.workPhotos}
                 tab="contratante"
               />
-            </div>
-          </div>
+            }
+            products={
+              <WorkForm
+                mode="products"
+                clientId={client.id}
+                personKey={CONTRACTOR_TRIAL_PHOTOS}
+                fieldPrefix="products."
+                products={event.productsUsed}
+                productLines={event.products}
+                photos={client.workPhotos}
+                tab="contratante"
+              />
+            }
+          />
         </section>
       ) : null}
 
@@ -270,14 +302,44 @@ export default async function StudioClientPage({
       ) : null}
 
       {tab === "historico" ? (
-        <section className="pt-10">
-          <h2 className="font-serif text-3xl">Histórico de nuestras comunicaciones</h2>
+        <section className="pt-8">
+          <h2 className="font-serif text-3xl">Comunicaciones</h2>
           <div className="mt-8">
-            <HistoryForm
-              clientId={client.id}
-              entries={client.history}
-              requests={requests}
-              clientName={fullName(event, client.name)}
+            <SubTabs
+              initial={com === "nueva" || ok === "mensaje" ? "nueva" : "historico"}
+              tabs={[
+                {
+                  id: "historico",
+                  label: "Histórico",
+                  body: (
+                    <HistoryForm
+                      clientId={client.id}
+                      entries={client.history}
+                      requests={requests}
+                      clientName={fullName(event, client.name)}
+                    />
+                  ),
+                },
+                {
+                  id: "nueva",
+                  label: "Nueva comunicación",
+                  body: (
+                    <form action="/api/admin/notices" method="post" className="flex max-w-xl flex-col gap-3">
+                      <input type="hidden" name="intent" value="compose" />
+                      <input type="hidden" name="clientId" value={client.id} />
+                      <input type="hidden" name="next" value={`/privado/novias/${client.id}?tab=historico&com=nueva`} />
+                      <p className="text-sm text-ash">Ella lo lee en comunicaciones, firmado como Ana Zarza.</p>
+                      <label className="field-label">
+                        Mensaje
+                        <textarea className="field min-h-28" name="message" required minLength={2} />
+                      </label>
+                      <button className="btn-atelier self-start" type="submit">
+                        Enviar
+                      </button>
+                    </form>
+                  ),
+                },
+              ]}
             />
           </div>
         </section>
@@ -311,6 +373,7 @@ export default async function StudioClientPage({
           </div>
         </section>
       ) : null}
+      </div>
     </PortalFrame>
   );
 }
