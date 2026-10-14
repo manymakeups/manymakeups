@@ -286,11 +286,11 @@ export default async function StudioClientPage({
         <section className="pt-10">
           <h2 className="font-serif text-3xl">Histórico y budget</h2>
           <p className="mt-3 max-w-2xl text-sm text-ash">
-            Anota cada contacto y cada servicio. Ella ve lo mismo. El budget suma los servicios; lo abonado se marca en
-            Facturación.
+            Anota cada contacto y cada servicio. Ella ve lo mismo. El importe del servicio queda abonado, salvo que marques
+            que lo paga después.
           </p>
           <div className="mt-8">
-            <HistoryForm clientId={client.id} entries={client.history} payments={client.payments} />
+            <HistoryForm clientId={client.id} entries={client.history} />
           </div>
         </section>
       ) : null}

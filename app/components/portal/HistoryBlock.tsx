@@ -8,9 +8,9 @@ import {
   euros,
   historyBudget,
   SERVICE_TITLES,
+  serviceNeedsName,
   type HistoryEntry,
   type HistoryKind,
-  type Payments,
 } from "@/lib/portal/types";
 
 function formatWhen(date: string, locale: Locale, copy: PortalCopy) {
@@ -31,17 +31,15 @@ function labelFor(title: string, copy: PortalCopy) {
 
 export function HistoryView({
   entries,
-  payments,
   copy = portalEs,
   locale = "es",
 }: {
   entries: HistoryEntry[];
-  payments: Payments;
   copy?: PortalCopy;
   locale?: Locale;
 }) {
   const ordered = [...entries].sort((a, b) => `${b.date}${b.title}`.localeCompare(`${a.date}${a.title}`));
-  const budget = historyBudget(entries, payments);
+  const budget = historyBudget(entries);
   if (!ordered.length) {
     return <p className="text-sm text-ash">{copy.historyEmpty}</p>;
   }
@@ -69,19 +67,25 @@ export function HistoryView({
       ) : null}
       <ul className="divide-y divide-ink/10 border border-ink/10">
         {ordered.map((entry) => {
-          const name = labelFor(entry.title, copy);
-          const named = !CATALOG.has(entry.title);
+          const known = CATALOG.has(entry.title);
+          const category = known ? labelFor(entry.title, copy) : "";
+          const specific = entry.name.trim() || (known ? "" : entry.title);
           return (
             <li key={entry.id} className="px-4 py-4">
               <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">
                 {copy.historyKinds[entry.kind]}
-                {named ? "" : ` · ${name}`}
+                {category ? ` · ${category}` : ""}
               </p>
-              {named ? <p className="mt-1 font-serif text-2xl">{name}</p> : null}
-              <p className={`${named ? "mt-1 text-sm text-ash" : "mt-1 font-serif text-2xl"} capitalize`}>
+              {specific ? <p className="mt-1 font-serif text-2xl">{specific}</p> : null}
+              <p className={`${specific ? "mt-1 text-sm text-ash" : "mt-1 font-serif text-2xl"} capitalize`}>
                 {formatWhen(entry.date, locale, copy)}
               </p>
-              {entry.kind === "servicio" ? <p className="mt-2 text-sm">{euros(entry.amount)}</p> : null}
+              {entry.kind === "servicio" ? (
+                <p className="mt-2 text-sm">
+                  {euros(entry.amount)}
+                  {entry.paid ? "" : ` · ${copy.unpaid}`}
+                </p>
+              ) : null}
               {entry.notes ? <p className="mt-2 whitespace-pre-wrap text-sm text-ash">{entry.notes}</p> : null}
             </li>
           );
@@ -91,7 +95,15 @@ export function HistoryView({
   );
 }
 
-export function HistoryForm({ clientId, entries, payments }: { clientId: string; entries: HistoryEntry[]; payments: Payments }) {
+function nameLabel(title: string) {
+  if (title === "Tratamiento facial" || title === "Servicios de ojos") return "Nombre del tratamiento";
+  if (title === "Bonos de tratamientos" || title === "Bonos de ojos") return "Nombre del bono";
+  if (title === "Formaciones") return "Nombre de la formación";
+  if (title === "Compra de productos") return "Qué ha comprado";
+  return "Nombre";
+}
+
+export function HistoryForm({ clientId, entries }: { clientId: string; entries: HistoryEntry[] }) {
   const [kind, setKind] = useState<HistoryKind>("servicio");
   const [title, setTitle] = useState<string>(SERVICE_TITLES[0]);
   const titles = kind === "servicio" ? SERVICE_TITLES : CONTACT_TITLES;
@@ -103,7 +115,7 @@ export function HistoryForm({ clientId, entries, payments }: { clientId: string;
 
   return (
     <div className="flex flex-col gap-10">
-      <HistoryView entries={entries} payments={payments} />
+      <HistoryView entries={entries} />
       <form action="/api/admin/history" method="post" className="grid max-w-xl gap-4">
         <input type="hidden" name="clientId" value={clientId} />
         <label className="field-label">
@@ -123,9 +135,9 @@ export function HistoryForm({ clientId, entries, payments }: { clientId: string;
             ))}
           </select>
         </label>
-        {title === "Otro" || title === "Tratamiento de piel" ? (
+        {serviceNeedsName(title) ? (
           <label className="field-label">
-            {title === "Tratamiento de piel" ? "Nombre del tratamiento" : "Nombre"}
+            {nameLabel(title)}
             <input className="field" name="customTitle" required />
           </label>
         ) : null}
@@ -134,10 +146,18 @@ export function HistoryForm({ clientId, entries, payments }: { clientId: string;
           <input className="field" name="date" type="date" required />
         </label>
         {kind === "servicio" ? (
-          <label className="field-label">
-            Importe
-            <input className="field" name="amount" type="number" min="0" step="0.01" defaultValue="0" />
-          </label>
+          <>
+            <label className="field-label">
+              Importe
+              <input className="field" name="amount" type="number" min="0" step="0.01" defaultValue="0" />
+            </label>
+            {serviceNeedsName(title) && title !== "Otro" ? (
+              <label className="flex items-center gap-3 text-sm">
+                <input name="payLater" type="checkbox" value="1" />
+                Lo paga después
+              </label>
+            ) : null}
+          </>
         ) : null}
         <label className="field-label">
           Nota
@@ -154,8 +174,8 @@ export function HistoryForm({ clientId, entries, payments }: { clientId: string;
             .map((entry) => (
               <li key={entry.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
                 <p className="text-sm">
-                  {entry.kind === "servicio" ? "Servicio" : "Contacto"} · {entry.title} · {entry.date || "sin fecha"}
-                  {entry.kind === "servicio" ? ` · ${euros(entry.amount)}` : ""}
+                  {entry.kind === "servicio" ? "Servicio" : "Contacto"} · {entry.name || entry.title} · {entry.date || "sin fecha"}
+                  {entry.kind === "servicio" ? ` · ${euros(entry.amount)}${entry.paid ? "" : " · lo paga después"}` : ""}
                 </p>
                 <form action="/api/admin/history" method="post">
                   <input type="hidden" name="clientId" value={clientId} />

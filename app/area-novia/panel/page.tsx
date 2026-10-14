@@ -175,7 +175,7 @@ export default async function BridePanelPage({
           <h2 className="font-serif text-3xl">{t.historyTitle}</h2>
           <p className="mt-3 max-w-2xl text-sm text-ash">{t.historyLead}</p>
           <div className="mt-8">
-            <HistoryView entries={client.history} payments={client.payments} copy={t} locale={locale} />
+            <HistoryView entries={client.history} copy={t} locale={locale} />
           </div>
         </section>
       ) : null}

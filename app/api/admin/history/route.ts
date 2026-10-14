@@ -2,7 +2,7 @@ import { newId } from "@/lib/portal/crypto";
 import { go } from "@/lib/portal/http";
 import { requireAdmin } from "@/lib/portal/session";
 import { getClient, saveClient } from "@/lib/portal/store";
-import { CONTACT_TITLES, SERVICE_TITLES, type HistoryKind } from "@/lib/portal/types";
+import { CONTACT_TITLES, SERVICE_TITLES, serviceNeedsName, type HistoryKind } from "@/lib/portal/types";
 
 function text(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
@@ -29,15 +29,16 @@ export async function POST(request: Request) {
     const allowed: readonly string[] = kind === "contacto" ? CONTACT_TITLES : SERVICE_TITLES;
     const picked = text(form.get("title"));
     const custom = text(form.get("customTitle"));
-    const named = picked === "Otro" || picked === "Tratamiento de piel";
-    const title = named ? custom || picked : allowed.includes(picked) ? picked : allowed[0];
+    const title = allowed.includes(picked) ? picked : allowed[0];
     client.history.push({
       id: newId(),
       kind,
       title,
+      name: serviceNeedsName(title) ? custom : "",
       date: text(form.get("date")),
       notes: text(form.get("notes")),
       amount: kind === "servicio" ? money(text(form.get("amount"))) : 0,
+      paid: kind !== "servicio" || form.get("payLater") !== "1",
     });
   }
   await saveClient(client);

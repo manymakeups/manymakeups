@@ -126,17 +126,38 @@ export const SERVICE_TITLES = [
   "Maquillaje",
   "Peinado",
   "Prueba",
-  "Tratamiento de piel",
+  "Tratamiento facial",
+  "Servicios de ojos",
+  "Bonos de tratamientos",
+  "Bonos de ojos",
+  "Formaciones",
+  "Compra de productos",
   "Otro",
 ] as const;
+
+export const NAMED_SERVICE_TITLES = [
+  "Tratamiento facial",
+  "Servicios de ojos",
+  "Bonos de tratamientos",
+  "Bonos de ojos",
+  "Formaciones",
+  "Compra de productos",
+  "Otro",
+] as const;
+
+export function serviceNeedsName(title: string) {
+  return (NAMED_SERVICE_TITLES as readonly string[]).includes(title);
+}
 
 export type HistoryEntry = {
   id: string;
   kind: HistoryKind;
   title: string;
+  name: string;
   date: string;
   notes: string;
   amount: number;
+  paid: boolean;
 };
 
 export type EventDetails = {
@@ -328,16 +349,11 @@ export function euros(value: number) {
   return `${formatted.replace(/\s/g, "")} €`;
 }
 
-export function paidTotal(payments: Payments) {
-  const slices = [payments.contractor.deposit, payments.contractor.trial, payments.contractor.event];
-  return slices.reduce((sum, slice) => sum + (slice.paid ? Math.max(0, Number(slice.amount) || 0) : 0), 0);
-}
-
-export function historyBudget(entries: HistoryEntry[], payments: Payments) {
+export function historyBudget(entries: HistoryEntry[]) {
   const services = entries.filter((entry) => entry.kind === "servicio");
   const total = services.reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0);
-  const paid = paidTotal(payments);
-  return { services, total, paid, pending: Math.max(0, total - paid) };
+  const pending = services.reduce((sum, entry) => sum + (entry.paid ? 0 : Number(entry.amount) || 0), 0);
+  return { services, total, paid: Math.max(0, total - pending), pending };
 }
 
 function asSlice(value: unknown): PaymentSlice {
@@ -398,9 +414,11 @@ function asHistory(value: unknown): HistoryEntry | null {
     id: String(row.id),
     kind: row.kind,
     title: row.title ?? "",
+    name: row.name ?? "",
     date: row.date ?? "",
     notes: row.notes ?? "",
     amount: row.kind === "servicio" ? Math.max(0, Number(row.amount) || 0) : 0,
+    paid: row.kind === "servicio" ? row.paid !== false : true,
   };
 }
 
