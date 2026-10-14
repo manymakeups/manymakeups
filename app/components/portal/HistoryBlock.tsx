@@ -66,7 +66,7 @@ function BudgetGroups({ groups, copy }: { groups: BudgetGroup[]; copy: PortalCop
                 {group.slices.map((slice) => (
                   <li key={slice.id}>
                     {sliceLabel(slice.kind, copy)} · {euros(slice.amount)}
-                    {slice.paid ? "" : ` · ${copy.unpaid}`}
+                    {` · ${slice.paid ? copy.paid : copy.unpaid}`}
                   </li>
                 ))}
               </ul>
@@ -140,7 +140,7 @@ export function HistoryView({
                     {specific ? <p className="mt-1 font-serif text-2xl">{specific}</p> : null}
                     <p className="mt-2 text-sm">
                       {euros(entry.amount)}
-                      {entry.paid ? "" : ` · ${copy.unpaid}`}
+                      {` · ${entry.paid ? copy.paid : copy.unpaid}`}
                     </p>
                   </li>
                 );
@@ -185,7 +185,7 @@ export function HistoryView({
                 {entry.kind === "servicio" ? (
                   <p className="mt-2 text-sm">
                     {euros(entry.amount)}
-                    {entry.paid ? "" : ` · ${copy.unpaid}`}
+                    {` · ${entry.paid ? copy.paid : copy.unpaid}`}
                   </p>
                 ) : null}
                 {entry.notes ? <p className="mt-2 whitespace-pre-wrap text-sm text-ash">{entry.notes}</p> : null}
@@ -290,7 +290,7 @@ export function HistoryForm({
               <li key={entry.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
                 <p className="text-sm">
                   {entry.kind === "servicio" ? "Servicio" : "Contacto"} · {entry.name || entry.title} · {entry.date || "sin fecha"}
-                  {entry.kind === "servicio" ? ` · ${euros(entry.amount)}${entry.paid ? "" : " · lo paga después"}` : ""}
+                  {entry.kind === "servicio" ? ` · ${euros(entry.amount)} · ${entry.paid ? "abonado" : "lo paga después"}` : ""}
                 </p>
                 <form action="/api/admin/history" method="post">
                   <input type="hidden" name="clientId" value={clientId} />
