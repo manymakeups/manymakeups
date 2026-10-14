@@ -66,7 +66,11 @@ export function ClientCalendar({
         </div>
       </div>
 
-      <div className="mt-8 grid grid-cols-7 border-l border-t border-ink/10 text-center text-[0.62rem] uppercase tracking-[0.14em] text-ash">
+      <p className="mt-6 flex items-center gap-2 text-sm text-gilt sm:hidden">
+        <span className="inline-block h-1.5 w-1.5 rounded-full bg-gilt" />
+        {freeLabel}
+      </p>
+      <div className="mt-4 grid grid-cols-7 border-l border-t border-ink/10 text-center text-[0.62rem] uppercase tracking-[0.14em] text-ash sm:mt-8">
         {weekdayLabels().map((label) => (
           <div key={label} className="border-b border-r border-ink/10 py-2">
             {label}
@@ -76,24 +80,31 @@ export function ClientCalendar({
       <div className="grid grid-cols-7 border-l border-ink/10">
         {cells.map((date, index) => {
           if (!date) {
-            return <div key={`empty-${index}`} className="min-h-16 border-b border-r border-ink/10 bg-linen/40 sm:min-h-24" />;
+            return <div key={`empty-${index}`} className="min-h-16 border-b border-r border-ink/10 bg-linen/40 sm:min-h-28" />;
           }
           const weekday = new Date(Date.UTC(Number(date.slice(0, 4)), Number(date.slice(5, 7)) - 1, Number(date.slice(8)))).getUTCDay();
           const free = date >= today && weekday !== 0 && !busy.has(date);
           const isToday = date === today;
           const isSelected = date === selected;
-          const className = `flex min-h-20 flex-col gap-1 border-b border-r border-ink/10 p-1.5 text-left sm:min-h-28 sm:p-2 ${
+          const className = `flex min-h-16 flex-col gap-1 overflow-hidden border-b border-r border-ink/10 p-1 text-left sm:min-h-28 sm:p-2 ${
             isSelected ? "bg-ink text-porcelain" : free ? "hover:bg-linen/60" : ""
           }`;
           const inner = (
             <>
-              <span className={`text-sm ${isToday && !isSelected ? "font-medium text-gilt" : ""}`}>
+              <span className={`text-sm leading-none ${isToday && !isSelected ? "font-medium text-gilt" : ""}`}>
                 {Number(date.slice(-2))}
               </span>
               {free ? (
-                <span className={`mt-auto flex items-start gap-1 text-[0.62rem] leading-tight sm:text-[0.68rem] ${isSelected ? "text-porcelain" : "text-gilt"}`}>
-                  <span className={`mt-[0.3rem] inline-block h-1.5 w-1.5 shrink-0 rounded-full ${isSelected ? "bg-porcelain" : "bg-gilt"}`} />
-                  <span>{freeLabel}</span>
+                <span className={`mt-auto text-gilt ${isSelected ? "text-porcelain" : ""}`}>
+                  <span className={`block h-1.5 w-1.5 rounded-full sm:hidden ${isSelected ? "bg-porcelain" : "bg-gilt"}`} />
+                  <span className={`hidden w-full min-w-0 text-[0.68rem] leading-tight sm:block ${isSelected ? "text-porcelain" : "text-gilt"}`}>
+                    <span className={`mb-0.5 block h-1.5 w-1.5 rounded-full ${isSelected ? "bg-porcelain" : "bg-gilt"}`} />
+                    {freeLabel.split(" ").map((word) => (
+                      <span key={word} className="block">
+                        {word}
+                      </span>
+                    ))}
+                  </span>
                 </span>
               ) : null}
             </>

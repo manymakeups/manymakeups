@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { newId } from "@/lib/portal/crypto";
-import { allowedType, maxBytes, safeFileName } from "@/lib/portal/files";
+import { isImageUpload, maxBytes, safeFileName } from "@/lib/portal/files";
 import { go } from "@/lib/portal/http";
 import { requireAdmin } from "@/lib/portal/session";
 import { deletePortalFile, getClient, putPortalFile, saveClient } from "@/lib/portal/store";
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     .getAll("files")
     .filter((item): item is File => item instanceof File && item.size > 0);
   for (const upload of uploads) {
-    if (!allowedType("work", upload.type) || upload.size > maxBytes("work")) {
+    if (!isImageUpload(upload) || upload.size > maxBytes("work")) {
       return go(request, `/privado/novias/${client.id}?tab=${tab}&error=archivo`);
     }
     const id = newId();

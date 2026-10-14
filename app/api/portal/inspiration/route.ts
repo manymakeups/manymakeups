@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { newId } from "@/lib/portal/crypto";
-import { allowedType, INSPIRATION_MAX, maxBytes, safeFileName } from "@/lib/portal/files";
+import { INSPIRATION_MAX, isImageUpload, maxBytes, safeFileName } from "@/lib/portal/files";
 import { goPortal } from "@/lib/portal/http";
 import { clientLabel, notifyStudio } from "@/lib/portal/notify";
 import { requireClient } from "@/lib/portal/session";
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
   }
   const added: string[] = [];
   for (const upload of uploads) {
-    if (!allowedType("inspiration", upload.type) || upload.size > maxBytes("inspiration")) {
+    if (!isImageUpload(upload) || upload.size > maxBytes("inspiration")) {
       return goPortal(request, "/area-novia/panel?error=archivo");
     }
     const id = newId();

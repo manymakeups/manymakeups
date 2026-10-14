@@ -15,8 +15,16 @@ export const INSPIRATION_MAX = 24;
 export const INSPIRATION_BYTES = 8 * 1024 * 1024;
 export const DOCUMENT_BYTES = 15 * 1024 * 1024;
 
+const IMAGE_EXT = /\.(jpe?g|png|webp|heic|heif|gif)$/i;
+
 export function isImageType(mime: string) {
   return IMAGE_TYPES.has(mime);
+}
+
+export function isImageUpload(file: { type: string; name: string }) {
+  if (file.type === "image/svg+xml") return false;
+  if (file.type.startsWith("image/")) return true;
+  return IMAGE_EXT.test(file.name);
 }
 
 export function allowedType(kind: "inspiration" | "document" | "work", mime: string) {

@@ -43,7 +43,10 @@ function PhotoBook({
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") closeRef.current();
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeRef.current();
+      }
       if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
       const dir = event.key === "ArrowRight" ? 1 : -1;
       if (turnRef.current !== 0 || holdRef.current) return;
@@ -51,10 +54,10 @@ function PhotoBook({
       if (next < 0 || next >= images.length) return;
       setTurn(dir);
     }
-    window.addEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKey, true);
     return () => {
       document.body.style.overflow = previous;
-      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keydown", onKey, true);
     };
   }, [images.length]);
 
@@ -90,14 +93,15 @@ function PhotoBook({
   const under = images[Math.min(images.length - 1, Math.max(0, index + (turn === 0 ? 1 : turn)))];
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center overflow-y-auto bg-ink/70 p-4" role="presentation" onClick={onClose}>
+    <div className="fixed inset-0 z-[80]" role="presentation">
+      <button type="button" className="absolute inset-0 bg-ink/70" aria-label={closeLabel} onClick={onClose} />
       <div
         role="dialog"
         aria-modal="true"
         aria-label={page?.name || closeLabel}
-        className="flex max-h-[92vh] w-full max-w-3xl flex-col items-center"
-        onClick={(event) => event.stopPropagation()}
+        className="pointer-events-none relative flex min-h-full items-center justify-center overflow-y-auto p-4"
       >
+        <div className="pointer-events-auto flex w-[min(92vw,420px)] flex-col items-center">
         <div className="mb-4 flex w-full max-w-md items-center justify-between text-porcelain">
           <p className="text-[0.68rem] uppercase tracking-[0.16em]">
             {index + 1} / {images.length}
@@ -154,6 +158,7 @@ function PhotoBook({
             <DeleteFileButton id={page.id} clientId={clientId} kind={kind} label={removeLabel} confirmText={confirmText} />
           </div>
         ) : null}
+        </div>
       </div>
     </div>
   );
@@ -259,33 +264,92 @@ export function PhotoPicker({
   const remove = localize ? copy.remove : "Quitar";
   const confirmText = localize ? copy.removeConfirm : "¿Quitar este archivo?";
 
-  async function upload() {
-    const chosen = inputRef.current?.files;
-    if (!chosen?.length) return;
-    const body = new FormData();
-    body.set(fieldName, personKey);
-    if (tab) body.set("tab", tab);
-    body.set("clientId", clientId);
-    for (const file of chosen) body.append("files", file);
+  async function prepare(file: File) {
+    if (file.type === "image/gif" || (file.size < 1_200_000 && /jpe?g|png|webp/i.test(file.type))) return file;
+    if (typeof createImageBitmap !== "function") return file;
+    try {
+      const bitmap = await createImageBitmap(file);
+      const longest = Math.max(bitmap.width, bitmap.height);
+      const scale = Math.min(1, 1800 / longest);
+      const width = Math.max(1, Math.round(bitmap.width * scale));
+      const height = Math.max(1, Math.round(bitmap.height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext("2d");
+      if (!context) return file;
+      context.drawImage(bitmap, 0, 0, width, height);
+      bitmap.close();
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.82));
+      if (!blob) return file;
+      const name = file.name.replace(/\.[^.]+$/, "") || "foto";
+      return new File([blob], `${name}.jpg`, { type: "image/jpeg" });
+    } catch {
+      return file;
+    }
+  }
+
+  async function upload(list?: FileList | File[] | null) {
+    const chosen = [...(list ?? inputRef.current?.files ?? [])];
+    if (!chosen.length) {
+      inputRef.current?.click();
+      return;
+    }
     setBusy(true);
-    await fetch(action, { method: "POST", body });
-    window.location.reload();
+    try {
+      const ready: File[] = [];
+      for (const file of chosen) ready.push(await prepare(file));
+      const chunks: File[][] = [];
+      let chunk: File[] = [];
+      let size = 0;
+      for (const file of ready) {
+        if (chunk.length && size + file.size > 3_500_000) {
+          chunks.push(chunk);
+          chunk = [];
+          size = 0;
+        }
+        chunk.push(file);
+        size += file.size;
+      }
+      if (chunk.length) chunks.push(chunk);
+      let landed = "";
+      for (const group of chunks) {
+        const body = new FormData();
+        body.set(fieldName, personKey);
+        if (tab) body.set("tab", tab);
+        body.set("clientId", clientId);
+        for (const file of group) body.append("files", file);
+        const response = await fetch(action, { method: "POST", body });
+        landed = response.url;
+        if (response.url.includes("error=")) break;
+      }
+      if (inputRef.current) inputRef.current.value = "";
+      if (landed) {
+        const next = new URL(landed);
+        window.location.assign(`${next.pathname}${next.search}`);
+        return;
+      }
+      window.location.reload();
+    } catch {
+      setBusy(false);
+    }
   }
 
   return (
     <div className="flex flex-col gap-3">
-      <label className="field-label">
-        {fieldLabel}
-        <input
-          ref={inputRef}
-          className="field"
-          type="file"
-          accept="image/*"
-          multiple
-          disabled={busy}
-        />
-      </label>
-      <button className="btn-atelier self-start" type="button" disabled={busy} onClick={upload}>
+      <p className="field-label">{fieldLabel}</p>
+      <input
+        ref={inputRef}
+        className="sr-only"
+        type="file"
+        accept="image/*,.heic,.heif"
+        multiple
+        onChange={(event) => {
+          const picked = event.currentTarget.files;
+          if (picked?.length) void upload(picked);
+        }}
+      />
+      <button className="btn-atelier self-start" type="button" disabled={busy} onClick={() => void upload()}>
         {busy ? uploading : attach}
       </button>
       <PhotoGrid
