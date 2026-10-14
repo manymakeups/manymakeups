@@ -72,6 +72,18 @@ export type PortalCopy = {
   budgetPending: string;
   budgetUnset: string;
   requestLabel: string;
+  filterShow: string;
+  filterAll: string;
+  filterServices: string;
+  filterContacts: string;
+  filterRequests: string;
+  filterService: string;
+  filterPay: string;
+  filterWho: string;
+  filterHer: string;
+  filterGuest: string;
+  filterContact: string;
+  filterEmpty: string;
   historyKinds: { contacto: string; servicio: string };
   historyTitles: Record<string, string>;
   yourName: string;
@@ -244,6 +256,18 @@ export const portalEs: PortalCopy = {
   budgetPending: "Pendiente",
   budgetUnset: "Importe por anotar",
   requestLabel: "Solicitud",
+  filterShow: "Ver",
+  filterAll: "Todo",
+  filterServices: "Servicios",
+  filterContacts: "Contactos",
+  filterRequests: "Solicitudes",
+  filterService: "Tipo de servicio",
+  filterPay: "Pago",
+  filterWho: "Para",
+  filterHer: "Ella",
+  filterGuest: "Acompañante",
+  filterContact: "Tipo de gestión",
+  filterEmpty: "Nada coincide con estos filtros.",
   historyKinds: { contacto: "Contacto", servicio: "Servicio" },
   historyTitles: {
     Llamada: "Llamada",
@@ -461,6 +485,18 @@ export const portalEn: PortalCopy = {
   budgetPending: "Outstanding",
   budgetUnset: "Amount still to enter",
   requestLabel: "Request",
+  filterShow: "Show",
+  filterAll: "All",
+  filterServices: "Services",
+  filterContacts: "Contacts",
+  filterRequests: "Requests",
+  filterService: "Service type",
+  filterPay: "Payment",
+  filterWho: "For",
+  filterHer: "Her",
+  filterGuest: "Guest",
+  filterContact: "Kind of contact",
+  filterEmpty: "Nothing matches these filters.",
   historyKinds: { contacto: "Contact", servicio: "Service" },
   historyTitles: {
     Llamada: "Call",
@@ -677,6 +713,18 @@ export const portalFr: PortalCopy = {
   budgetPending: "Reste",
   budgetUnset: "Montant à indiquer",
   requestLabel: "Demande",
+  filterShow: "Voir",
+  filterAll: "Tout",
+  filterServices: "Services",
+  filterContacts: "Contacts",
+  filterRequests: "Demandes",
+  filterService: "Type de service",
+  filterPay: "Paiement",
+  filterWho: "Pour",
+  filterHer: "Elle",
+  filterGuest: "Accompagnant",
+  filterContact: "Type de contact",
+  filterEmpty: "Rien ne correspond à ces filtres.",
   historyKinds: { contacto: "Contact", servicio: "Service" },
   historyTitles: {
     Llamada: "Appel",

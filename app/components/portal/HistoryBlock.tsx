@@ -80,6 +80,30 @@ function BudgetGroups({ groups, copy }: { groups: BudgetGroup[]; copy: PortalCop
   );
 }
 
+type ViewFilter = "" | "servicios" | "contactos" | "solicitudes";
+type PayFilter = "" | "abonado" | "pendiente";
+type WhoFilter = "" | "ella" | "acompanante";
+
+function whoMatches(who: WhoFilter, role: "contratante" | "acompanante") {
+  if (!who) return true;
+  return who === "ella" ? role === "contratante" : role === "acompanante";
+}
+
+function filterGroup(group: BudgetGroup, service: string, pay: PayFilter, who: WhoFilter) {
+  if (!whoMatches(who, group.role)) return null;
+  if (service && !group.services.includes(service)) return null;
+  if (pay === "abonado") {
+    const slices = group.slices.filter((slice) => slice.paid);
+    return slices.length ? { ...group, slices } : null;
+  }
+  if (pay === "pendiente") {
+    const slices = group.slices.filter((slice) => !slice.paid);
+    if (group.slices.length && !slices.length) return null;
+    return { ...group, slices };
+  }
+  return group;
+}
+
 export function HistoryView({
   entries,
   event,
@@ -95,18 +119,121 @@ export function HistoryView({
   copy?: PortalCopy;
   locale?: Locale;
 }) {
+  const [view, setView] = useState<ViewFilter>("");
+  const [service, setService] = useState("");
+  const [pay, setPay] = useState<PayFilter>("");
+  const [who, setWho] = useState<WhoFilter>("");
+  const [contact, setContact] = useState("");
   const ordered = [...entries].sort((a, b) => `${b.date}${b.title}`.localeCompare(`${a.date}${a.title}`));
   const asked = [...requests].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const booked = event && payments ? clientBudget({ history: entries, event, payments }) : null;
   const history = booked?.history ?? historyBudget(entries);
   const budget = booked ?? { ...history, groups: [], total: history.total, pending: history.pending, paid: history.paid };
   const showBudget = history.services.length > 0 || budget.groups.length > 0;
+  const showServices = view === "" || view === "servicios";
+  const showContacts = view === "contactos" || (view === "" && who !== "acompanante");
+  const showRequests = view === "" || view === "solicitudes";
+  const serviceOptions = [
+    ...new Set([
+      ...SERVICE_TITLES,
+      "Sólo maquillaje",
+      "Sólo peinado",
+      "Glitter Bar",
+      "Beauty Corner",
+      ...budget.groups.flatMap((group) => group.services),
+      ...history.services.map((entry) => entry.title),
+    ]),
+  ];
+  const groups = showServices
+    ? budget.groups.flatMap((group) => {
+        const next = filterGroup(group, service, pay, who);
+        return next ? [next] : [];
+      })
+    : [];
+  const services = showServices
+    ? history.services.filter((entry) => {
+        if (!whoMatches(who, "contratante")) return false;
+        if (service && entry.title !== service) return false;
+        if (pay === "abonado") return entry.paid;
+        if (pay === "pendiente") return !entry.paid;
+        return true;
+      })
+    : [];
+  const contacts = showContacts
+    ? ordered.filter((entry) => entry.kind === "contacto" && (!contact || entry.title === contact))
+    : [];
+  const visibleRequests = showRequests
+    ? asked.filter((notice) => whoMatches(who, notice.scope === "acompanante" ? "acompanante" : "contratante"))
+    : [];
+  const logEntries = [
+    ...contacts,
+    ...(showServices ? ordered.filter((entry) => entry.kind === "servicio" && services.some((item) => item.id === entry.id)) : []),
+  ];
+  const filtering = Boolean(view || service || pay || who || contact);
   if (!ordered.length && !asked.length && !showBudget) {
     return <p className="text-sm text-ash">{copy.historyEmpty}</p>;
   }
+  const detail = groups.length > 0 || services.length > 0 || logEntries.length > 0 || visibleRequests.length > 0;
   return (
     <div className="flex flex-col gap-12">
-      {showBudget ? (
+      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
+        <label className="field-label sm:w-44">
+          {copy.filterShow}
+          <select className="field" value={view} onChange={(event) => setView(event.target.value as ViewFilter)}>
+            <option value="">{copy.filterAll}</option>
+            <option value="servicios">{copy.filterServices}</option>
+            <option value="contactos">{copy.filterContacts}</option>
+            <option value="solicitudes">{copy.filterRequests}</option>
+          </select>
+        </label>
+        {showServices ? (
+          <>
+            <label className="field-label sm:w-56">
+              {copy.filterService}
+              <select className="field" value={service} onChange={(event) => setService(event.target.value)}>
+                <option value="">{copy.filterAll}</option>
+                {serviceOptions.map((title) => (
+                  <option key={title} value={title}>
+                    {serviceLabel(title, copy)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field-label sm:w-44">
+              {copy.filterPay}
+              <select className="field" value={pay} onChange={(event) => setPay(event.target.value as PayFilter)}>
+                <option value="">{copy.filterAll}</option>
+                <option value="abonado">{copy.paid}</option>
+                <option value="pendiente">{copy.budgetPending}</option>
+              </select>
+            </label>
+          </>
+        ) : null}
+        {view !== "contactos" ? (
+          <label className="field-label sm:w-44">
+            {copy.filterWho}
+            <select className="field" value={who} onChange={(event) => setWho(event.target.value as WhoFilter)}>
+              <option value="">{copy.filterAll}</option>
+              <option value="ella">{copy.filterHer}</option>
+              <option value="acompanante">{copy.filterGuest}</option>
+            </select>
+          </label>
+        ) : null}
+        {showContacts ? (
+          <label className="field-label sm:w-52">
+            {copy.filterContact}
+            <select className="field" value={contact} onChange={(event) => setContact(event.target.value)}>
+              <option value="">{copy.filterAll}</option>
+              {CONTACT_TITLES.map((title) => (
+                <option key={title} value={title}>
+                  {labelFor(title, copy)}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
+      </div>
+      {showBudget && showServices ? (
         <section>
           <h3 className="font-serif text-3xl">{copy.budgetTitle}</h3>
           <p className="mt-3 max-w-2xl text-sm text-ash">{copy.budgetLead}</p>
@@ -124,10 +251,10 @@ export function HistoryView({
               <p className="mt-3 font-serif text-3xl">{euros(budget.pending)}</p>
             </article>
           </div>
-          <BudgetGroups groups={budget.groups} copy={copy} />
-          {history.services.length ? (
-            <ul className={`${budget.groups.length ? "mt-4" : "mt-8"} divide-y divide-ink/10 border border-ink/10`}>
-              {history.services.map((entry) => {
+          <BudgetGroups groups={groups} copy={copy} />
+          {services.length ? (
+            <ul className={`${groups.length ? "mt-4" : "mt-8"} divide-y divide-ink/10 border border-ink/10`}>
+              {services.map((entry) => {
                 const known = CATALOG.has(entry.title);
                 const category = known ? labelFor(entry.title, copy) : "";
                 const specific = entry.name.trim() || (known ? "" : entry.title);
@@ -149,9 +276,10 @@ export function HistoryView({
           ) : null}
         </section>
       ) : null}
-      {ordered.length || asked.length ? (
+      {!detail && filtering ? <p className="text-sm text-ash">{copy.filterEmpty}</p> : null}
+      {logEntries.length || visibleRequests.length ? (
         <ul className="divide-y divide-ink/10 border border-ink/10">
-          {asked.map((notice) => {
+          {visibleRequests.map((notice) => {
             const [heading, ...rest] = notice.message.split(/\n\n/);
             const body = rest.join("\n\n").trim();
             return (
@@ -168,7 +296,7 @@ export function HistoryView({
               </li>
             );
           })}
-          {ordered.map((entry) => {
+          {logEntries.map((entry) => {
             const known = CATALOG.has(entry.title);
             const category = known ? labelFor(entry.title, copy) : "";
             const specific = entry.name.trim() || (known ? "" : entry.title);
