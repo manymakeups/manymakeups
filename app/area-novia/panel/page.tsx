@@ -45,7 +45,7 @@ function fileHref(clientId: string, id: string, download = false) {
 export default async function BridePanelPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ok?: string; error?: string; tab?: string; mes?: string; com?: string; sec?: string }>;
+  searchParams: Promise<{ ok?: string; error?: string; tab?: string; mes?: string; com?: string; sec?: string; agenda?: string }>;
 }) {
   const locale = await getLocale();
   const t = getPortalCopy(locale);
@@ -53,7 +53,7 @@ export default async function BridePanelPage({
   if (!session) redirect(localePath(locale, "/area-novia"));
   const client = await getClient(session.sub);
   if (!client) redirect(localePath(locale, "/area-novia"));
-  const { ok, error, tab: tabRaw, mes, com, sec } = await searchParams;
+  const { ok, error, tab: tabRaw, mes, com, sec, agenda } = await searchParams;
   const tab = portalTab(tabRaw);
   const requests = (await listNotices()).filter((notice) => notice.clientId === client.id && notice.kind === "cambio");
   const unreadComms =
@@ -68,6 +68,7 @@ export default async function BridePanelPage({
     fotos: t.savedPhotos,
     cambio: t.changeSent,
     doc: t.sendDocumentHint,
+    agenda: t.agendaUpdated,
   };
   const errorText: Record<string, string> = {
     limite: interpolate(t.errorLimit, { max: INSPIRATION_MAX }),
@@ -239,8 +240,15 @@ export default async function BridePanelPage({
                         index={i}
                         person={person}
                         clientId={client.id}
-                        inspiration={client.inspiration}
-                        workPhotos={client.workPhotos}
+                        inspiration={client.inspiration.filter((file) => {
+                          const label = file.label;
+                          return (
+                            label === `persona-${i}` ||
+                            label === `persona-${i}-maquillaje` ||
+                            label === `persona-${i}-peinado`
+                          );
+                        })}
+                        workPhotos={client.workPhotos.filter((file) => file.label === `prueba-persona-${i}`)}
                         copy={t}
                         section={sec?.startsWith(`${i}-`) ? sec.slice(`${i}-`.length) : undefined}
                       />
@@ -370,6 +378,7 @@ export default async function BridePanelPage({
           <div className="mt-4 flex min-h-0 flex-1 flex-col">
             <SubTabs
               fill
+              initial={agenda === "historico" ? "historico" : "calendario"}
               tabs={[
                 {
                   id: "calendario",
@@ -390,7 +399,9 @@ export default async function BridePanelPage({
                 {
                   id: "historico",
                   label: t.agendaHistory,
-                  body: <AgendaView appointments={client.appointments} copy={t} locale={locale} />,
+                  body: (
+                    <AgendaView appointments={client.appointments} copy={t} locale={locale} editable />
+                  ),
                 },
               ]}
             />

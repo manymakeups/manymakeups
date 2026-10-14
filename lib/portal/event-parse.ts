@@ -36,7 +36,7 @@ function peopleFromForm(form: FormData, count: number, fallback: Attendee[]): At
       skinNotes: text(form.get(`people.${i}.skinNotes`)),
       notes: text(form.get(`people.${i}.notes`)),
       productsUsed: prev.productsUsed,
-      products: prev.products ?? [],
+      products: [...(prev.products ?? [])],
       makeupNotes: prev.makeupNotes ?? "",
       hairNotes: prev.hairNotes ?? "",
       budgetAmount: prev.budgetAmount,

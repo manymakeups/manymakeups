@@ -1,5 +1,5 @@
 import { AgendaLists, NewAppointmentModal } from "@/app/components/portal/AgendaBlock";
-import { BudgetView, HistoryComposer, HistoryForm } from "@/app/components/portal/HistoryBlock";
+import { BudgetView, HistoryForm } from "@/app/components/portal/HistoryBlock";
 import { AddCompanionModal, PersonDataForm } from "@/app/components/portal/CompanionsForm";
 import { DeleteFileButton } from "@/app/components/portal/FileActions";
 import { EventForm } from "@/app/components/portal/EventForm";
@@ -223,8 +223,13 @@ export default async function StudioClientPage({
                 initial={sec?.match(/^(\d+)/)?.[1]}
                 tabs={event.people.map((person, i) => {
                   const piece = sec?.startsWith(`${i}-`) ? sec.slice(`${i}-`.length) : undefined;
-                  const makeupPhotos = filesFor(client.inspiration, personInspirationLookKey(i, "maquillaje"));
-                  const hairPhotos = filesFor(client.inspiration, personInspirationLookKey(i, "peinado"));
+                  const ownInspiration = client.inspiration.filter((file) => {
+                    const label = file.label;
+                    return label === `persona-${i}` || label === `persona-${i}-maquillaje` || label === `persona-${i}-peinado`;
+                  });
+                  const makeupPhotos = filesFor(ownInspiration, personInspirationLookKey(i, "maquillaje"));
+                  const hairPhotos = filesFor(ownInspiration, personInspirationLookKey(i, "peinado"));
+                  const trialPhotos = filesFor(client.workPhotos, personTrialPhotoKey(i));
                   return {
                     id: String(i),
                     label: companionHeading(person, portalEs.whoOptions, `Persona ${i + 1}`),
@@ -272,7 +277,7 @@ export default async function StudioClientPage({
                             personKey={personTrialPhotoKey(i)}
                             fieldPrefix={`people.${i}.products.`}
                             products={person.productsUsed}
-                            photos={client.workPhotos}
+                            photos={trialPhotos}
                             tab="acompanantes"
                             photoSection={`${i}-fotos`}
                           />
@@ -288,7 +293,7 @@ export default async function StudioClientPage({
                             fieldPrefix={`people.${i}.products.`}
                             products={person.productsUsed}
                             productLines={productsFor(person.products, "maquillaje")}
-                            photos={client.workPhotos}
+                            photos={trialPhotos}
                             tab="acompanantes"
                           />
                         }
@@ -303,7 +308,7 @@ export default async function StudioClientPage({
                             fieldPrefix={`people.${i}.products.`}
                             products={person.productsUsed}
                             productLines={productsFor(person.products, "peinado")}
-                            photos={client.workPhotos}
+                            photos={trialPhotos}
                             tab="acompanantes"
                           />
                         }
@@ -411,7 +416,21 @@ export default async function StudioClientPage({
                 {
                   id: "nueva",
                   label: "Nueva comunicación",
-                  body: <HistoryComposer clientId={client.id} />,
+                  body: (
+                    <form action="/api/admin/notices" method="post" className="flex max-w-xl flex-col gap-3">
+                      <input type="hidden" name="intent" value="compose" />
+                      <input type="hidden" name="clientId" value={client.id} />
+                      <input type="hidden" name="next" value={`/privado/novias/${client.id}?tab=historico&com=nueva`} />
+                      <p className="text-sm text-ash">Ella lo lee en comunicaciones, firmado como Ana Zarza.</p>
+                      <label className="field-label">
+                        Mensaje
+                        <textarea className="field min-h-28" name="message" required minLength={2} />
+                      </label>
+                      <button className="btn-atelier self-start" type="submit">
+                        Enviar
+                      </button>
+                    </form>
+                  ),
                 },
               ]}
             />

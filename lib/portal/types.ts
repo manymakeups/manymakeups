@@ -25,7 +25,7 @@ export const PERSON_SERVICE_OPTIONS = [
 ] as const;
 
 export const APPOINTMENT_TITLES = ["Prueba", "Evento", "Reserva", "Otra"] as const;
-export const APPOINTMENT_STATUSES = ["planificada", "confirmada", "hecha"] as const;
+export const APPOINTMENT_STATUSES = ["planificada", "confirmada", "hecha", "anulada"] as const;
 export type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];
 
 export const CONTRACTOR_INSPIRATION = "contratante";

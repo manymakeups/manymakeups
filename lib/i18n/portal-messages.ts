@@ -161,6 +161,15 @@ export type PortalCopy = {
   agendaBookLead: string;
   agendaCalendar: string;
   agendaHistory: string;
+  agendaUpdated: string;
+  agendaOptions: string;
+  agendaModify: string;
+  agendaCancel: string;
+  agendaCancelLead: string;
+  agendaSave: string;
+  agendaTime: string;
+  agendaPlace: string;
+  agendaNotes: string;
   photoOpen: string;
   photoClose: string;
   agendaFree: string;
@@ -179,6 +188,7 @@ export type PortalCopy = {
     planificada: string;
     confirmada: string;
     hecha: string;
+    anulada: string;
   };
   documentKinds: Record<string, string>;
   recoverMailSubject: string;
@@ -428,6 +438,15 @@ export const portalEs: PortalCopy = {
   agendaBook: "Pide una cita",
   agendaCalendar: "Calendario",
   agendaHistory: "Histórico de citas",
+  agendaUpdated: "Cita actualizada.",
+  agendaOptions: "Opciones de la cita",
+  agendaModify: "Modificar",
+  agendaCancel: "Anular",
+  agendaCancelLead: "Esta cita quedará anulada.",
+  agendaSave: "Guardar cambios",
+  agendaTime: "Hora",
+  agendaPlace: "Lugar",
+  agendaNotes: "Notas",
   agendaBookLead:
     "Las casillas que estén marcadas tienen huecos disponibles. Selecciona el que mejor se adapte a tu agenda. Recuerda que hasta que no recibas mi confirmación de cita, esta no está bloqueada.",
   photoOpen: "Ver fotos",
@@ -453,6 +472,7 @@ export const portalEs: PortalCopy = {
     planificada: "Planificada",
     confirmada: "Confirmada",
     hecha: "Hecha",
+    anulada: "Anulada",
   },
   documentKinds: {
     Presupuesto: "Presupuesto",
@@ -714,6 +734,15 @@ export const portalEn: PortalCopy = {
   agendaBook: "Book an appointment",
   agendaCalendar: "Calendar",
   agendaHistory: "Appointment history",
+  agendaUpdated: "Appointment updated.",
+  agendaOptions: "Appointment options",
+  agendaModify: "Edit",
+  agendaCancel: "Cancel",
+  agendaCancelLead: "This appointment will be cancelled.",
+  agendaSave: "Save changes",
+  agendaTime: "Time",
+  agendaPlace: "Place",
+  agendaNotes: "Notes",
   agendaBookLead:
     "Marked days have openings. Choose the one that fits your diary. Until you receive my confirmation, the appointment is not held.",
   photoOpen: "View photos",
@@ -739,6 +768,7 @@ export const portalEn: PortalCopy = {
     planificada: "Planned",
     confirmada: "Confirmed",
     hecha: "Done",
+    anulada: "Cancelled",
   },
   documentKinds: {
     Presupuesto: "Quote",
@@ -999,6 +1029,15 @@ export const portalFr: PortalCopy = {
   agendaBook: "Demande un rendez-vous",
   agendaCalendar: "Calendrier",
   agendaHistory: "Historique des rendez-vous",
+  agendaUpdated: "Rendez-vous mis à jour.",
+  agendaOptions: "Options du rendez-vous",
+  agendaModify: "Modifier",
+  agendaCancel: "Annuler",
+  agendaCancelLead: "Ce rendez-vous sera annulé.",
+  agendaSave: "Enregistrer",
+  agendaTime: "Heure",
+  agendaPlace: "Lieu",
+  agendaNotes: "Notes",
   agendaBookLead:
     "Les cases marquées ont des créneaux. Choisis celui qui convient le mieux à ton agenda. Tant que tu n’as pas reçu ma confirmation, le rendez-vous n’est pas bloqué.",
   photoOpen: "Voir les photos",
@@ -1024,6 +1063,7 @@ export const portalFr: PortalCopy = {
     planificada: "Planifié",
     confirmada: "Confirmé",
     hecha: "Fait",
+    anulada: "Annulé",
   },
   documentKinds: {
     Presupuesto: "Devis",

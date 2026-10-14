@@ -344,6 +344,7 @@ export function HistoryForm({
             ))}
         </ul>
       ) : null}
+      <HistoryComposer clientId={clientId} />
     </div>
   );
 }

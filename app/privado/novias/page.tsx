@@ -51,6 +51,7 @@ export default async function StudioClientsPage({
     >
       <div className="shrink-0 pb-6">
         <NewClientModal />
+        <ClientSearch mode={mode} query={query} partida={service} />
       </div>
       <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
       <MailSetupNotice />
@@ -64,9 +65,7 @@ export default async function StudioClientsPage({
       {error === "existe" ? <PortalNotice>Ese correo ya tiene cuenta.</PortalNotice> : null}
       {ok === "eliminada" ? <PortalNotice>Clienta eliminada.</PortalNotice> : null}
 
-      <ClientSearch mode={mode} query={query} partida={service} />
-
-      <ul className="mt-12 divide-y divide-ink/10 border-t border-ink/10">
+      <ul className="divide-y divide-ink/10 border-t border-ink/10">
         {clients.length === 0 ? (
           <li className="py-6 text-sm text-ash">Todavía no hay clientas en el área.</li>
         ) : visible.length === 0 ? (

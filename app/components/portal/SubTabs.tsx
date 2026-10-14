@@ -48,18 +48,22 @@ export function SubTabs({
     <div className="flex h-full min-h-0 flex-1 flex-col">
       {bar}
       {active.nested ? (
-        tabs.map((tab) => (
-          <div
-            key={tab.id}
-            className={
-              tab.id === active.id
-                ? "flex min-h-0 flex-1 flex-col overflow-hidden pt-4 [&>*]:flex [&>*]:h-full [&>*]:min-h-0 [&>*]:flex-1 [&>*]:flex-col"
-                : "hidden"
-            }
-          >
-            {tab.body}
-          </div>
-        ))
+        tabs.map((tab) => {
+          const on = tab.id === active.id;
+          return (
+            <div
+              key={tab.id}
+              hidden={!on}
+              className={
+                on
+                  ? "flex min-h-0 flex-1 flex-col overflow-hidden pt-4 [&>*]:flex [&>*]:h-full [&>*]:min-h-0 [&>*]:flex-1 [&>*]:flex-col"
+                  : undefined
+              }
+            >
+              {tab.body}
+            </div>
+          );
+        })
       ) : (
         <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-0 pb-16 pt-6">
           {active.body}
