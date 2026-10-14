@@ -26,10 +26,10 @@ export async function POST(request: Request) {
     client.history = client.history.filter((item) => item.id !== deleteId);
   } else {
     const kind: HistoryKind = text(form.get("kind")) === "contacto" ? "contacto" : "servicio";
-    const allowed = kind === "contacto" ? CONTACT_TITLES : SERVICE_TITLES;
+    const allowed: readonly string[] = kind === "contacto" ? CONTACT_TITLES : SERVICE_TITLES;
     const picked = text(form.get("title"));
     const custom = text(form.get("customTitle"));
-    const title = picked === "Otro" ? custom || "Otro" : allowed.includes(picked as (typeof allowed)[number]) ? picked : allowed[0];
+    const title = picked === "Otro" ? custom || "Otro" : allowed.includes(picked) ? picked : allowed[0];
     client.history.push({
       id: newId(),
       kind,
