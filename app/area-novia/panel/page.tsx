@@ -1,6 +1,6 @@
 import { AgendaView } from "@/app/components/portal/AgendaBlock";
 import { ClientCalendar } from "@/app/components/portal/ClientCalendar";
-import { HistoryView } from "@/app/components/portal/HistoryBlock";
+import { BudgetView, HistoryView } from "@/app/components/portal/HistoryBlock";
 import { ChangeRequestForm } from "@/app/components/portal/ChangeRequestForm";
 import { CompanionView } from "@/app/components/portal/CompanionView";
 import { CompanionsForm } from "@/app/components/portal/CompanionsForm";
@@ -182,14 +182,17 @@ export default async function BridePanelPage({
           <h2 className="font-serif text-3xl">{t.historyTitle}</h2>
           <p className="mt-3 max-w-2xl text-sm text-ash">{t.historyLead}</p>
           <div className="mt-8">
-            <HistoryView
-              entries={client.history}
-              event={client.event}
-              payments={client.payments}
-              requests={requests}
-              copy={t}
-              locale={locale}
-            />
+            <HistoryView entries={client.history} requests={requests} copy={t} locale={locale} />
+          </div>
+        </section>
+      ) : null}
+
+      {tab === "budget" ? (
+        <section className="pt-10">
+          <h2 className="font-serif text-3xl">{t.budgetTitle}</h2>
+          <p className="mt-3 max-w-2xl text-sm text-ash">{t.budgetLead}</p>
+          <div className="mt-8">
+            <BudgetView entries={client.history} event={client.event} payments={client.payments} copy={t} />
           </div>
         </section>
       ) : null}

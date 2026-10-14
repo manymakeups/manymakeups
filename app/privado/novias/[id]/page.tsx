@@ -1,5 +1,5 @@
 import { AgendaForm } from "@/app/components/portal/AgendaBlock";
-import { HistoryForm } from "@/app/components/portal/HistoryBlock";
+import { BudgetView, HistoryForm } from "@/app/components/portal/HistoryBlock";
 import { CompanionsForm } from "@/app/components/portal/CompanionsForm";
 import { CopyInvite, DeleteFileButton } from "@/app/components/portal/FileActions";
 import { EventForm } from "@/app/components/portal/EventForm";
@@ -285,19 +285,25 @@ export default async function StudioClientPage({
 
       {tab === "historico" ? (
         <section className="pt-10">
-          <h2 className="font-serif text-3xl">Histórico y budget</h2>
+          <h2 className="font-serif text-3xl">Histórico</h2>
           <p className="mt-3 max-w-2xl text-sm text-ash">
-            Anota cada contacto y cada servicio. Ella ve lo mismo, junto con las solicitudes que te llegan al buzón. El
-            budget suma esos servicios, el del evento y el de cada acompañante.
+            Anota cada contacto y cada servicio. Ella ve los contactos y las solicitudes en su histórico. Los servicios
+            pasan al budget.
           </p>
           <div className="mt-8">
-            <HistoryForm
-              clientId={client.id}
-              entries={client.history}
-              event={client.event}
-              payments={client.payments}
-              requests={requests}
-            />
+            <HistoryForm clientId={client.id} entries={client.history} requests={requests} />
+          </div>
+        </section>
+      ) : null}
+
+      {tab === "budget" ? (
+        <section className="pt-10">
+          <h2 className="font-serif text-3xl">Budget</h2>
+          <p className="mt-3 max-w-2xl text-sm text-ash">
+            Suma los servicios del histórico, el del evento y el de cada acompañante. Ella lo ve en su pestaña de budget.
+          </p>
+          <div className="mt-8">
+            <BudgetView entries={client.history} event={client.event} payments={client.payments} />
           </div>
         </section>
       ) : null}

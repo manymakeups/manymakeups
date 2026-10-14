@@ -105,33 +105,24 @@ function filterGroup(group: BudgetGroup, service: string, pay: PayFilter, who: W
   return group;
 }
 
-export function HistoryView({
+export function BudgetView({
   entries,
   event,
   payments,
-  requests = [],
   copy = portalEs,
-  locale = "es",
 }: {
   entries: HistoryEntry[];
   event?: EventDetails;
   payments?: Payments;
-  requests?: StudioNotice[];
   copy?: PortalCopy;
-  locale?: Locale;
 }) {
   const [service, setService] = useState("");
   const [pay, setPay] = useState<PayFilter>("");
   const [budgetWho, setBudgetWho] = useState<WhoFilter>("");
-  const [contact, setContact] = useState("");
-  const [contactWho, setContactWho] = useState<WhoFilter>("");
-  const ordered = [...entries].sort((a, b) => `${b.date}${b.title}`.localeCompare(`${a.date}${a.title}`));
-  const asked = [...requests].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const booked = event && payments ? clientBudget({ history: entries, event, payments }) : null;
   const history = booked?.history ?? historyBudget(entries);
   const budget = booked ?? { ...history, groups: [], total: history.total, pending: history.pending, paid: history.paid };
   const showBudget = history.services.length > 0 || budget.groups.length > 0;
-  const serviceOptions = [...SERVICE_TITLES];
   const groups = budget.groups.flatMap((group) => {
     const next = filterGroup(group, service, pay, budgetWho);
     return next ? [next] : [];
@@ -143,6 +134,101 @@ export function HistoryView({
     if (pay === "pendiente") return !entry.paid;
     return true;
   });
+  const filtering = Boolean(service || pay || budgetWho);
+  if (!showBudget) return <p className="text-sm text-ash">{copy.budgetEmpty}</p>;
+  return (
+    <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
+        <label className="field-label sm:w-56">
+          {copy.filterService}
+          <select className="field" value={service} onChange={(event) => setService(event.target.value)}>
+            <option value="">{copy.filterAll}</option>
+            {SERVICE_TITLES.map((title) => (
+              <option key={title} value={title}>
+                {serviceLabel(title, copy)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="field-label sm:w-44">
+          {copy.filterPay}
+          <select className="field" value={pay} onChange={(event) => setPay(event.target.value as PayFilter)}>
+            <option value="">{copy.filterAll}</option>
+            <option value="abonado">{copy.paid}</option>
+            <option value="pendiente">{copy.budgetPending}</option>
+          </select>
+        </label>
+        <label className="field-label sm:w-44">
+          {copy.filterWho}
+          <select className="field" value={budgetWho} onChange={(event) => setBudgetWho(event.target.value as WhoFilter)}>
+            <option value="">{copy.filterAll}</option>
+            <option value="ella">{copy.filterHer}</option>
+            <option value="acompanante">{copy.filterGuest}</option>
+          </select>
+        </label>
+      </div>
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        <article className="border border-ink/10 bg-linen/40 p-5">
+          <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">{copy.budgetTotal}</p>
+          <p className="mt-3 font-serif text-3xl">{euros(budget.total)}</p>
+        </article>
+        <article className="border border-ink/10 bg-linen/40 p-5">
+          <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">{copy.budgetPaid}</p>
+          <p className="mt-3 font-serif text-3xl">{euros(budget.paid)}</p>
+        </article>
+        <article className="border border-ink/10 bg-linen/40 p-5">
+          <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">{copy.budgetPending}</p>
+          <p className="mt-3 font-serif text-3xl">{euros(budget.pending)}</p>
+        </article>
+      </div>
+      {groups.length || services.length ? (
+        <>
+          <BudgetGroups groups={groups} copy={copy} />
+          {services.length ? (
+            <ul className={`${groups.length ? "mt-4" : "mt-8"} divide-y divide-ink/10 border border-ink/10`}>
+              {services.map((entry) => {
+                const known = CATALOG.has(canonicalService(entry.title));
+                const category = known ? labelFor(entry.title, copy) : "";
+                const specific = entry.name.trim() || (known ? "" : entry.title);
+                return (
+                  <li key={entry.id} className="px-4 py-4">
+                    <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">
+                      {copy.historyKinds.servicio}
+                      {category ? ` · ${category}` : ""}
+                    </p>
+                    {specific ? <p className="mt-1 font-serif text-2xl">{specific}</p> : null}
+                    <p className="mt-2 text-sm">
+                      {euros(entry.amount)}
+                      {` · ${entry.paid ? copy.paid : copy.unpaid}`}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+        </>
+      ) : filtering ? (
+        <p className="mt-6 text-sm text-ash">{copy.filterEmpty}</p>
+      ) : null}
+    </div>
+  );
+}
+
+export function HistoryView({
+  entries,
+  requests = [],
+  copy = portalEs,
+  locale = "es",
+}: {
+  entries: HistoryEntry[];
+  requests?: StudioNotice[];
+  copy?: PortalCopy;
+  locale?: Locale;
+}) {
+  const [contact, setContact] = useState("");
+  const [contactWho, setContactWho] = useState<WhoFilter>("");
+  const ordered = [...entries].sort((a, b) => `${b.date}${b.title}`.localeCompare(`${a.date}${a.title}`));
+  const asked = [...requests].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const contacts = ordered.filter((entry) => {
     if (entry.kind !== "contacto") return false;
     if (contactWho === "acompanante") return false;
@@ -152,93 +238,10 @@ export function HistoryView({
     contact && contact !== "Correo"
       ? []
       : asked.filter((notice) => whoMatches(contactWho, notice.scope === "acompanante" ? "acompanante" : "contratante"));
-  const budgetFiltering = Boolean(service || pay || budgetWho);
   const contactFiltering = Boolean(contact || contactWho);
-  if (!ordered.length && !asked.length && !showBudget) {
-    return <p className="text-sm text-ash">{copy.historyEmpty}</p>;
-  }
   return (
-    <div className="flex flex-col gap-12">
-      <section>
-        <h3 className="font-serif text-3xl">{copy.budgetTitle}</h3>
-        <p className="mt-3 max-w-2xl text-sm text-ash">{copy.budgetLead}</p>
-        <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
-          <label className="field-label sm:w-56">
-            {copy.filterService}
-            <select className="field" value={service} onChange={(event) => setService(event.target.value)}>
-              <option value="">{copy.filterAll}</option>
-              {serviceOptions.map((title) => (
-                <option key={title} value={title}>
-                  {serviceLabel(title, copy)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field-label sm:w-44">
-            {copy.filterPay}
-            <select className="field" value={pay} onChange={(event) => setPay(event.target.value as PayFilter)}>
-              <option value="">{copy.filterAll}</option>
-              <option value="abonado">{copy.paid}</option>
-              <option value="pendiente">{copy.budgetPending}</option>
-            </select>
-          </label>
-          <label className="field-label sm:w-44">
-            {copy.filterWho}
-            <select className="field" value={budgetWho} onChange={(event) => setBudgetWho(event.target.value as WhoFilter)}>
-              <option value="">{copy.filterAll}</option>
-              <option value="ella">{copy.filterHer}</option>
-              <option value="acompanante">{copy.filterGuest}</option>
-            </select>
-          </label>
-        </div>
-        {showBudget ? (
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
-            <article className="border border-ink/10 bg-linen/40 p-5">
-              <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">{copy.budgetTotal}</p>
-              <p className="mt-3 font-serif text-3xl">{euros(budget.total)}</p>
-            </article>
-            <article className="border border-ink/10 bg-linen/40 p-5">
-              <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">{copy.budgetPaid}</p>
-              <p className="mt-3 font-serif text-3xl">{euros(budget.paid)}</p>
-            </article>
-            <article className="border border-ink/10 bg-linen/40 p-5">
-              <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">{copy.budgetPending}</p>
-              <p className="mt-3 font-serif text-3xl">{euros(budget.pending)}</p>
-            </article>
-          </div>
-        ) : null}
-        {groups.length || services.length ? (
-          <>
-            <BudgetGroups groups={groups} copy={copy} />
-            {services.length ? (
-              <ul className={`${groups.length ? "mt-4" : "mt-8"} divide-y divide-ink/10 border border-ink/10`}>
-                {services.map((entry) => {
-                  const known = CATALOG.has(canonicalService(entry.title));
-                  const category = known ? labelFor(entry.title, copy) : "";
-                  const specific = entry.name.trim() || (known ? "" : entry.title);
-                  return (
-                    <li key={entry.id} className="px-4 py-4">
-                      <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">
-                        {copy.historyKinds.servicio}
-                        {category ? ` · ${category}` : ""}
-                      </p>
-                      {specific ? <p className="mt-1 font-serif text-2xl">{specific}</p> : null}
-                      <p className="mt-2 text-sm">
-                        {euros(entry.amount)}
-                        {` · ${entry.paid ? copy.paid : copy.unpaid}`}
-                      </p>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : null}
-          </>
-        ) : budgetFiltering ? (
-          <p className="mt-6 text-sm text-ash">{copy.filterEmpty}</p>
-        ) : null}
-      </section>
-      <section>
-        <h3 className="font-serif text-3xl">{copy.contactsTitle}</h3>
+    <div>
+      <h3 className="font-serif text-3xl">{copy.contactsTitle}</h3>
         <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
           <label className="field-label sm:w-52">
             {copy.filterContact}
@@ -323,7 +326,6 @@ export function HistoryView({
         ) : (
           <p className="mt-6 text-sm text-ash">{contactFiltering ? copy.filterEmpty : copy.historyEmpty}</p>
         )}
-      </section>
     </div>
   );
 }
@@ -340,14 +342,10 @@ function nameLabel(title: string) {
 export function HistoryForm({
   clientId,
   entries,
-  event,
-  payments,
   requests = [],
 }: {
   clientId: string;
   entries: HistoryEntry[];
-  event: EventDetails;
-  payments: Payments;
   requests?: StudioNotice[];
 }) {
   const [kind, setKind] = useState<HistoryKind>("servicio");
@@ -361,7 +359,7 @@ export function HistoryForm({
 
   return (
     <div className="flex flex-col gap-10">
-      <HistoryView entries={entries} event={event} payments={payments} requests={requests} />
+      <HistoryView entries={entries} requests={requests} />
       <form action="/api/admin/history" method="post" className="grid max-w-xl gap-4">
         <input type="hidden" name="clientId" value={clientId} />
         <label className="field-label">

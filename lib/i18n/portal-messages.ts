@@ -45,6 +45,7 @@ export type PortalCopy = {
     documentacion: string;
     agenda: string;
     historico: string;
+    budget: string;
   };
   yourDetails: string;
   yourDetailsLead: string;
@@ -72,6 +73,7 @@ export type PortalCopy = {
   budgetPaid: string;
   budgetPending: string;
   budgetUnset: string;
+  budgetEmpty: string;
   requestLabel: string;
   filterShow: string;
   filterAll: string;
@@ -198,7 +200,7 @@ export const portalEs: PortalCopy = {
   backToSite: "Volver a la web",
   logout: "Salir",
   hello: "Hola, {name}.",
-  panelLead: "Tu ficha, la de tus acompañantes, el histórico, los pagos, los papeles y la agenda de citas.",
+  panelLead: "Tu ficha, la de tus acompañantes, el histórico, el budget, los pagos, los papeles y la agenda de citas.",
   email: "Correo",
   password: "Contraseña",
   confirmPassword: "Repite la contraseña",
@@ -240,6 +242,7 @@ export const portalEs: PortalCopy = {
     documentacion: "Documentación",
     agenda: "Agenda",
     historico: "Histórico",
+    budget: "Budget",
   },
   yourDetails: "Tus datos",
   yourDetailsLead: "Cuanto más concreto, más fácil organizo horarios y equipo.",
@@ -262,13 +265,14 @@ export const portalEs: PortalCopy = {
   historyTitle: "Histórico de contactos o solicitudes",
   historyLead: "Aquí encontrarás un extracto de tus solicitudes o cambios.",
   contactsTitle: "Contactos y solicitudes",
-  historyEmpty: "Todavía no hay contactos, solicitudes ni servicios.",
+  historyEmpty: "Todavía no hay contactos ni solicitudes.",
   budgetTitle: "Budget",
   budgetLead: "Ten controlados los pagos y conoce el detalle de todos los servicios realizados.",
   budgetTotal: "Total",
   budgetPaid: "Abonado",
   budgetPending: "Pendiente",
   budgetUnset: "Importe por anotar",
+  budgetEmpty: "Todavía no hay servicios ni importes en el budget.",
   requestLabel: "Solicitud",
   filterShow: "Ver",
   filterAll: "Todo",
@@ -450,7 +454,7 @@ export const portalEn: PortalCopy = {
   backToSite: "Back to the site",
   logout: "Log out",
   hello: "Hello, {name}.",
-  panelLead: "Your details, your guests, your history, payments, documents and the appointment diary.",
+  panelLead: "Your details, your guests, your history, your budget, payments, documents and the appointment diary.",
   email: "Email",
   password: "Password",
   confirmPassword: "Repeat password",
@@ -491,6 +495,7 @@ export const portalEn: PortalCopy = {
     documentacion: "Documents",
     agenda: "Diary",
     historico: "History",
+    budget: "Budget",
   },
   yourDetails: "Your details",
   yourDetailsLead: "The more specific you are, the easier it is to plan timing and team.",
@@ -512,13 +517,14 @@ export const portalEn: PortalCopy = {
   historyTitle: "History of contacts and requests",
   historyLead: "Here you will find a summary of your requests and changes.",
   contactsTitle: "Contacts and requests",
-  historyEmpty: "There are no contacts, requests or services yet.",
+  historyEmpty: "There are no contacts or requests yet.",
   budgetTitle: "Budget",
   budgetLead: "Keep your payments in view and see every service that has been carried out.",
   budgetTotal: "Total",
   budgetPaid: "Paid",
   budgetPending: "Outstanding",
   budgetUnset: "Amount still to enter",
+  budgetEmpty: "There are no services or amounts in the budget yet.",
   requestLabel: "Request",
   filterShow: "Show",
   filterAll: "All",
@@ -697,7 +703,7 @@ export const portalFr: PortalCopy = {
   backToSite: "Retour au site",
   logout: "Sortir",
   hello: "Bonjour, {name}.",
-  panelLead: "Ta fiche, celle de tes accompagnants, l’historique, les paiements, les papiers et l’agenda des rendez-vous.",
+  panelLead: "Ta fiche, celle de tes accompagnants, l’historique, le budget, les paiements, les papiers et l’agenda des rendez-vous.",
   email: "E-mail",
   password: "Mot de passe",
   confirmPassword: "Répète le mot de passe",
@@ -739,6 +745,7 @@ export const portalFr: PortalCopy = {
     documentacion: "Documents",
     agenda: "Agenda",
     historico: "Historique",
+    budget: "Budget",
   },
   yourDetails: "Tes informations",
   yourDetailsLead: "Plus c’est précis, plus j’organise facilement les horaires et l’équipe.",
@@ -761,13 +768,14 @@ export const portalFr: PortalCopy = {
   historyTitle: "Historique des contacts ou demandes",
   historyLead: "Tu trouveras ici un extrait de tes demandes ou changements.",
   contactsTitle: "Contacts et demandes",
-  historyEmpty: "Il n’y a pas encore de contacts, de demandes ni de services.",
+  historyEmpty: "Il n’y a pas encore de contacts ni de demandes.",
   budgetTitle: "Budget",
   budgetLead: "Garde le contrôle des paiements et le détail de tous les services réalisés.",
   budgetTotal: "Total",
   budgetPaid: "Payé",
   budgetPending: "Reste",
   budgetUnset: "Montant à indiquer",
+  budgetEmpty: "Il n’y a pas encore de services ni de montants dans le budget.",
   requestLabel: "Demande",
   filterShow: "Voir",
   filterAll: "Tout",

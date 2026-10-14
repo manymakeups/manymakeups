@@ -67,6 +67,7 @@ export const PORTAL_TABS = [
   { id: "contratante", label: "Contratante" },
   { id: "acompanantes", label: "Acompañantes" },
   { id: "historico", label: "Histórico" },
+  { id: "budget", label: "Budget" },
   { id: "facturacion", label: "Facturación" },
   { id: "documentacion", label: "Documentación" },
   { id: "agenda", label: "Agenda" },
