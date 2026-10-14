@@ -1,4 +1,5 @@
 import { ClientMenu } from "@/app/components/portal/ClientMenu";
+import { InviteModal } from "@/app/components/portal/InviteModal";
 import { ClientSearch } from "@/app/components/portal/ClientSearch";
 import { MailSetupNotice } from "@/app/components/portal/MailSetupNotice";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
@@ -28,12 +29,12 @@ function formatEventDate(value: string) {
 export default async function StudioClientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; ok?: string; por?: string; q?: string; partida?: string }>;
+  searchParams: Promise<{ error?: string; ok?: string; por?: string; q?: string; partida?: string; invite?: string; client?: string }>;
 }) {
   const admin = await requireAdmin();
   if (!admin) redirect("/privado");
   const clients = await listClients();
-  const { error, ok, por, q, partida } = await searchParams;
+  const { error, ok, por, q, partida, invite, client: inviteClient } = await searchParams;
   const mode = clientSearchMode(por);
   const query = q ?? "";
   const service = partida ?? "";
@@ -96,7 +97,8 @@ export default async function StudioClientsPage({
                   {client.passwordHash ? " · activa" : " · pendiente de activar"}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-4">
+                <InviteModal clientId={client.id} invite={inviteClient === client.id ? invite : undefined} />
                 <a className="btn-atelier" href={`/privado/novias/${client.id}`}>
                   Abrir
                 </a>

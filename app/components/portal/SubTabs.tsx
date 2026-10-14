@@ -5,40 +5,55 @@ import { useState, type ReactNode } from "react";
 export function SubTabs({
   tabs,
   initial,
-  pinned = false,
+  fill = false,
 }: {
-  tabs: { id: string; label: string; body: ReactNode }[];
+  tabs: { id: string; label: string; body: ReactNode; nested?: boolean }[];
   initial?: string;
-  pinned?: boolean;
+  fill?: boolean;
 }) {
   const start = initial && tabs.some((tab) => tab.id === initial) ? initial : tabs[0]?.id;
   const [current, setCurrent] = useState(start);
   const active = tabs.find((tab) => tab.id === current) ?? tabs[0];
   if (!active) return null;
-  return (
-    <div>
-      <div
-        className={`flex flex-wrap gap-x-6 border-b border-ink/10 ${pinned ? "sticky top-0 z-20 bg-porcelain" : ""}`}
-      >
-        {tabs.map((tab) => {
-          const on = tab.id === active.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              className={
-                on
-                  ? "border-b-2 border-gilt px-1 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ink"
-                  : "border-b-2 border-transparent px-1 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ash hover:text-ink"
-              }
-              onClick={() => setCurrent(tab.id)}
-            >
-              {tab.label}
-            </button>
-          );
-        })}
+  const bar = (
+    <div className="flex shrink-0 flex-wrap gap-x-6 border-b border-ink/10 bg-porcelain">
+      {tabs.map((tab) => {
+        const on = tab.id === active.id;
+        return (
+          <button
+            key={tab.id}
+            type="button"
+            className={
+              on
+                ? "border-b-2 border-gilt px-1 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ink"
+                : "border-b-2 border-transparent px-1 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ash hover:text-ink"
+            }
+            onClick={() => setCurrent(tab.id)}
+          >
+            {tab.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+  if (!fill) {
+    return (
+      <div>
+        {bar}
+        <div className="pt-8">{active.body}</div>
       </div>
-      <div className="pt-8">{active.body}</div>
+    );
+  }
+  return (
+    <div className="flex h-full min-h-0 flex-1 flex-col">
+      {bar}
+      {active.nested ? (
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden pt-4">{active.body}</div>
+      ) : (
+        <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-0 pb-16 pt-6">
+          {active.body}
+        </div>
+      )}
     </div>
   );
 }
@@ -52,6 +67,7 @@ export function EventSections({
   photos,
   makeupProducts,
   hairProducts,
+  notes,
 }: {
   labels: {
     data: string;
@@ -61,6 +77,7 @@ export function EventSections({
     trial: string;
     photos: string;
     products: string;
+    notes: string;
   };
   section?: string;
   details: ReactNode;
@@ -69,19 +86,26 @@ export function EventSections({
   photos: ReactNode;
   makeupProducts: ReactNode;
   hairProducts: ReactNode;
+  notes: ReactNode;
 }) {
-  const inTrial = section === "fotos" || section === "productos" || section?.startsWith("productos-");
+  const inProducts = section === "productos" || section?.startsWith("productos-") || section === "notas";
+  const inTrial = section === "fotos" || inProducts;
   const inInspiration = section === "maquillaje" || section === "peinado";
+  const productTab =
+    section === "productos-peinado" ? "peinado" : section === "productos-notas" || section === "notas" ? "notas" : "maquillaje";
   return (
     <SubTabs
+      fill
       initial={inTrial ? "prueba" : inInspiration ? "inspiraciones" : "datos"}
       tabs={[
         { id: "datos", label: labels.data, body: details },
         {
           id: "inspiraciones",
           label: labels.inspirations,
+          nested: true,
           body: (
             <SubTabs
+              fill
               initial={section === "peinado" ? "peinado" : "maquillaje"}
               tabs={[
                 { id: "maquillaje", label: labels.makeup, body: makeupInspiration },
@@ -93,20 +117,25 @@ export function EventSections({
         {
           id: "prueba",
           label: labels.trial,
+          nested: true,
           body: (
             <SubTabs
-              initial={section?.startsWith("productos") ? "productos" : "fotos"}
+              fill
+              initial={inProducts ? "productos" : "fotos"}
               tabs={[
                 { id: "fotos", label: labels.photos, body: photos },
                 {
                   id: "productos",
                   label: labels.products,
+                  nested: true,
                   body: (
                     <SubTabs
-                      initial={section === "productos-peinado" ? "peinado" : "maquillaje"}
+                      fill
+                      initial={productTab}
                       tabs={[
                         { id: "maquillaje", label: labels.makeup, body: makeupProducts },
                         { id: "peinado", label: labels.hair, body: hairProducts },
+                        { id: "notas", label: labels.notes, body: notes },
                       ]}
                     />
                   ),

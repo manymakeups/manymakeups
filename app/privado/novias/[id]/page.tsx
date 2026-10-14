@@ -1,17 +1,16 @@
 import { AgendaForm } from "@/app/components/portal/AgendaBlock";
 import { BudgetView, HistoryForm } from "@/app/components/portal/HistoryBlock";
-import { AddCompanionForm, PersonDataForm } from "@/app/components/portal/CompanionsForm";
+import { AddCompanionModal, PersonDataForm } from "@/app/components/portal/CompanionsForm";
 import { DeleteFileButton } from "@/app/components/portal/FileActions";
 import { EventForm } from "@/app/components/portal/EventForm";
 import { MailSetupNotice } from "@/app/components/portal/MailSetupNotice";
 import { PaymentsForm } from "@/app/components/portal/PaymentsBlock";
 import { PhotoGrid } from "@/app/components/portal/PhotoPicker";
-import { InviteModal } from "@/app/components/portal/InviteModal";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { PortalTabs } from "@/app/components/portal/PortalTabs";
 import { EventSections, SubTabs } from "@/app/components/portal/SubTabs";
 import { StudioAside } from "@/app/components/portal/StudioAside";
-import { WorkForm } from "@/app/components/portal/WorkBlock";
+import { LookNotesForm, WorkForm } from "@/app/components/portal/WorkBlock";
 import { portalEs } from "@/lib/i18n/portal-messages";
 import { companionHeading, fullName } from "@/lib/portal/names";
 import { portalFileHref } from "@/lib/portal/files";
@@ -42,7 +41,7 @@ export default async function StudioClientPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ invite?: string; ok?: string; error?: string; tab?: string; com?: string; sec?: string }>;
+  searchParams: Promise<{ ok?: string; error?: string; tab?: string; com?: string; sec?: string }>;
 }) {
   const admin = await requireAdmin();
   if (!admin) redirect("/privado");
@@ -50,9 +49,10 @@ export default async function StudioClientPage({
   const client = await getClient(id);
   if (!client) notFound();
   const requests = (await listNotices()).filter((notice) => notice.clientId === client.id && notice.kind === "cambio");
-  const { invite, ok, error, tab: tabRaw, com, sec } = await searchParams;
+  const { ok, error, tab: tabRaw, com, sec } = await searchParams;
   const event = client.event;
   const tab = portalTab(tabRaw);
+  const panel = tab === "contratante" || tab === "acompanantes" || tab === "historico";
 
   return (
     <PortalFrame
@@ -71,13 +71,17 @@ export default async function StudioClientPage({
       }
     >
       <div className="shrink-0">
-      <div className="mt-6">
-        <InviteModal clientId={client.id} invite={invite} />
+        <PortalTabs basePath={`/privado/novias/${client.id}`} active={tab} />
       </div>
-      <PortalTabs basePath={`/privado/novias/${client.id}`} active={tab} />
-      </div>
-      <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
-      <div className="pt-6">
+      <div
+        className={
+          panel
+            ? "flex min-h-0 flex-1 flex-col overflow-hidden pb-4"
+            : "min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16"
+        }
+        {...(panel ? {} : { "data-portal-scroll": "" })}
+      >
+      <div className="shrink-0 pt-6">
       {ok === "doc" ? <PortalNotice>Documento colgado.</PortalNotice> : null}
       {ok === "pagos" ? <PortalNotice>Pagos actualizados.</PortalNotice> : null}
       {ok === "agenda" ? <PortalNotice>Agenda actualizada.</PortalNotice> : null}
@@ -103,7 +107,7 @@ export default async function StudioClientPage({
       </div>
 
       {tab === "contratante" ? (
-        <section className="pt-8">
+        <section className="flex min-h-0 flex-1 flex-col pt-4">
           <EventSections
             section={sec}
             labels={{
@@ -114,6 +118,7 @@ export default async function StudioClientPage({
               trial: "Prueba",
               photos: "Fotografías",
               products: "Productos",
+              notes: "Notas / comentarios",
             }}
             details={
               <div>
@@ -173,7 +178,6 @@ export default async function StudioClientPage({
               <WorkForm
                 mode="products"
                 look="maquillaje"
-                notes={event.makeupNotes}
                 section="productos-maquillaje"
                 clientId={client.id}
                 personKey={CONTRACTOR_TRIAL_PHOTOS}
@@ -188,7 +192,6 @@ export default async function StudioClientPage({
               <WorkForm
                 mode="products"
                 look="peinado"
-                notes={event.hairNotes}
                 section="productos-peinado"
                 clientId={client.id}
                 personKey={CONTRACTOR_TRIAL_PHOTOS}
@@ -199,114 +202,137 @@ export default async function StudioClientPage({
                 tab="contratante"
               />
             }
+            notes={
+              <LookNotesForm
+                clientId={client.id}
+                tab="contratante"
+                section="productos-notas"
+                makeupNotes={event.makeupNotes}
+                hairNotes={event.hairNotes}
+              />
+            }
           />
         </section>
       ) : null}
 
       {tab === "acompanantes" ? (
-        <section className="pt-8">
-          <h2 className="font-serif text-3xl">Acompañantes</h2>
-          <p className="mt-3 max-w-2xl text-sm text-ash">
+        <section className="flex min-h-0 flex-1 flex-col pt-4">
+          <div className="flex shrink-0 items-center justify-between gap-4">
+            <h2 className="font-serif text-3xl">Acompañantes</h2>
+            <AddCompanionModal clientId={client.id} action="/api/admin/companions" copy={portalEs} includeClientId />
+          </div>
+          <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">
             Corrige nombre, parentesco y servicio en Datos. Inspiraciones y prueba van en sus pestañas.
           </p>
-          <div className="mt-8 flex flex-col gap-10">
-            {event.people.map((person, i) => {
-              const piece = sec?.startsWith(`${i}-`) ? sec.slice(`${i}-`.length) : undefined;
-              const makeupPhotos = filesFor(client.inspiration, personInspirationLookKey(i, "maquillaje"));
-              const hairPhotos = filesFor(client.inspiration, personInspirationLookKey(i, "peinado"));
-              return (
-                <article key={i} className="border border-ink/10 p-5">
-                  <p className="font-serif text-2xl">{companionHeading(person, portalEs.whoOptions, `Persona ${i + 1}`)}</p>
-                  <div className="mt-6">
-                    <EventSections
-                      section={piece}
-                      labels={{
-                        data: "Datos del evento",
-                        inspirations: "Inspiraciones",
-                        makeup: "Maquillaje",
-                        hair: "Peinado",
-                        trial: "Prueba",
-                        photos: "Fotografías",
-                        products: "Productos",
-                      }}
-                      details={
-                        <PersonDataForm
-                          person={person}
-                          index={i}
-                          clientId={client.id}
-                          action="/api/admin/companions"
-                          copy={portalEs}
-                        />
-                      }
-                      makeupInspiration={
-                        makeupPhotos.length ? (
-                          <PhotoGrid files={makeupPhotos} clientId={client.id} kind="inspiration" />
-                        ) : (
-                          <p className="text-sm text-ash">Todavía no ha colgado fotos de maquillaje.</p>
-                        )
-                      }
-                      hairInspiration={
-                        hairPhotos.length ? (
-                          <PhotoGrid files={hairPhotos} clientId={client.id} kind="inspiration" />
-                        ) : (
-                          <p className="text-sm text-ash">Todavía no ha colgado fotos de peinado.</p>
-                        )
-                      }
-                      photos={
-                        <WorkForm
-                          mode="photos"
-                          clientId={client.id}
-                          personKey={personTrialPhotoKey(i)}
-                          fieldPrefix={`people.${i}.products.`}
-                          products={person.productsUsed}
-                          photos={client.workPhotos}
-                          tab="acompanantes"
-                          photoSection={`${i}-fotos`}
-                        />
-                      }
-                      makeupProducts={
-                        <WorkForm
-                          mode="products"
-                          look="maquillaje"
-                          notes={person.makeupNotes}
-                          section={`${i}-productos-maquillaje`}
-                          personIndex={i}
-                          clientId={client.id}
-                          personKey={personTrialPhotoKey(i)}
-                          fieldPrefix={`people.${i}.products.`}
-                          products={person.productsUsed}
-                          productLines={productsFor(person.products, "maquillaje")}
-                          photos={client.workPhotos}
-                          tab="acompanantes"
-                        />
-                      }
-                      hairProducts={
-                        <WorkForm
-                          mode="products"
-                          look="peinado"
-                          notes={person.hairNotes}
-                          section={`${i}-productos-peinado`}
-                          personIndex={i}
-                          clientId={client.id}
-                          personKey={personTrialPhotoKey(i)}
-                          fieldPrefix={`people.${i}.products.`}
-                          products={person.productsUsed}
-                          productLines={productsFor(person.products, "peinado")}
-                          photos={client.workPhotos}
-                          tab="acompanantes"
-                        />
-                      }
-                    />
-                  </div>
-                </article>
-              );
-            })}
-            <AddCompanionForm
-              clientId={client.id}
-              action="/api/admin/companions"
-              copy={portalEs}
-              includeClientId
-            />
+          <div className="mt-4 min-h-0 flex-1">
+            {event.people.length ? (
+              <SubTabs
+                fill
+                initial={sec?.match(/^(\d+)/)?.[1]}
+                tabs={event.people.map((person, i) => {
+                  const piece = sec?.startsWith(`${i}-`) ? sec.slice(`${i}-`.length) : undefined;
+                  const makeupPhotos = filesFor(client.inspiration, personInspirationLookKey(i, "maquillaje"));
+                  const hairPhotos = filesFor(client.inspiration, personInspirationLookKey(i, "peinado"));
+                  return {
+                    id: String(i),
+                    label: companionHeading(person, portalEs.whoOptions, `Persona ${i + 1}`),
+                    nested: true,
+                    body: (
+                      <EventSections
+                        section={piece}
+                        labels={{
+                          data: "Datos del evento",
+                          inspirations: "Inspiraciones",
+                          makeup: "Maquillaje",
+                          hair: "Peinado",
+                          trial: "Prueba",
+                          photos: "Fotografías",
+                          products: "Productos",
+                          notes: "Notas / comentarios",
+                        }}
+                        details={
+                          <PersonDataForm
+                            person={person}
+                            index={i}
+                            clientId={client.id}
+                            action="/api/admin/companions"
+                            copy={portalEs}
+                          />
+                        }
+                        makeupInspiration={
+                          makeupPhotos.length ? (
+                            <PhotoGrid files={makeupPhotos} clientId={client.id} kind="inspiration" />
+                          ) : (
+                            <p className="text-sm text-ash">Todavía no ha colgado fotos de maquillaje.</p>
+                          )
+                        }
+                        hairInspiration={
+                          hairPhotos.length ? (
+                            <PhotoGrid files={hairPhotos} clientId={client.id} kind="inspiration" />
+                          ) : (
+                            <p className="text-sm text-ash">Todavía no ha colgado fotos de peinado.</p>
+                          )
+                        }
+                        photos={
+                          <WorkForm
+                            mode="photos"
+                            clientId={client.id}
+                            personKey={personTrialPhotoKey(i)}
+                            fieldPrefix={`people.${i}.products.`}
+                            products={person.productsUsed}
+                            photos={client.workPhotos}
+                            tab="acompanantes"
+                            photoSection={`${i}-fotos`}
+                          />
+                        }
+                        makeupProducts={
+                          <WorkForm
+                            mode="products"
+                            look="maquillaje"
+                            section={`${i}-productos-maquillaje`}
+                            personIndex={i}
+                            clientId={client.id}
+                            personKey={personTrialPhotoKey(i)}
+                            fieldPrefix={`people.${i}.products.`}
+                            products={person.productsUsed}
+                            productLines={productsFor(person.products, "maquillaje")}
+                            photos={client.workPhotos}
+                            tab="acompanantes"
+                          />
+                        }
+                        hairProducts={
+                          <WorkForm
+                            mode="products"
+                            look="peinado"
+                            section={`${i}-productos-peinado`}
+                            personIndex={i}
+                            clientId={client.id}
+                            personKey={personTrialPhotoKey(i)}
+                            fieldPrefix={`people.${i}.products.`}
+                            products={person.productsUsed}
+                            productLines={productsFor(person.products, "peinado")}
+                            photos={client.workPhotos}
+                            tab="acompanantes"
+                          />
+                        }
+                        notes={
+                          <LookNotesForm
+                            clientId={client.id}
+                            tab="acompanantes"
+                            section={`${i}-productos-notas`}
+                            personIndex={i}
+                            makeupNotes={person.makeupNotes}
+                            hairNotes={person.hairNotes}
+                          />
+                        }
+                      />
+                    ),
+                  };
+                })}
+              />
+            ) : (
+              <p className="pt-6 text-sm text-ash">Todavía no hay acompañantes.</p>
+            )}
           </div>
         </section>
       ) : null}
@@ -369,11 +395,11 @@ export default async function StudioClientPage({
       ) : null}
 
       {tab === "historico" ? (
-        <section className="pt-8">
-          <h2 className="font-serif text-3xl">Comunicaciones</h2>
-          <div className="mt-8">
+        <section className="flex min-h-0 flex-1 flex-col pt-4">
+          <h2 className="shrink-0 font-serif text-3xl">Comunicaciones</h2>
+          <div className="mt-4 min-h-0 flex-1">
             <SubTabs
-              pinned
+              fill
               initial={com === "nueva" || ok === "mensaje" ? "nueva" : "historico"}
               tabs={[
                 {

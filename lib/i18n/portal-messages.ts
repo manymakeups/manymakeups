@@ -72,6 +72,7 @@ export type PortalCopy = {
   addCompanion: string;
   lookNotes: string;
   productsTab: string;
+  notesTab: string;
   commsHistory: string;
   commsWrite: string;
   commsWait: string;
@@ -288,6 +289,7 @@ export const portalEs: PortalCopy = {
   addCompanion: "Añadir acompañante",
   lookNotes: "Notas para clonar el look",
   productsTab: "Productos",
+  notesTab: "Notas / comentarios",
   commsHistory: "Histórico",
   commsWrite: "Nueva comunicación",
   commsWait: "Cuando la ficha esté guardada, puedes escribirme desde aquí.",
@@ -565,6 +567,7 @@ export const portalEn: PortalCopy = {
   addCompanion: "Add a guest",
   lookNotes: "Notes to recreate the look",
   productsTab: "Products",
+  notesTab: "Notes / comments",
   commsHistory: "History",
   commsWrite: "New message",
   commsWait: "Once the details are saved, you can write to me from here.",
@@ -841,6 +844,7 @@ export const portalFr: PortalCopy = {
   addCompanion: "Ajouter un accompagnant",
   lookNotes: "Notes pour reproduire le look",
   productsTab: "Produits",
+  notesTab: "Notes / commentaires",
   commsHistory: "Historique",
   commsWrite: "Nouveau message",
   commsWait: "Quand la fiche est enregistrée, tu peux m’écrire d’ici.",

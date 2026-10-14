@@ -16,5 +16,5 @@ export async function POST(request: Request) {
   client.inviteExpiresAt = new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString();
   await saveClient(client);
   const invite = `${site.url}/area-novia/activar?token=${encodeURIComponent(token)}`;
-  return go(request, `/privado/novias/${client.id}?invite=${encodeURIComponent(invite)}`);
+  return go(request, `/privado/novias?invite=${encodeURIComponent(invite)}&client=${client.id}`);
 }

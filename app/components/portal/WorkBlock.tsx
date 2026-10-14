@@ -193,7 +193,6 @@ export function WorkForm({
   tab,
   mode = "both",
   look = "maquillaje",
-  notes = "",
   section = "productos",
   photoSection = "fotos",
   personIndex,
@@ -207,7 +206,6 @@ export function WorkForm({
   tab: string;
   mode?: "both" | "photos" | "products";
   look?: "maquillaje" | "peinado";
-  notes?: string;
   section?: string;
   photoSection?: string;
   personIndex?: number;
@@ -227,10 +225,6 @@ export function WorkForm({
             <p className="whitespace-pre-wrap text-sm text-ash">{products}</p>
           ) : null}
           <ProductFields prefix={fieldPrefix} products={productLines} look={look} />
-          <label className="field-label">
-            Notas para clonar el look
-            <textarea className="field min-h-28" name="lookNotes" defaultValue={notes} />
-          </label>
           <button className="btn-atelier self-start" type="submit">
             Guardar productos
           </button>
@@ -254,6 +248,71 @@ export function WorkForm({
           ) : null}
         </>
       ) : null}
+    </div>
+  );
+}
+
+export function LookNotesForm({
+  clientId,
+  tab,
+  section,
+  personIndex,
+  makeupNotes,
+  hairNotes,
+}: {
+  clientId: string;
+  tab: string;
+  section: string;
+  personIndex?: number;
+  makeupNotes: string;
+  hairNotes: string;
+}) {
+  return (
+    <form action="/api/admin/studio" method="post" className="flex max-w-xl flex-col gap-4">
+      <input type="hidden" name="intent" value="notes" />
+      <input type="hidden" name="clientId" value={clientId} />
+      <input type="hidden" name="tab" value={tab} />
+      <input type="hidden" name="section" value={section} />
+      <input type="hidden" name="productTarget" value={personIndex == null ? "event" : "person"} />
+      {personIndex != null ? <input type="hidden" name="personIndex" value={personIndex} /> : null}
+      <label className="field-label">
+        Maquillaje
+        <textarea className="field min-h-28" name="makeupNotes" defaultValue={makeupNotes} />
+      </label>
+      <label className="field-label">
+        Peinado
+        <textarea className="field min-h-28" name="hairNotes" defaultValue={hairNotes} />
+      </label>
+      <button className="btn-atelier self-start" type="submit">
+        Guardar notas
+      </button>
+    </form>
+  );
+}
+
+export function LookNotesView({
+  makeupNotes,
+  hairNotes,
+  makeupLabel,
+  hairLabel,
+  empty,
+}: {
+  makeupNotes: string;
+  hairNotes: string;
+  makeupLabel: string;
+  hairLabel: string;
+  empty: string;
+}) {
+  return (
+    <div className="flex max-w-xl flex-col gap-6">
+      <div>
+        <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">{makeupLabel}</p>
+        <p className="mt-2 whitespace-pre-wrap text-sm">{makeupNotes || empty}</p>
+      </div>
+      <div>
+        <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">{hairLabel}</p>
+        <p className="mt-2 whitespace-pre-wrap text-sm">{hairNotes || empty}</p>
+      </div>
     </div>
   );
 }

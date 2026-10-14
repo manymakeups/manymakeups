@@ -3,7 +3,7 @@ import { ClientCalendar } from "@/app/components/portal/ClientCalendar";
 import { BudgetView, HistoryView } from "@/app/components/portal/HistoryBlock";
 import { ChangeRequestForm } from "@/app/components/portal/ChangeRequestForm";
 import { CompanionView } from "@/app/components/portal/CompanionView";
-import { AddCompanionForm, CompanionsForm } from "@/app/components/portal/CompanionsForm";
+import { AddCompanionModal, CompanionsForm } from "@/app/components/portal/CompanionsForm";
 import { EventForm } from "@/app/components/portal/EventForm";
 import { EventView } from "@/app/components/portal/EventView";
 import { PaymentsView } from "@/app/components/portal/PaymentsBlock";
@@ -11,7 +11,7 @@ import { PhotoPicker } from "@/app/components/portal/PhotoPicker";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { PortalTabs } from "@/app/components/portal/PortalTabs";
 import { EventSections, SubTabs } from "@/app/components/portal/SubTabs";
-import { WorkView } from "@/app/components/portal/WorkBlock";
+import { LookNotesView, WorkView } from "@/app/components/portal/WorkBlock";
 import { studioBusyDates } from "@/lib/portal/availability";
 import { madridToday, parseMonth } from "@/lib/portal/calendar";
 import { INSPIRATION_MAX } from "@/lib/portal/files";
@@ -55,6 +55,8 @@ export default async function BridePanelPage({
   const requests = (await listNotices()).filter((notice) => notice.clientId === client.id && notice.kind === "cambio");
   const { ok, error, tab: tabRaw, mes, com, sec } = await searchParams;
   const tab = portalTab(tabRaw);
+  const lockedPanels =
+    tab === "contratante" || tab === "historico" || (tab === "acompanantes" && client.event.peopleLocked);
   const today = madridToday();
   const { year: initialYear, month: initialMonth } = parseMonth(mes, today);
   const busyDates = tab === "agenda" ? await studioBusyDates() : [];
@@ -91,12 +93,19 @@ export default async function BridePanelPage({
           labels={t.tabs}
         />
       </div>
-      <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
+      <div
+        className={
+          lockedPanels
+            ? "flex min-h-0 flex-1 flex-col overflow-hidden"
+            : "min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16"
+        }
+        {...(lockedPanels ? {} : { "data-portal-scroll": "" })}
+      >
       {ok && okText[ok] ? <div className="pt-6"><PortalNotice>{okText[ok]}</PortalNotice></div> : null}
       {error && errorText[error] ? <div className="pt-6"><PortalNotice>{errorText[error]}</PortalNotice></div> : null}
 
       {tab === "contratante" ? (
-        <section className="pt-8">
+        <section className="flex min-h-0 flex-1 flex-col pt-4">
           <EventSections
             section={sec}
             labels={{
@@ -107,6 +116,7 @@ export default async function BridePanelPage({
               trial: t.trialHeading,
               photos: t.photosTab,
               products: t.productsTab,
+              notes: t.notesTab,
             }}
             details={
               <div>
@@ -173,7 +183,6 @@ export default async function BridePanelPage({
                 photos={[]}
                 clientId={client.id}
                 copy={t}
-                notes={client.event.makeupNotes}
               />
             }
             hairProducts={
@@ -184,7 +193,15 @@ export default async function BridePanelPage({
                 photos={[]}
                 clientId={client.id}
                 copy={t}
-                notes={client.event.hairNotes}
+              />
+            }
+            notes={
+              <LookNotesView
+                makeupNotes={client.event.makeupNotes}
+                hairNotes={client.event.hairNotes}
+                makeupLabel={t.makeupTab}
+                hairLabel={t.hairTab}
+                empty="—"
               />
             }
           />
@@ -192,28 +209,42 @@ export default async function BridePanelPage({
       ) : null}
 
       {tab === "acompanantes" ? (
-        <section className="pt-10">
-          <h2 className="font-serif text-3xl">{t.companionsTitle}</h2>
-          <p className="mt-3 max-w-2xl text-sm text-ash">
+        <section className={client.event.peopleLocked ? "flex min-h-0 flex-1 flex-col pt-4" : "pt-10"}>
+          <div className="flex shrink-0 items-center justify-between gap-4">
+            <h2 className="font-serif text-3xl">{t.companionsTitle}</h2>
+            {client.event.peopleLocked ? (
+              <AddCompanionModal clientId={client.id} action="/api/portal/companions" copy={t} />
+            ) : null}
+          </div>
+          <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">
             {client.event.peopleLocked ? t.lockedLead : t.companionsLead}
           </p>
-          <div className="mt-8">
+          <div className={client.event.peopleLocked ? "mt-4 min-h-0 flex-1" : "mt-8"}>
             {client.event.peopleLocked ? (
-              <div className="flex flex-col gap-8">
-                {client.event.people.map((person, i) => (
-                  <CompanionView
-                    key={i}
-                    index={i}
-                    person={person}
-                    clientId={client.id}
-                    inspiration={client.inspiration}
-                    workPhotos={client.workPhotos}
-                    copy={t}
-                    section={sec?.startsWith(`${i}-`) ? sec.slice(`${i}-`.length) : undefined}
-                  />
-                ))}
-                <AddCompanionForm clientId={client.id} action="/api/portal/companions" copy={t} />
-              </div>
+              client.event.people.length ? (
+                <SubTabs
+                  fill
+                  initial={sec?.match(/^(\d+)/)?.[1]}
+                  tabs={client.event.people.map((person, i) => ({
+                    id: String(i),
+                    label: companionHeading(person, t.whoOptions, interpolate(t.personN, { n: i + 1 })),
+                    nested: true,
+                    body: (
+                      <CompanionView
+                        index={i}
+                        person={person}
+                        clientId={client.id}
+                        inspiration={client.inspiration}
+                        workPhotos={client.workPhotos}
+                        copy={t}
+                        section={sec?.startsWith(`${i}-`) ? sec.slice(`${i}-`.length) : undefined}
+                      />
+                    ),
+                  }))}
+                />
+              ) : (
+                <p className="pt-6 text-sm text-ash">{t.noCompanions}</p>
+              )
             ) : (
               <CompanionsForm
                 event={client.event}
@@ -230,11 +261,11 @@ export default async function BridePanelPage({
       ) : null}
 
       {tab === "historico" ? (
-        <section className="pt-8">
-          <h2 className="font-serif text-3xl">{t.historyTitle}</h2>
-          <div className="mt-8">
+        <section className="flex min-h-0 flex-1 flex-col pt-4">
+          <h2 className="shrink-0 font-serif text-3xl">{t.historyTitle}</h2>
+          <div className="mt-4 min-h-0 flex-1">
             <SubTabs
-              pinned
+              fill
               initial={com === "nueva" || ok === "cambio" || error === "cambio" ? "nueva" : "historico"}
               tabs={[
                 {

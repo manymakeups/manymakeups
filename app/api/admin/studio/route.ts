@@ -35,12 +35,29 @@ export async function POST(request: Request) {
   const tab = text(form.get("tab")) || "contratante";
   const client = await getClient(id);
   if (!client) return go(request, "/privado/novias?error=datos");
+  if (text(form.get("intent")) === "notes") {
+    const makeupNotes = text(form.get("makeupNotes"));
+    const hairNotes = text(form.get("hairNotes"));
+    if (text(form.get("productTarget")) === "person") {
+      const index = Number(text(form.get("personIndex")));
+      const person = client.event.people[index];
+      if (person) {
+        person.makeupNotes = makeupNotes;
+        person.hairNotes = hairNotes;
+      }
+    } else {
+      client.event.makeupNotes = makeupNotes;
+      client.event.hairNotes = hairNotes;
+    }
+    await saveClient(client);
+    const section = text(form.get("section"));
+    const extra = section ? `&sec=${encodeURIComponent(section)}` : "";
+    return go(request, `/privado/novias/${client.id}?tab=${encodeURIComponent(tab)}${extra}&ok=estudio`);
+  }
   const lookRaw = text(form.get("productLook"));
   const look = lookRaw === "peinado" || lookRaw === "maquillaje" ? lookRaw : "";
   if (look && text(form.get("productTarget")) === "event") {
     client.event.products = mergeLook(client.event.products, productsFrom(form, "products.", look), look);
-    if (look === "peinado") client.event.hairNotes = text(form.get("lookNotes"));
-    else client.event.makeupNotes = text(form.get("lookNotes"));
     if (client.event.products.length) client.event.productsUsed = "";
   } else if (form.has("products.0.brand") || form.has("products.0.name") || form.has("products.0.zone")) {
     const products = productsFrom(form, "products.", "maquillaje");
@@ -56,8 +73,6 @@ export async function POST(request: Request) {
     if (person) {
       const prefix = `people.${index}.products.`;
       person.products = mergeLook(person.products, productsFrom(form, prefix, look), look);
-      if (look === "peinado") person.hairNotes = text(form.get("lookNotes"));
-      else person.makeupNotes = text(form.get("lookNotes"));
       if (person.products.length) person.productsUsed = "";
     }
   } else {

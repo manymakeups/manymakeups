@@ -247,7 +247,7 @@ export function PersonDataForm({
   );
 }
 
-export function AddCompanionForm({
+export function AddCompanionModal({
   clientId,
   action,
   copy,
@@ -260,8 +260,56 @@ export function AddCompanionForm({
 }) {
   const hooked = usePortalCopy();
   const t = copy ?? hooked;
+  const [open, setOpen] = useState(false);
   return (
-    <form action={action} method="post" className="border border-ink/10 p-5">
+    <>
+      <button
+        type="button"
+        className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink"
+        onClick={() => setOpen(true)}
+      >
+        {t.addCompanion}
+      </button>
+      {open ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 px-5" onClick={() => setOpen(false)}>
+          <div
+            className="max-h-[85dvh] w-full max-w-lg overflow-y-auto bg-porcelain p-6 shadow-[0_20px_60px_rgba(26,22,19,0.16)]"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            <AddCompanionForm clientId={clientId} action={action} copy={t} includeClientId={includeClientId} plain />
+            <button
+              type="button"
+              className="mt-4 text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink"
+              onClick={() => setOpen(false)}
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+export function AddCompanionForm({
+  clientId,
+  action,
+  copy,
+  includeClientId = false,
+  plain = false,
+}: {
+  clientId: string;
+  action: string;
+  copy?: PortalCopy;
+  includeClientId?: boolean;
+  plain?: boolean;
+}) {
+  const hooked = usePortalCopy();
+  const t = copy ?? hooked;
+  return (
+    <form action={action} method="post" className={plain ? "" : "border border-ink/10 p-5"}>
       {includeClientId ? <input type="hidden" name="clientId" value={clientId} /> : null}
       <input type="hidden" name="intent" value="add" />
       <p className="font-serif text-2xl">{t.addCompanion}</p>

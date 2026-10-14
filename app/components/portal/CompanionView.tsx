@@ -1,8 +1,7 @@
 import { PhotoPicker } from "@/app/components/portal/PhotoPicker";
 import { EventSections } from "@/app/components/portal/SubTabs";
-import { WorkView } from "@/app/components/portal/WorkBlock";
-import { interpolate, type PortalCopy } from "@/lib/i18n/portal-messages";
-import { companionHeading } from "@/lib/portal/names";
+import { LookNotesView, WorkView } from "@/app/components/portal/WorkBlock";
+import type { PortalCopy } from "@/lib/i18n/portal-messages";
 import {
   filesFor,
   personInspirationLookKey,
@@ -29,7 +28,6 @@ export function CompanionView({
   copy: PortalCopy;
   section?: string;
 }) {
-  const who = companionHeading(person, copy.whoOptions, interpolate(copy.personN, { n: index + 1 }));
   const labels = {
     data: copy.eventData,
     inspirations: copy.inspirationsTab,
@@ -38,11 +36,11 @@ export function CompanionView({
     trial: copy.trialHeading,
     photos: copy.photosTab,
     products: copy.productsTab,
+    notes: copy.notesTab,
   };
   return (
-    <article className="border border-ink/10 bg-linen/30 p-5">
-      <p className="font-serif text-2xl">{who}</p>
-      <div className="mt-6">
+    <article className="flex h-full min-h-0 flex-col">
+      <div className="min-h-0 flex-1">
         <EventSections
           labels={labels}
           section={section}
@@ -119,7 +117,6 @@ export function CompanionView({
               photos={[]}
               clientId={clientId}
               copy={copy}
-              notes={person.makeupNotes}
             />
           }
           hairProducts={
@@ -130,12 +127,19 @@ export function CompanionView({
               photos={[]}
               clientId={clientId}
               copy={copy}
-              notes={person.hairNotes}
+            />
+          }
+          notes={
+            <LookNotesView
+              makeupNotes={person.makeupNotes}
+              hairNotes={person.hairNotes}
+              makeupLabel={copy.makeupTab}
+              hairLabel={copy.hairTab}
+              empty="—"
             />
           }
         />
       </div>
-      <p className="sr-only">{interpolate(copy.personN, { n: index + 1 })}</p>
     </article>
   );
 }
