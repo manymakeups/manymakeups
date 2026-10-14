@@ -1,6 +1,6 @@
 import { AgendaLists, NewAppointmentModal } from "@/app/components/portal/AgendaBlock";
 import { BudgetView, HistoryForm } from "@/app/components/portal/HistoryBlock";
-import { AddCompanionModal, PersonDataForm } from "@/app/components/portal/CompanionsForm";
+import { AddCompanionModal, PersonDataForm, RemoveCompanionButton } from "@/app/components/portal/CompanionsForm";
 import { DeleteFileButton } from "@/app/components/portal/FileActions";
 import { EventForm } from "@/app/components/portal/EventForm";
 import { MailSetupNotice } from "@/app/components/portal/MailSetupNotice";
@@ -248,13 +248,20 @@ export default async function StudioClientPage({
                           notes: "Notas / comentarios",
                         }}
                         details={
-                          <PersonDataForm
-                            person={person}
-                            index={i}
-                            clientId={client.id}
-                            action="/api/admin/companions"
-                            copy={portalEs}
-                          />
+                          <>
+                            <PersonDataForm
+                              person={person}
+                              index={i}
+                              clientId={client.id}
+                              action="/api/admin/companions"
+                              copy={portalEs}
+                            />
+                            <RemoveCompanionButton
+                              clientId={client.id}
+                              index={i}
+                              name={companionHeading(person, portalEs.whoOptions, `Persona ${i + 1}`)}
+                            />
+                          </>
                         }
                         makeupInspiration={
                           makeupPhotos.length ? (

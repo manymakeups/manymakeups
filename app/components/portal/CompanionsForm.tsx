@@ -247,6 +247,55 @@ export function PersonDataForm({
   );
 }
 
+export function RemoveCompanionButton({
+  clientId,
+  index,
+  name,
+}: {
+  clientId: string;
+  index: number;
+  name: string;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        className="mt-8 text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink"
+        onClick={() => setOpen(true)}
+      >
+        Eliminar acompañante
+      </button>
+      {open ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 px-5" onClick={() => setOpen(false)}>
+          <div
+            className="w-full max-w-md bg-porcelain p-8 shadow-[0_20px_60px_rgba(26,22,19,0.16)]"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            <h2 className="font-serif text-3xl">Eliminar a {name}</h2>
+            <p className="mt-4 text-sm leading-relaxed text-ash">
+              Se quita de la ficha, con sus inspiraciones y las fotos de la prueba. No se puede deshacer.
+            </p>
+            <form action="/api/admin/companions" method="post" className="mt-8 flex flex-wrap gap-3">
+              <input type="hidden" name="clientId" value={clientId} />
+              <input type="hidden" name="intent" value="delete" />
+              <input type="hidden" name="personIndex" value={index} />
+              <button type="button" className="btn-atelier" onClick={() => setOpen(false)}>
+                Cancelar
+              </button>
+              <button type="submit" className="btn-atelier btn-atelier-solid">
+                Eliminar
+              </button>
+            </form>
+          </div>
+        </div>
+      ) : null}
+    </>
+  );
+}
+
 export function AddCompanionModal({
   clientId,
   action,

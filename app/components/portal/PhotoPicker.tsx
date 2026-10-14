@@ -220,7 +220,9 @@ function PhotoBook({
   canDelete,
   kind,
   removeLabel,
+  removeTitle,
   confirmText,
+  cancelLabel,
 }: {
   images: PortalFile[];
   clientId: string;
@@ -229,7 +231,9 @@ function PhotoBook({
   canDelete?: boolean;
   kind: FileKind;
   removeLabel: string;
+  removeTitle?: string;
   confirmText?: string;
+  cancelLabel?: string;
 }) {
   const [index, setIndex] = useState(0);
   const [turn, setTurn] = useState<1 | -1 | 0>(0);
@@ -345,7 +349,15 @@ function PhotoBook({
         </div>
         {canDelete && page ? (
           <div className="mt-4 bg-porcelain px-4 py-2">
-            <DeleteFileButton id={page.id} clientId={clientId} kind={kind} label={removeLabel} confirmText={confirmText} />
+            <DeleteFileButton
+              id={page.id}
+              clientId={clientId}
+              kind={kind}
+              label={removeLabel}
+              confirmText={confirmText}
+              title={removeTitle}
+              closeLabel={cancelLabel}
+            />
           </div>
         ) : null}
         </div>
@@ -360,7 +372,9 @@ export function PhotoGrid({
   canDelete,
   kind,
   removeLabel,
+  removeTitle,
   confirmText,
+  cancelLabel,
   openLabel = "Ver fotos",
   closeLabel = "Cerrar",
 }: {
@@ -369,7 +383,9 @@ export function PhotoGrid({
   canDelete?: boolean;
   kind: FileKind;
   removeLabel?: string;
+  removeTitle?: string;
   confirmText?: string;
+  cancelLabel?: string;
   openLabel?: string;
   closeLabel?: string;
 }) {
@@ -416,7 +432,9 @@ export function PhotoGrid({
           canDelete={canDelete}
           kind={kind}
           removeLabel={removeLabel || "Quitar"}
+          removeTitle={removeTitle}
           confirmText={confirmText}
+          cancelLabel={cancelLabel}
         />
       ) : null}
     </>
@@ -551,7 +569,9 @@ export function PhotoPicker({
         canDelete
         kind={kind}
         removeLabel={remove}
+        removeTitle={localize ? copy.removePhoto : "Quitar foto"}
         confirmText={confirmText}
+        cancelLabel={localize ? copy.photoClose : "Cancelar"}
         openLabel={localize ? copy.photoOpen : "Ver fotos"}
         closeLabel={localize ? copy.photoClose : "Cerrar"}
       />

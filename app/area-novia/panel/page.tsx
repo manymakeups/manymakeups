@@ -69,11 +69,13 @@ export default async function BridePanelPage({
     cambio: t.changeSent,
     doc: t.sendDocumentHint,
     agenda: t.agendaUpdated,
+    respuesta: t.replySent,
   };
   const errorText: Record<string, string> = {
     limite: interpolate(t.errorLimit, { max: INSPIRATION_MAX }),
     archivo: t.errorFile,
     cambio: t.changeError,
+    respuesta: t.replyError,
   };
 
   return (
@@ -291,6 +293,7 @@ export default async function BridePanelPage({
                       clientName={fullName(client.event, client.name)}
                       copy={t}
                       locale={locale}
+                      canReply
                     />
                   ),
                 },

@@ -41,6 +41,10 @@ export function personLine(person: Attendee, index: number) {
 export function noticeTitle(notice: StudioNotice) {
   if (notice.kind === "ficha") return "Ficha guardada";
   if (notice.kind === "acompanantes") return "Acompañantes guardados";
+  if (notice.kind === "fotos") return "Fotos de inspiración";
+  if (notice.kind === "documento") return "Documentación";
+  if (notice.kind === "agenda") return "Cita";
+  if (notice.kind === "respuesta") return "Respuesta";
   if (notice.scope === "acompanante") {
     const n = (notice.personIndex ?? 0) + 1;
     return `Cambio en acompañante ${n}`;

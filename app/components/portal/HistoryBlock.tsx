@@ -176,18 +176,47 @@ export function BudgetView({
   );
 }
 
+function ClientReply({ id, copy }: { id: string; copy: PortalCopy }) {
+  const [open, setOpen] = useState(false);
+  if (!open) {
+    return (
+      <button
+        type="button"
+        className="mt-5 text-[0.68rem] uppercase tracking-[0.16em] text-ash hover:text-ink"
+        onClick={() => setOpen(true)}
+      >
+        {copy.replyButton}
+      </button>
+    );
+  }
+  return (
+    <form action="/api/portal/replies" method="post" className="mt-5 flex max-w-xl flex-col gap-3">
+      <input type="hidden" name="id" value={id} />
+      <label className="field-label">
+        {copy.replyButton}
+        <textarea className="field min-h-24" name="reply" required minLength={2} placeholder={copy.replyPlaceholder} />
+      </label>
+      <button className="btn-atelier self-start" type="submit">
+        {copy.replyButton}
+      </button>
+    </form>
+  );
+}
+
 export function HistoryView({
   entries,
   requests = [],
   clientName = "",
   copy = portalEs,
   locale = "es",
+  canReply = false,
 }: {
   entries: HistoryEntry[];
   requests?: StudioNotice[];
   clientName?: string;
   copy?: PortalCopy;
   locale?: Locale;
+  canReply?: boolean;
 }) {
   const [contactWho, setContactWho] = useState<WhoFilter>("");
   const ordered = [...entries].sort((a, b) => `${b.date}${b.title}`.localeCompare(`${a.date}${a.title}`));
@@ -226,8 +255,8 @@ export function HistoryView({
                       <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">{copy.threadReply}</p>
                       <div className="mt-2 flex items-baseline justify-between gap-4">
                         <p className="text-sm">
-                          {copy.threadAuthor}
-                          <span className="text-ash"> → {person}</span>
+                          {reply.fromClient ? person : copy.threadAuthor}
+                          <span className="text-ash"> → {reply.fromClient ? copy.threadAuthor : person}</span>
                         </p>
                         <p className="text-sm capitalize text-ash">{formatWhen(reply.createdAt.slice(0, 10), locale, copy)}</p>
                       </div>
@@ -250,6 +279,7 @@ export function HistoryView({
                       </div>
                       <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{notice.message}</p>
                       {replies}
+                      {canReply ? <ClientReply id={notice.id} copy={copy} /> : null}
                     </article>
                   </li>
                 );
@@ -270,6 +300,7 @@ export function HistoryView({
                     <p className="mt-2 font-serif text-2xl">{heading || copy.requestLabel}</p>
                     {body ? <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{body}</p> : null}
                     {replies}
+                    {canReply ? <ClientReply id={notice.id} copy={copy} /> : null}
                   </article>
                 </li>
               );

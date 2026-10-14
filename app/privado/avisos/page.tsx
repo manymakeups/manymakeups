@@ -35,7 +35,7 @@ export default async function StudioInboxPage({
       lead={
         unread
           ? `Tienes ${unread} aviso${unread === 1 ? "" : "s"} sin leer.`
-          : "Cuando una clienta guarda la ficha o pide un cambio, el aviso aparece aquí."
+          : "Cuando una clienta cambia algo, sube o quita fotos, o escribe, el aviso aparece aquí."
       }
       aside={
         <StudioAside

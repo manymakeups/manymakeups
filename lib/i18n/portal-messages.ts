@@ -156,6 +156,7 @@ export type PortalCopy = {
   trialPhotosEmpty: string;
   remove: string;
   removeConfirm: string;
+  removePhoto: string;
   agendaEmpty: string;
   agendaBook: string;
   agendaBookLead: string;
@@ -181,6 +182,10 @@ export type PortalCopy = {
   threadStudio: string;
   threadAuthor: string;
   threadReply: string;
+  replyButton: string;
+  replyPlaceholder: string;
+  replySent: string;
+  replyError: string;
   noDate: string;
   appointment: string;
   appointmentTitles: Record<string, string>;
@@ -434,6 +439,7 @@ export const portalEs: PortalCopy = {
   trialPhotosEmpty: "Todavía no hay fotos de la prueba.",
   remove: "Quitar",
   removeConfirm: "¿Quitar este archivo?",
+  removePhoto: "Quitar foto",
   agendaEmpty: "Todavía no hay citas en la agenda.",
   agendaBook: "Pide una cita",
   agendaCalendar: "Calendario",
@@ -460,6 +466,10 @@ export const portalEs: PortalCopy = {
   threadStudio: "Estudio",
   threadAuthor: "Ana Zarza",
   threadReply: "Respuesta",
+  replyButton: "Responder",
+  replyPlaceholder: "Escribe tu respuesta",
+  replySent: "Respuesta enviada.",
+  replyError: "Escribe la respuesta antes de enviarla.",
   noDate: "Sin fecha",
   appointment: "Cita",
   appointmentTitles: {
@@ -730,6 +740,7 @@ export const portalEn: PortalCopy = {
   trialPhotosEmpty: "No trial photos yet.",
   remove: "Remove",
   removeConfirm: "Remove this file?",
+  removePhoto: "Remove photo",
   agendaEmpty: "There are no appointments in the diary yet.",
   agendaBook: "Book an appointment",
   agendaCalendar: "Calendar",
@@ -756,6 +767,10 @@ export const portalEn: PortalCopy = {
   threadStudio: "Studio",
   threadAuthor: "Ana Zarza",
   threadReply: "Reply",
+  replyButton: "Reply",
+  replyPlaceholder: "Write your reply",
+  replySent: "Reply sent.",
+  replyError: "Write the reply before sending it.",
   noDate: "No date",
   appointment: "Appointment",
   appointmentTitles: {
@@ -1025,6 +1040,7 @@ export const portalFr: PortalCopy = {
   trialPhotosEmpty: "Pas encore de photos de l’essai.",
   remove: "Retirer",
   removeConfirm: "Retirer ce fichier ?",
+  removePhoto: "Retirer la photo",
   agendaEmpty: "Il n’y a pas encore de rendez-vous dans l’agenda.",
   agendaBook: "Demande un rendez-vous",
   agendaCalendar: "Calendrier",
@@ -1051,6 +1067,10 @@ export const portalFr: PortalCopy = {
   threadStudio: "Atelier",
   threadAuthor: "Ana Zarza",
   threadReply: "Réponse",
+  replyButton: "Répondre",
+  replyPlaceholder: "Écris ta réponse",
+  replySent: "Réponse envoyée.",
+  replyError: "Écris la réponse avant de l’envoyer.",
   noDate: "Sans date",
   appointment: "Rendez-vous",
   appointmentTitles: {

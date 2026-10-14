@@ -35,7 +35,8 @@ export async function POST(request: Request) {
   };
   await putPortalFile(record, Buffer.from(await upload.arrayBuffer()));
   client.documents.push(record);
-  await saveClient(client);
-  await notifyStudio(`Documentación nueva · ${clientLabel(client)}`, [record.name]);
+  const message = `Ha enviado un documento: ${record.name}`;
+  await saveClient(client, { kind: "documento", scope: "contratante", message });
+  await notifyStudio(`Documentación nueva · ${clientLabel(client)}`, [message]);
   return goPortal(request, "/area-novia/panel?tab=documentacion&ok=doc");
 }

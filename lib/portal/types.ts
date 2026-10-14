@@ -241,13 +241,14 @@ export type EventDetails = {
   peopleLocked: boolean;
 };
 
-export type StudioNoticeKind = "ficha" | "acompanantes" | "cambio";
+export type StudioNoticeKind = "ficha" | "acompanantes" | "cambio" | "fotos" | "documento" | "agenda" | "respuesta";
 export type StudioNoticeScope = "contratante" | "acompanante";
 
 export type StudioNoticeReply = {
   id: string;
   createdAt: string;
   text: string;
+  fromClient?: boolean;
 };
 
 export type StudioNotice = {
@@ -377,7 +378,8 @@ export function asStudioNotice(value: unknown): StudioNotice | null {
   if (!value || typeof value !== "object") return null;
   const row = value as StudioNotice;
   if (!row.id || !row.clientId) return null;
-  const kind = row.kind === "acompanantes" || row.kind === "cambio" ? row.kind : "ficha";
+  const known: StudioNoticeKind[] = ["ficha", "acompanantes", "cambio", "fotos", "documento", "agenda", "respuesta"];
+  const kind = known.includes(row.kind) ? row.kind : "ficha";
   const scope = row.scope === "acompanante" ? "acompanante" : "contratante";
   return {
     id: String(row.id),
@@ -396,6 +398,7 @@ export function asStudioNotice(value: unknown): StudioNotice | null {
             id: String(item.id || ""),
             createdAt: item.createdAt || "",
             text: String(item.text),
+            fromClient: Boolean(item.fromClient),
           }))
       : [],
   };

@@ -51,11 +51,18 @@ export async function POST(request: Request) {
     client.inspiration.push(record);
     added.push(record.name);
   }
-  await saveClient(client);
+  const label = personLabel(form.get("person"));
+  const where = inspirationWhere(label);
+  const lines = [`${added.length} foto(s) en ${where}.`, ...added];
+  const place = inspirationScope(label);
+  await saveClient(
+    client,
+    added.length
+      ? { kind: "fotos", scope: place.scope, personIndex: place.personIndex, message: lines.join("\n") }
+      : undefined,
+  );
   if (added.length) {
-    await notifyStudio(`Inspiración nueva · ${clientLabel(client)}`, [
-      `${added.length} foto(s): ${added.join(", ")}`,
-    ]);
+    await notifyStudio(`Inspiración nueva · ${clientLabel(client)}`, lines);
   }
   const tab = typeof form.get("tab") === "string" && form.get("tab") ? String(form.get("tab")) : "contratante";
   const sec = typeof form.get("sec") === "string" ? String(form.get("sec")) : "";
@@ -73,6 +80,28 @@ export async function DELETE(request: Request) {
   if (!file) return NextResponse.json({ ok: false }, { status: 404 });
   await deletePortalFile(file);
   client.inspiration = client.inspiration.filter((item) => item.id !== id);
-  await saveClient(client);
+  const where = inspirationWhere(file.label);
+  const place = inspirationScope(file.label);
+  const message = `Ha quitado una foto de ${where}.`;
+  await saveClient(client, { kind: "fotos", scope: place.scope, personIndex: place.personIndex, message });
+  await notifyStudio(`Inspiración quitada · ${clientLabel(client)}`, [message]);
   return NextResponse.json({ ok: true });
+}
+
+function inspirationScope(label: string) {
+  const person = /^persona-(\d+)/.exec(label);
+  if (!person) return { scope: "contratante" as const };
+  return { scope: "acompanante" as const, personIndex: Number(person[1]) };
+}
+
+function inspirationWhere(label: string) {
+  const person = /^persona-(\d+)(?:-(maquillaje|peinado))?$/.exec(label);
+  if (person) {
+    const who = `acompañante ${Number(person[1]) + 1}`;
+    if (person[2] === "peinado") return `${who}, peinado`;
+    if (person[2] === "maquillaje") return `${who}, maquillaje`;
+    return who;
+  }
+  if (label.includes("peinado")) return "su peinado";
+  return "su maquillaje";
 }

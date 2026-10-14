@@ -157,7 +157,7 @@ export function StudioInbox({
                   {notice.replies.map((reply) => (
                     <li key={reply.id} className="text-sm">
                       <p className="text-[0.65rem] uppercase tracking-[0.16em] text-ash">
-                        Respuesta · {formatWhen(reply.createdAt)}
+                        {reply.fromClient ? "Clienta" : "Respuesta"} · {formatWhen(reply.createdAt)}
                       </p>
                       <p className="mt-1 whitespace-pre-wrap">{reply.text}</p>
                     </li>

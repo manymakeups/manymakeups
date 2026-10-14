@@ -1,8 +1,9 @@
 import { mailClient } from "@/lib/portal/client-mail";
 import { companionsFromForm, peopleFields } from "@/lib/portal/event-parse";
 import { go } from "@/lib/portal/http";
+import { dropPersonFiles } from "@/lib/portal/person-index";
 import { requireAdmin } from "@/lib/portal/session";
-import { getClient, saveClient } from "@/lib/portal/store";
+import { deletePortalFile, getClient, mutateNotices, saveClient } from "@/lib/portal/store";
 import { emptyAttendee } from "@/lib/portal/types";
 
 export async function POST(request: Request) {
@@ -23,6 +24,35 @@ export async function POST(request: Request) {
       people[index] = peopleFields(form, index, people[index]);
       client.event.people = people;
     }
+  } else if (intent === "delete") {
+    const index = Number(form.get("personIndex"));
+    if (!Number.isInteger(index) || !client.event.people[index]) {
+      return go(request, `/privado/novias/${client.id}?tab=acompanantes`);
+    }
+    const inspiration = dropPersonFiles(client.inspiration, index);
+    const work = dropPersonFiles(client.workPhotos, index);
+    client.inspiration = inspiration.keep;
+    client.workPhotos = work.keep;
+    client.event.people = client.event.people.filter((_, i) => i !== index);
+    client.event.peopleCount = client.event.people.length;
+    client.payments.guests = client.payments.guests.filter((_, i) => i !== index);
+    await saveClient(client);
+    await mutateNotices((notices) =>
+      notices.map((notice) => {
+        if (notice.clientId !== client.id || notice.personIndex == null) return notice;
+        if (notice.personIndex === index) return { ...notice, personIndex: undefined };
+        if (notice.personIndex > index) return { ...notice, personIndex: notice.personIndex - 1 };
+        return notice;
+      }),
+    );
+    await Promise.all(
+      [...inspiration.drop, ...work.drop].map((file) => deletePortalFile(file).catch(() => undefined)),
+    );
+    const sent = await mailClient(client, "update", { tab: "acompanantes" });
+    return go(
+      request,
+      `/privado/novias/${client.id}?tab=acompanantes&ok=ficha${sent ? "" : "&error=correo"}`,
+    );
   } else {
     client.event = {
       ...companionsFromForm(form, client.event),

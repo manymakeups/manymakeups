@@ -20,10 +20,9 @@ export async function POST(request: Request) {
   const intent = text(form.get("intent"));
   if (intent === "cancel") {
     item.status = "anulada";
-    await saveClient(client);
-    await notifyStudio(`Cita anulada · ${clientLabel(client)}`, [
-      `${item.title || "Cita"} · ${item.date || "sin fecha"} ${item.time}`.trim(),
-    ]);
+    const line = `${item.title || "Cita"} · ${item.date || "sin fecha"} ${item.time}`.trim();
+    await saveClient(client, { kind: "agenda", scope: "contratante", message: `Ha anulado una cita.\n${line}` });
+    await notifyStudio(`Cita anulada · ${clientLabel(client)}`, [line]);
     return goPortal(request, `${back}&ok=agenda`);
   }
   const date = text(form.get("date"));
@@ -32,10 +31,12 @@ export async function POST(request: Request) {
   item.time = text(form.get("time"));
   item.place = text(form.get("place"));
   item.notes = text(form.get("notes"));
-  await saveClient(client);
-  await notifyStudio(`Cita modificada · ${clientLabel(client)}`, [
-    `${item.title || "Cita"} · ${item.date} ${item.time}`.trim(),
-    item.place,
-  ]);
+  const line = `${item.title || "Cita"} · ${item.date} ${item.time}`.trim();
+  await saveClient(client, {
+    kind: "agenda",
+    scope: "contratante",
+    message: `Ha modificado una cita.\n${line}${item.place ? `\n${item.place}` : ""}`,
+  });
+  await notifyStudio(`Cita modificada · ${clientLabel(client)}`, [line, item.place]);
   return goPortal(request, `${back}&ok=agenda`);
 }
