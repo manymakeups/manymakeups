@@ -82,7 +82,7 @@ export function ClientCalendar({
           const free = date >= today && weekday !== 0 && !busy.has(date);
           const isToday = date === today;
           const isSelected = date === selected;
-          const className = `flex min-h-16 flex-col gap-1 border-b border-r border-ink/10 p-2 text-left sm:min-h-24 ${
+          const className = `flex min-h-20 flex-col gap-1 border-b border-r border-ink/10 p-1.5 text-left sm:min-h-28 sm:p-2 ${
             isSelected ? "bg-ink text-porcelain" : free ? "hover:bg-linen/60" : ""
           }`;
           const inner = (
@@ -91,9 +91,9 @@ export function ClientCalendar({
                 {Number(date.slice(-2))}
               </span>
               {free ? (
-                <span className={`mt-auto inline-flex items-center gap-1 text-[0.68rem] leading-tight ${isSelected ? "text-porcelain" : "text-gilt"}`}>
-                  <span className={`inline-block h-1.5 w-1.5 rounded-full ${isSelected ? "bg-porcelain" : "bg-gilt"}`} />
-                  {freeLabel}
+                <span className={`mt-auto flex items-start gap-1 text-[0.62rem] leading-tight sm:text-[0.68rem] ${isSelected ? "text-porcelain" : "text-gilt"}`}>
+                  <span className={`mt-[0.3rem] inline-block h-1.5 w-1.5 shrink-0 rounded-full ${isSelected ? "bg-porcelain" : "bg-gilt"}`} />
+                  <span>{freeLabel}</span>
                 </span>
               ) : null}
             </>
