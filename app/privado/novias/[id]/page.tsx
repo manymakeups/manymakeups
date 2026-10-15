@@ -2,7 +2,7 @@ import { AgendaLists, NewAppointmentModal } from "@/app/components/portal/Agenda
 import { BudgetView, HistoryComposer, HistoryForm } from "@/app/components/portal/HistoryBlock";
 import { AddCompanionModal, PersonDataForm, RemoveCompanionButton } from "@/app/components/portal/CompanionsForm";
 import { DeleteFileButton } from "@/app/components/portal/FileActions";
-import { EventForm } from "@/app/components/portal/EventForm";
+import { EventForm, TrialNotesEditor } from "@/app/components/portal/EventForm";
 import { MailSetupNotice } from "@/app/components/portal/MailSetupNotice";
 import { PaymentsForm } from "@/app/components/portal/PaymentsBlock";
 import { PhotoGrid } from "@/app/components/portal/PhotoPicker";
@@ -116,6 +116,7 @@ export default async function StudioClientPage({
               photos: "Fotografías",
               products: "Productos",
               notes: "Notas / comentarios",
+              comments: "Comentarios",
             }}
             details={
               <div>
@@ -208,6 +209,15 @@ export default async function StudioClientPage({
                 hairNotes={event.hairNotes}
               />
             }
+            trialComments={
+              <TrialNotesEditor
+                action="/api/admin/event"
+                clientId={client.id}
+                notes={event.trialNotes}
+                label="Comentarios"
+                submitLabel="Guardar"
+              />
+            }
           />
         </section>
       ) : null}
@@ -251,6 +261,7 @@ export default async function StudioClientPage({
                           photos: "Fotografías",
                           products: "Productos",
                           notes: "Notas / comentarios",
+                          comments: "Comentarios",
                         }}
                         details={
                           <PersonDataForm
@@ -325,6 +336,16 @@ export default async function StudioClientPage({
                             personIndex={i}
                             makeupNotes={person.makeupNotes}
                             hairNotes={person.hairNotes}
+                          />
+                        }
+                        trialComments={
+                          <TrialNotesEditor
+                            action="/api/admin/companions"
+                            clientId={client.id}
+                            personIndex={i}
+                            notes={person.trialNotes}
+                            label="Comentarios"
+                            submitLabel="Guardar"
                           />
                         }
                       />
@@ -458,7 +479,7 @@ export default async function StudioClientPage({
           <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">
             El resumen junta el evento y los otros gastos, estén pagados o pendientes. Ella lo ve igual en su budget.
           </p>
-          <div className="mt-6 flex min-h-0 flex-1 flex-col">
+          <div data-portal-scroll className="mt-6 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
             <BudgetView
               entries={client.history}
               event={client.event}

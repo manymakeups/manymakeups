@@ -77,6 +77,8 @@ export type PortalCopy = {
   lookNotes: string;
   productsTab: string;
   notesTab: string;
+  commentsTab: string;
+  moreInfo: string;
   commsHistory: string;
   commsWrite: string;
   commsWait: string;
@@ -242,7 +244,7 @@ export const portalEs: PortalCopy = {
   menu: "Menú",
   logout: "Salir",
   hello: "Hola, {name}.",
-  panelLead: "Tu ficha, la de tus acompañantes, las comunicaciones, el budget, los papeles y la agenda de citas.",
+  panelLead: "Toda la información, gestión y planificación de tu evento al alcance de tu mano.",
   email: "Correo",
   password: "Contraseña",
   confirmPassword: "Repite la contraseña",
@@ -317,6 +319,8 @@ export const portalEs: PortalCopy = {
   lookNotes: "Notas para clonar el look",
   productsTab: "Productos",
   notesTab: "Notas / comentarios",
+  commentsTab: "Comentarios",
+  moreInfo: "Información",
   commsHistory: "Histórico",
   commsWrite: "Nueva comunicación",
   commsWait: "Cuando la ficha esté guardada, puedes escribirme desde aquí.",
@@ -560,7 +564,7 @@ export const portalEn: PortalCopy = {
   menu: "Menu",
   logout: "Log out",
   hello: "Hello, {name}.",
-  panelLead: "Your details, your guests, communications, your budget, documents and the appointment diary.",
+  panelLead: "All the information, management and planning for your event, right at hand.",
   email: "Email",
   password: "Password",
   confirmPassword: "Repeat password",
@@ -633,6 +637,8 @@ export const portalEn: PortalCopy = {
   lookNotes: "Notes to recreate the look",
   productsTab: "Products",
   notesTab: "Notes / comments",
+  commentsTab: "Comments",
+  moreInfo: "Information",
   commsHistory: "History",
   commsWrite: "New message",
   commsWait: "Once the details are saved, you can write to me from here.",
@@ -873,7 +879,7 @@ export const portalFr: PortalCopy = {
   menu: "Menu",
   logout: "Sortir",
   hello: "Bonjour, {name}.",
-  panelLead: "Ta fiche, celle de tes accompagnants, les communications, le budget, les papiers et l’agenda des rendez-vous.",
+  panelLead: "Toute l’information, la gestion et la planification de ton événement à portée de main.",
   email: "E-mail",
   password: "Mot de passe",
   confirmPassword: "Répète le mot de passe",
@@ -948,6 +954,8 @@ export const portalFr: PortalCopy = {
   lookNotes: "Notes pour reproduire le look",
   productsTab: "Produits",
   notesTab: "Notes / commentaires",
+  commentsTab: "Commentaires",
+  moreInfo: "Information",
   commsHistory: "Historique",
   commsWrite: "Nouveau message",
   commsWait: "Quand la fiche est enregistrée, tu peux m’écrire d’ici.",

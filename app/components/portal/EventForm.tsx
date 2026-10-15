@@ -105,10 +105,6 @@ export function EventForm({
         </label>
       </fieldset>
       <label className="field-label">
-        {t.trialNotes}
-        <textarea className="field min-h-24" name="trialNotes" defaultValue={event.trialNotes} />
-      </label>
-      <label className="field-label">
         {t.skinNotes}
         <textarea className="field min-h-24" name="skinNotes" defaultValue={event.skinNotes} />
       </label>
@@ -131,5 +127,36 @@ export function EventForm({
         />
       ) : null}
     </div>
+  );
+}
+
+export function TrialNotesEditor({
+  action,
+  notes,
+  label,
+  submitLabel,
+  clientId,
+  personIndex,
+}: {
+  action: string;
+  notes: string;
+  label: string;
+  submitLabel: string;
+  clientId?: string;
+  personIndex?: number;
+}) {
+  return (
+    <form action={action} method="post" className="flex max-w-xl flex-col gap-4">
+      <input type="hidden" name="intent" value="trial-notes" />
+      {clientId ? <input type="hidden" name="clientId" value={clientId} /> : null}
+      {personIndex != null ? <input type="hidden" name="personIndex" value={personIndex} /> : null}
+      <label className="field-label">
+        {label}
+        <textarea className="field min-h-28" name="trialNotes" defaultValue={notes} />
+      </label>
+      <button className="btn-atelier self-start" type="submit">
+        {submitLabel}
+      </button>
+    </form>
   );
 }

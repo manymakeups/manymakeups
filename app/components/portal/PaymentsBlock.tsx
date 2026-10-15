@@ -15,11 +15,11 @@ import {
 function SliceView({ title, slice }: { title: string; slice: PaymentSlice }) {
   const t = usePortalCopy();
   return (
-    <article className="border border-ink/10 bg-linen/40 p-5">
-      <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">{title}</p>
-      <p className="mt-3 font-serif text-3xl">{euros(slice.amount)}</p>
-      <p className="mt-2 text-sm text-ash">{slice.paid ? t.paid : t.unpaid}</p>
-      <p className="mt-4 text-sm">
+    <article className="border border-ink/10 px-3 py-3 sm:bg-linen/40 sm:p-5">
+      <p className="text-[0.62rem] uppercase tracking-[0.14em] text-gilt sm:text-[0.68rem] sm:tracking-[0.18em]">{title}</p>
+      <p className="mt-2 font-serif text-2xl sm:mt-3 sm:text-3xl">{euros(slice.amount)}</p>
+      <p className="mt-1 text-sm text-ash sm:mt-2">{slice.paid ? t.paid : t.unpaid}</p>
+      <p className="mt-2 text-sm sm:mt-4">
         {interpolate(t.pending, { amount: euros(pendingAmount(slice)) })}
       </p>
     </article>
@@ -38,8 +38,8 @@ function PersonPayView({
   const t = usePortalCopy();
   return (
     <div>
-      <h3 className="font-serif text-2xl">{title}</h3>
-      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+      <h3 className="font-serif text-xl sm:text-2xl">{title}</h3>
+      <div className="mt-3 grid gap-2 sm:mt-4 sm:grid-cols-3 sm:gap-4">
         <SliceView title={t.deposit} slice={payments.deposit} />
         {showTrial ? <SliceView title={t.trialDay} slice={payments.trial} /> : null}
         <SliceView title={t.eventDay} slice={payments.event} />
@@ -57,7 +57,7 @@ export function PaymentsView({
 }) {
   const t = usePortalCopy();
   return (
-    <div className="flex flex-col gap-12">
+    <div className="flex flex-col gap-8 sm:gap-12">
       <PersonPayView title={t.budgetService} payments={payments.contractor} showTrial />
       {people.map((person, i) => (
         <PersonPayView
@@ -87,7 +87,7 @@ function SliceFields({
   slice: PaymentSlice;
 }) {
   return (
-    <fieldset className="border border-ink/10 p-4">
+    <fieldset className="border border-ink/10 p-3 sm:p-4">
       <legend className="px-1 text-[0.68rem] uppercase tracking-[0.18em] text-gilt">{title}</legend>
       <label className="field-label mt-3">
         Importe
@@ -119,11 +119,11 @@ export function PaymentsForm({
   people: Attendee[];
 }) {
   return (
-    <form action="/api/admin/payments" method="post" className="flex flex-col gap-12">
+    <form action="/api/admin/payments" method="post" className="flex flex-col gap-8 sm:gap-12">
       <input type="hidden" name="clientId" value={clientId} />
       <div>
-        <h3 className="font-serif text-2xl">Tu servicio</h3>
-        <div className="mt-4 grid gap-6 sm:grid-cols-3">
+        <h3 className="font-serif text-xl sm:text-2xl">Tu servicio</h3>
+        <div className="mt-3 grid gap-3 sm:mt-4 sm:grid-cols-3 sm:gap-6">
           <SliceFields
             title="Reserva"
             amountName="contractor.depositAmount"
@@ -152,10 +152,10 @@ export function PaymentsForm({
         };
         return (
           <div key={i}>
-            <h3 className="font-serif text-2xl">
+            <h3 className="font-serif text-xl sm:text-2xl">
               {person.name ? `${person.name}${person.who ? ` · ${person.who}` : ""}` : person.who || `Acompañante ${i + 1}`}
             </h3>
-            <div className="mt-4 grid gap-6 sm:grid-cols-3">
+            <div className="mt-3 grid gap-3 sm:mt-4 sm:grid-cols-3 sm:gap-6">
               <SliceFields
                 title="Reserva"
                 amountName={`guests.${i}.depositAmount`}

@@ -32,7 +32,7 @@ function peopleFromForm(form: FormData, count: number, fallback: Attendee[]): At
       who: text(form.get(`people.${i}.who`)),
       service: normalizePersonService(text(form.get(`people.${i}.service`)) || prev.service),
       wantsTrial,
-      trialNotes: wantsTrial ? text(form.get(`people.${i}.trialNotes`)) : prev.trialNotes,
+      trialNotes: form.has(`people.${i}.trialNotes`) ? text(form.get(`people.${i}.trialNotes`)) : prev.trialNotes,
       skinNotes: text(form.get(`people.${i}.skinNotes`)),
       notes: text(form.get(`people.${i}.notes`)),
       productsUsed: prev.productsUsed,
@@ -62,7 +62,7 @@ export function contractorFromForm(form: FormData, fallback: EventDetails): Even
     hair: flag(form.get("hair")),
     glitterBar: flag(form.get("glitterBar")),
     beautyCorner: flag(form.get("beautyCorner")),
-    trialNotes: text(form.get("trialNotes")),
+    trialNotes: form.has("trialNotes") ? text(form.get("trialNotes")) : fallback.trialNotes,
     skinNotes: text(form.get("skinNotes")),
     notes: text(form.get("notes")),
   };

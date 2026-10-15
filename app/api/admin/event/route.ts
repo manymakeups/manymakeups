@@ -11,6 +11,15 @@ export async function POST(request: Request) {
   const id = String(form.get("clientId") ?? "");
   const client = await getClient(id);
   if (!client) return go(request, "/privado/novias?error=datos");
+  if (String(form.get("intent") ?? "") === "trial-notes") {
+    client.event = { ...client.event, trialNotes: String(form.get("trialNotes") ?? "").trim() };
+    await saveClient(client);
+    const sent = await mailClient(client, "update", { tab: "contratante" });
+    return go(
+      request,
+      `/privado/novias/${client.id}?tab=contratante&sec=comentarios&ok=ficha${sent ? "" : "&error=correo"}`,
+    );
+  }
   client.event = {
     ...contractorFromForm(form, client.event),
     contractorLocked: client.event.contractorLocked,

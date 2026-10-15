@@ -136,6 +136,7 @@ export function EventSections({
   makeupProducts,
   hairProducts,
   notes,
+  trialComments,
 }: {
   labels: {
     data: string;
@@ -146,6 +147,7 @@ export function EventSections({
     photos: string;
     products: string;
     notes: string;
+    comments: string;
   };
   section?: string;
   details: ReactNode;
@@ -155,9 +157,11 @@ export function EventSections({
   makeupProducts: ReactNode;
   hairProducts: ReactNode;
   notes: ReactNode;
+  trialComments: ReactNode;
 }) {
   const inProducts = section === "productos" || section?.startsWith("productos-") || section === "notas";
-  const inTrial = section === "fotos" || inProducts;
+  const inComments = section === "comentarios";
+  const inTrial = section === "fotos" || inProducts || inComments;
   const inInspiration = section === "maquillaje" || section === "peinado";
   const productTab =
     section === "productos-peinado" ? "peinado" : section === "productos-notas" || section === "notas" ? "notas" : "maquillaje";
@@ -189,7 +193,7 @@ export function EventSections({
           body: (
             <SubTabs
               fill
-              initial={inProducts ? "productos" : "fotos"}
+              initial={inComments ? "comentarios" : inProducts ? "productos" : "fotos"}
               tabs={[
                 { id: "fotos", label: labels.photos, body: photos },
                 {
@@ -208,6 +212,7 @@ export function EventSections({
                     />
                   ),
                 },
+                { id: "comentarios", label: labels.comments, body: trialComments },
               ]}
             />
           ),

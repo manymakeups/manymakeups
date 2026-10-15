@@ -38,9 +38,6 @@ export function EventView({ event, copy }: { event: EventDetails; copy: PortalCo
         <Row label={copy.services} value={services} />
       </div>
       <div className="sm:col-span-2">
-        <Row label={copy.trialNotes} value={event.trialNotes} />
-      </div>
-      <div className="sm:col-span-2">
         <Row label={copy.skinNotes} value={event.skinNotes} />
       </div>
       <div className="sm:col-span-2">

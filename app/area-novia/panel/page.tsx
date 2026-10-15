@@ -5,7 +5,8 @@ import { BudgetView, HistoryView } from "@/app/components/portal/HistoryBlock";
 import { ClientCompose } from "@/app/components/portal/ClientCompose";
 import { CompanionView } from "@/app/components/portal/CompanionView";
 import { AddCompanionModal, CompanionsForm } from "@/app/components/portal/CompanionsForm";
-import { EventForm } from "@/app/components/portal/EventForm";
+import { EventForm, TrialNotesEditor } from "@/app/components/portal/EventForm";
+import { InfoTip } from "@/app/components/portal/InfoTip";
 import { EventView } from "@/app/components/portal/EventView";
 import { PaymentsView } from "@/app/components/portal/PaymentsBlock";
 import { PhotoPicker } from "@/app/components/portal/PhotoPicker";
@@ -118,6 +119,7 @@ export default async function BridePanelPage({
               photos: t.photosTab,
               products: t.productsTab,
               notes: t.notesTab,
+              comments: t.commentsTab,
             }}
             details={
               <div>
@@ -204,6 +206,18 @@ export default async function BridePanelPage({
                 hairLabel={t.hairTab}
                 empty="—"
               />
+            }
+            trialComments={
+              client.event.contractorLocked ? (
+                <p className="whitespace-pre-wrap text-sm">{client.event.trialNotes.trim() || "—"}</p>
+              ) : (
+                <TrialNotesEditor
+                  action="/api/portal/event"
+                  notes={client.event.trialNotes}
+                  label={t.commentsTab}
+                  submitLabel={t.agendaSave}
+                />
+              )
             }
           />
         </section>
@@ -331,7 +345,7 @@ export default async function BridePanelPage({
         <section className="flex min-h-0 flex-1 flex-col pt-4">
           <h2 className="shrink-0 font-serif text-3xl">{t.budgetTitle}</h2>
           <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">{t.budgetLead}</p>
-          <div className="mt-6 flex min-h-0 flex-1 flex-col">
+          <div data-portal-scroll className="mt-6 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
             <BudgetView
               entries={client.history}
               event={client.event}
@@ -376,8 +390,10 @@ export default async function BridePanelPage({
 
       {tab === "agenda" ? (
         <section className="flex min-h-0 flex-1 flex-col pt-4">
-          <h2 className="shrink-0 font-serif text-3xl">{t.agendaBook}</h2>
-          <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">{t.agendaBookLead}</p>
+          <div className="flex shrink-0 items-center gap-3">
+            <h2 className="font-serif text-3xl">{t.agendaBook}</h2>
+            <InfoTip text={t.agendaBookLead} label={t.moreInfo} />
+          </div>
           <div className="mt-4 flex min-h-0 flex-1 flex-col">
             <SubTabs
               fill

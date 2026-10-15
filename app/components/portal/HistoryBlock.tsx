@@ -74,18 +74,18 @@ function MoneyBoxes({
   copy: PortalCopy;
 }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-3">
-      <article className="border border-ink/10 bg-linen/40 p-5">
-        <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">{copy.budgetTotal}</p>
-        <p className="mt-3 font-serif text-3xl">{euros(total)}</p>
+    <div className="grid grid-cols-3 gap-2 sm:gap-4">
+      <article className="border border-ink/10 bg-linen/40 px-2 py-3 sm:p-5">
+        <p className="text-[0.58rem] uppercase tracking-[0.1em] text-gilt sm:text-[0.68rem] sm:tracking-[0.18em]">{copy.budgetTotal}</p>
+        <p className="mt-2 font-serif text-lg leading-none sm:mt-3 sm:text-3xl">{euros(total)}</p>
       </article>
-      <article className="border border-ink/10 bg-linen/40 p-5">
-        <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">{copy.budgetPaid}</p>
-        <p className="mt-3 font-serif text-3xl">{euros(paid)}</p>
+      <article className="border border-ink/10 bg-linen/40 px-2 py-3 sm:p-5">
+        <p className="text-[0.58rem] uppercase tracking-[0.1em] text-gilt sm:text-[0.68rem] sm:tracking-[0.18em]">{copy.budgetPaid}</p>
+        <p className="mt-2 font-serif text-lg leading-none sm:mt-3 sm:text-3xl">{euros(paid)}</p>
       </article>
-      <article className="border border-ink/10 bg-linen/40 p-5">
-        <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">{copy.budgetPending}</p>
-        <p className="mt-3 font-serif text-3xl">{euros(pending)}</p>
+      <article className="border border-ink/10 bg-linen/40 px-2 py-3 sm:p-5">
+        <p className="text-[0.58rem] uppercase tracking-[0.1em] text-gilt sm:text-[0.68rem] sm:tracking-[0.18em]">{copy.budgetPending}</p>
+        <p className="mt-2 font-serif text-lg leading-none sm:mt-3 sm:text-3xl">{euros(pending)}</p>
       </article>
     </div>
   );
@@ -137,21 +137,18 @@ export function BudgetView({
   const careServices = history.services.filter((entry) => isCareService(entry.title));
   const care = sumServices(careServices);
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <div className="shrink-0">
-        <MoneyBoxes total={budget.total} paid={budget.paid} pending={budget.pending} copy={copy} />
-      </div>
-      <div className="mt-6 min-h-0 flex-1">
+    <div>
+      <MoneyBoxes total={budget.total} paid={budget.paid} pending={budget.pending} copy={copy} />
+      <div className="mt-6">
         <SubTabs
-          fill
           tabs={[
             {
               id: "evento",
               label: copy.budgetEvent,
               body: (
                 <>
-                  {billing}
                   <ServiceLines entries={eventServices} copy={copy} />
+                  {billing ? <div className={eventServices.length ? "mt-10" : undefined}>{billing}</div> : null}
                 </>
               ),
             },

@@ -81,7 +81,7 @@ export function eventChangeMessage(before: EventDetails, after: EventDetails) {
     { where: "Datos del evento · Peinado", before: yesNo(before.hair), after: yesNo(after.hair) },
     { where: "Datos del evento · Glitter bar", before: yesNo(before.glitterBar), after: yesNo(after.glitterBar) },
     { where: "Datos del evento · Beauty corner", before: yesNo(before.beautyCorner), after: yesNo(after.beautyCorner) },
-    { where: "Datos del evento · Notas de la prueba", before: before.trialNotes, after: after.trialNotes },
+    { where: "Prueba · Comentarios", before: before.trialNotes, after: after.trialNotes },
     { where: "Datos del evento · Piel", before: before.skinNotes, after: after.skinNotes },
     { where: "Datos del evento · Notas", before: before.notes, after: after.notes },
   ]);
@@ -94,7 +94,7 @@ function personFieldChanges(before: Attendee, after: Attendee, where: string) {
     { where: `${where} · Parentesco`, before: before.who, after: after.who },
     { where: `${where} · Servicio`, before: before.service, after: after.service },
     { where: `${where} · Prueba`, before: yesNo(before.wantsTrial), after: yesNo(after.wantsTrial) },
-    { where: `${where} · Notas de la prueba`, before: before.trialNotes, after: after.trialNotes },
+    { where: `${where} · Comentarios`, before: before.trialNotes, after: after.trialNotes },
     { where: `${where} · Piel`, before: before.skinNotes, after: after.skinNotes },
     { where: `${where} · Notas`, before: before.notes, after: after.notes },
   ]);

@@ -75,12 +75,6 @@ function PersonInputs({
         />
         {copy.wantsTrial}
       </label>
-      {wantsTrial ? (
-        <label className="mt-4 field-label">
-          {copy.trialNotes}
-          <textarea className="field min-h-24" name={`people.${index}.trialNotes`} defaultValue={person.trialNotes} />
-        </label>
-      ) : null}
     </>
   );
 }
@@ -114,6 +108,10 @@ function PersonCard({
       </legend>
       <div className="mt-3">
         <PersonInputs index={index} person={person} copy={t} />
+        <label className="mt-4 field-label">
+          {t.commentsTab}
+          <textarea className="field min-h-24" name={`people.${index}.trialNotes`} defaultValue={person.trialNotes} />
+        </label>
       </div>
       {person.wantsTrial && showTrialWork ? (
         <div className="mt-6 border-t border-ink/10 pt-6">

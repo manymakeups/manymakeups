@@ -37,6 +37,7 @@ export function CompanionView({
     photos: copy.photosTab,
     products: copy.productsTab,
     notes: copy.notesTab,
+    comments: copy.commentsTab,
   };
   return (
     <article className="flex h-full min-h-0 flex-1 flex-col">
@@ -69,12 +70,6 @@ export function CompanionView({
                 <dt className="text-ash">{copy.wantsTrial}</dt>
                 <dd className="mt-1">{person.wantsTrial ? copy.trialYes : copy.trialNo}</dd>
               </div>
-              {person.wantsTrial ? (
-                <div>
-                  <dt className="text-ash">{copy.trialNotes}</dt>
-                  <dd className="mt-1 whitespace-pre-wrap">{person.trialNotes || "—"}</dd>
-                </div>
-              ) : null}
             </dl>
           }
           makeupInspiration={
@@ -137,6 +132,7 @@ export function CompanionView({
               empty="—"
             />
           }
+          trialComments={<p className="whitespace-pre-wrap text-sm">{person.trialNotes.trim() || "—"}</p>}
         />
     </article>
   );

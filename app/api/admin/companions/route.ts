@@ -14,6 +14,21 @@ export async function POST(request: Request) {
   const client = await getClient(id);
   if (!client) return go(request, "/privado/novias?error=datos");
   const intent = String(form.get("intent") ?? "");
+  if (intent === "trial-notes") {
+    const index = Number(form.get("personIndex"));
+    if (Number.isInteger(index) && client.event.people[index]) {
+      const people = [...client.event.people];
+      people[index] = { ...people[index], trialNotes: String(form.get("trialNotes") ?? "").trim() };
+      client.event.people = people;
+      await saveClient(client);
+      const sent = await mailClient(client, "update", { tab: "acompanantes" });
+      return go(
+        request,
+        `/privado/novias/${client.id}?tab=acompanantes&sec=${index}-comentarios&ok=ficha${sent ? "" : "&error=correo"}`,
+      );
+    }
+    return go(request, `/privado/novias/${client.id}?tab=acompanantes`);
+  }
   if (intent === "add" && client.event.people.length < 20) {
     client.event.people = [...client.event.people, peopleFields(form, 0, emptyAttendee())];
     client.event.peopleCount = client.event.people.length;
