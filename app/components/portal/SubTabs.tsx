@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 export function SubTabs({
   tabs,
@@ -14,20 +14,25 @@ export function SubTabs({
   const start = initial && tabs.some((tab) => tab.id === initial) ? initial : tabs[0]?.id;
   const [current, setCurrent] = useState(start);
   const active = tabs.find((tab) => tab.id === current) ?? tabs[0];
+  const currentRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    currentRef.current?.scrollIntoView({ inline: "nearest", block: "nearest" });
+  }, [active?.id]);
   if (!active) return null;
   const bar = (
-    <div className="flex shrink-0 flex-wrap gap-x-6 border-b border-ink/10 bg-porcelain">
+    <div className="flex w-full min-w-0 shrink-0 gap-x-5 overflow-x-auto border-b border-ink/10 bg-porcelain [-ms-overflow-style:none] [scrollbar-width:none] md:flex-wrap md:overflow-visible [&::-webkit-scrollbar]:hidden">
       {tabs.map((tab) => {
         const on = tab.id === active.id;
         return (
-          <div key={tab.id} className="flex flex-col items-center">
+          <div key={tab.id} className="flex shrink-0 flex-col items-center">
             {tab.above ? <div className="flex h-4 items-end justify-center">{tab.above}</div> : null}
             <button
               type="button"
+              ref={on ? currentRef : undefined}
               className={
                 on
-                  ? "border-b-2 border-gilt px-1 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ink"
-                  : "border-b-2 border-transparent px-1 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ash hover:text-ink"
+                  ? "whitespace-nowrap border-b-2 border-gilt px-1 py-3 text-[0.68rem] uppercase tracking-[0.12em] text-ink md:tracking-[0.16em]"
+                  : "whitespace-nowrap border-b-2 border-transparent px-1 py-3 text-[0.68rem] uppercase tracking-[0.12em] text-ash hover:text-ink md:tracking-[0.16em]"
               }
               onClick={() => setCurrent(tab.id)}
             >
@@ -40,14 +45,14 @@ export function SubTabs({
   );
   if (!fill) {
     return (
-      <div>
+      <div className="min-w-0">
         {bar}
         <div className="pt-8">{active.body}</div>
       </div>
     );
   }
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col">
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
       {bar}
       {active.nested ? (
         tabs.map((tab) => {

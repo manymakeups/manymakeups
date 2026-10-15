@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 export async function StudioAside({ extra }: { extra?: ReactNode }) {
   const unread = (await listNotices()).filter((notice) => !notice.read).length;
   return (
-    <div className="flex items-center gap-4">
+    <div className="contents md:flex md:items-center md:gap-4">
       {extra}
       <a className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink" href="/privado/calendario">
         Agenda

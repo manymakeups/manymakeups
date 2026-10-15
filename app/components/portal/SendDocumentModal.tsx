@@ -18,15 +18,15 @@ export function SendDocumentModal({
     <>
       <button
         type="button"
-        className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink"
+        className="inline-flex min-h-11 items-center text-[0.68rem] uppercase tracking-[0.14em] text-ash hover:text-ink sm:tracking-[0.18em]"
         onClick={() => setOpen(true)}
       >
         {label}
       </button>
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 px-5" onClick={() => setOpen(false)}>
+        <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-ink/40 p-3 sm:items-center sm:p-6" onClick={() => setOpen(false)}>
           <div
-            className="w-full max-w-lg bg-porcelain p-6 shadow-[0_20px_60px_rgba(26,22,19,0.16)]"
+            className="max-h-[92dvh] w-full max-w-lg overflow-y-auto bg-porcelain p-5 shadow-[0_20px_60px_rgba(26,22,19,0.16)] sm:p-6"
             onClick={(event) => event.stopPropagation()}
             role="dialog"
             aria-modal="true"

@@ -341,6 +341,31 @@ html.intro-active .site-jump {
   display: none;
 }
 
+.portal-shell p {
+  text-align: start;
+  hyphens: manual;
+}
+
+@media (max-width: 767px) {
+  .portal-shell .field {
+    font-size: 16px;
+  }
+
+  .portal-actions a,
+  .portal-actions button {
+    min-height: 2.75rem;
+  }
+
+  body:has(.portal-shell) .site-jump {
+    display: none;
+  }
+
+  .portal-shell nav .overflow-x-auto {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 1.5rem), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 1.5rem), transparent);
+  }
+}
+
 .header-logo img {
   filter:
     drop-shadow(0 1px 0 rgb(157 125 82 / 0.75))

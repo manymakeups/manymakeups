@@ -6,6 +6,7 @@ export type PortalCopy = {
   recoverTitle: string;
   kicker: string;
   backToSite: string;
+  menu: string;
   logout: string;
   hello: string;
   panelLead: string;
@@ -238,6 +239,7 @@ export const portalEs: PortalCopy = {
   recoverTitle: "Recuperar contraseña",
   kicker: "Área clientes",
   backToSite: "Volver a la web",
+  menu: "Menú",
   logout: "Salir",
   hello: "Hola, {name}.",
   panelLead: "Tu ficha, la de tus acompañantes, las comunicaciones, el budget, los papeles y la agenda de citas.",
@@ -548,6 +550,7 @@ export const portalEn: PortalCopy = {
   recoverTitle: "Reset password",
   kicker: "Client area",
   backToSite: "Back to the site",
+  menu: "Menu",
   logout: "Log out",
   hello: "Hello, {name}.",
   panelLead: "Your details, your guests, communications, your budget, documents and the appointment diary.",
@@ -853,6 +856,7 @@ export const portalFr: PortalCopy = {
   recoverTitle: "Récupérer le mot de passe",
   kicker: "Espace clientes",
   backToSite: "Retour au site",
+  menu: "Menu",
   logout: "Sortir",
   hello: "Bonjour, {name}.",
   panelLead: "Ta fiche, celle de tes accompagnants, les communications, le budget, les papiers et l’agenda des rendez-vous.",

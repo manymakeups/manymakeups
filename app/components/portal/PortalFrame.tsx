@@ -1,5 +1,6 @@
 import { BrandLogo } from "../BrandLogo";
 import { LanguageSwitch } from "@/app/components/LanguageSwitch";
+import { PortalMenu } from "@/app/components/portal/PortalMenu";
 import { getLocale, getPortalCopy, getRequestPathname, localePath } from "@/lib/i18n";
 import { site } from "@/lib/site";
 import type { ReactNode } from "react";
@@ -25,47 +26,65 @@ export async function PortalFrame({
   const copy = getPortalCopy(locale);
   const path = localize ? await getRequestPathname() : "/";
 
+  const backHref = localize ? localePath(locale, "/") : "/";
+  const backLabel = localize ? copy.backToSite : "Volver a la web";
   const header = (
       <header className="shrink-0 border-b border-ink/5">
-        <div className="mx-auto flex max-w-[960px] items-center justify-between gap-4 px-5 py-4 md:px-10">
+        <div className="mx-auto flex max-w-[960px] items-center justify-between gap-3 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:px-10 md:py-4">
           <a
-            href={localize ? localePath(locale, "/") : "/"}
-            className="flex items-center gap-3"
+            href={backHref}
+            className="flex min-w-0 items-center gap-3"
             aria-label={site.legalName}
           >
-            <BrandLogo size="header" className="size-[4.5rem] sm:size-[5.5rem]" />
+            <BrandLogo size="header" className="size-16 shrink-0 sm:size-[4.5rem] md:size-[5.5rem]" />
             <span className="hidden font-serif text-lg sm:block">Many Makeups</span>
           </a>
-          <div className="flex flex-wrap items-center justify-end gap-x-6 gap-y-3">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-4">
             {localize ? (
-              <div className="border-ink/10 pr-0 sm:border-r sm:pr-6">
+              <div className="border-ink/10 md:border-r md:pr-6">
                 <LanguageSwitch current={locale} path={path} enabled />
               </div>
             ) : null}
-            <div className="flex flex-wrap items-center justify-end gap-4">
-              {aside}
-              <a className="btn-atelier shrink-0" href={localize ? localePath(locale, "/") : "/"}>
-                {localize ? copy.backToSite : "Volver a la web"}
-              </a>
-            </div>
+            {aside ? (
+              <PortalMenu label={copy.menu} closeLabel={copy.agendaClose}>
+                {aside}
+                <a className="btn-atelier mt-6 md:mt-0" href={backHref}>
+                  {backLabel}
+                </a>
+              </PortalMenu>
+            ) : (
+              <>
+                <a
+                  className="max-w-[7.5rem] text-right text-[0.62rem] uppercase leading-tight tracking-[0.12em] text-ink md:hidden"
+                  href={backHref}
+                >
+                  {backLabel}
+                </a>
+                <span className="hidden md:inline-flex">
+                  <a className="btn-atelier" href={backHref}>
+                    {backLabel}
+                  </a>
+                </span>
+              </>
+            )}
           </div>
         </div>
       </header>
   );
   const intro = (
     <>
-      <p className="text-[0.68rem] uppercase tracking-[0.32em] text-gilt">{kicker}</p>
-      <h1 className="mt-4 font-serif text-4xl leading-tight tracking-tight md:text-5xl">{title}</h1>
-      {lead ? <p className="mt-4 max-w-2xl text-ash">{lead}</p> : null}
+      <p className="text-[0.62rem] uppercase tracking-[0.18em] text-gilt md:text-[0.68rem] md:tracking-[0.32em]">{kicker}</p>
+      <h1 className="mt-2 font-serif text-[2rem] leading-tight tracking-tight md:mt-4 md:text-5xl">{title}</h1>
+      {lead ? <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ash md:mt-4 md:text-base">{lead}</p> : null}
     </>
   );
 
   if (pinned) {
     return (
-      <div className="flex h-dvh flex-col overflow-hidden bg-porcelain text-ink">
+      <div className="portal-shell flex h-dvh flex-col overflow-hidden bg-porcelain text-ink">
         {header}
-        <div className="mx-auto flex min-h-0 w-full max-w-[960px] flex-1 flex-col px-5 md:px-10">
-          <div className="shrink-0 pt-8 md:pt-10">{intro}</div>
+        <div className="mx-auto flex min-h-0 w-full min-w-0 max-w-[960px] flex-1 flex-col px-4 md:px-10">
+          <div className="shrink-0 pt-5 md:pt-10">{intro}</div>
           {children}
         </div>
       </div>
@@ -73,9 +92,9 @@ export async function PortalFrame({
   }
 
   return (
-    <div className="min-h-full bg-porcelain text-ink">
+    <div className="portal-shell min-h-full bg-porcelain text-ink">
       {header}
-      <main className="mx-auto max-w-[960px] px-5 pb-24 pt-10 md:px-10">
+      <main className="mx-auto max-w-[960px] px-4 pb-[max(5rem,env(safe-area-inset-bottom))] pt-8 md:px-10 md:pt-10">
         {intro}
         <div className="mt-10">{children}</div>
       </main>

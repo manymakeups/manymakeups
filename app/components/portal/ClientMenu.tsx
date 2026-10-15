@@ -24,7 +24,7 @@ export function ClientMenu({ id, name, phone }: { id: string; name: string; phon
             <circle cx="8" cy="13" r="1.3" fill="currentColor" />
           </svg>
         </summary>
-        <div className="absolute right-0 top-12 z-20 w-64 border border-ink/15 bg-porcelain py-1 shadow-sm">
+        <div className="absolute right-0 top-12 z-20 w-64 max-w-[calc(100vw-2rem)] border border-ink/15 bg-porcelain py-1 shadow-sm">
           <form action="/api/admin/invite" method="post">
             <input type="hidden" name="id" value={id} />
             <button
@@ -62,10 +62,10 @@ export function ClientMenu({ id, name, phone }: { id: string; name: string; phon
         popover="auto"
         role="dialog"
         aria-labelledby={`${dialogId}-title`}
-        className="inset-0 m-auto h-fit w-[min(28rem,calc(100%-2.5rem))] border border-ink/10 bg-porcelain px-8 py-10 text-ink backdrop:bg-ink/35"
+        className="inset-0 m-auto h-fit w-[min(28rem,calc(100%-1.5rem))] border border-ink/10 bg-porcelain px-5 py-8 text-ink backdrop:bg-ink/35 sm:px-8 sm:py-10"
       >
         <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">Clientas</p>
-        <h2 id={`${dialogId}-title`} className="mt-3 font-serif text-4xl leading-none">
+        <h2 id={`${dialogId}-title`} className="mt-3 font-serif text-3xl leading-tight sm:text-4xl">
           Eliminar a {name}
         </h2>
         <p className="mt-5 text-sm leading-relaxed text-ash">

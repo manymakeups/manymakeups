@@ -75,7 +75,7 @@ export function StudioInbox({
 
   return (
     <div className="flex flex-col gap-8">
-      <form action="/api/admin/notices" method="post" className="flex flex-wrap items-center gap-2 border-b border-ink/10 pb-4">
+      <form action="/api/admin/notices" method="post" className="flex flex-col items-stretch gap-2 border-b border-ink/10 pb-4 sm:flex-row sm:flex-wrap sm:items-center [&>button]:w-full sm:[&>button]:w-auto">
         <input type="hidden" name="next" value="/privado/avisos" />
         {selected.map((id) => (
           <input key={id} type="hidden" name="ids" value={id} />

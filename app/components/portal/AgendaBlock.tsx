@@ -70,7 +70,7 @@ function AppointmentMenu({ item, copy }: { item: Appointment; copy: PortalCopy }
         </div>
       </details>
       {mode ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 px-5" onClick={() => setMode(null)}>
+        <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-ink/40 p-3 sm:items-center sm:p-6" onClick={() => setMode(null)}>
           <div
             className="max-h-[85dvh] w-full max-w-lg overflow-y-auto bg-porcelain p-6 shadow-[0_20px_60px_rgba(26,22,19,0.16)]"
             onClick={(event) => event.stopPropagation()}
@@ -224,7 +224,7 @@ export function NewAppointmentModal({ clientId }: { clientId: string }) {
         Crear nueva cita
       </button>
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 px-5" onClick={() => setOpen(false)}>
+        <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-ink/40 p-3 sm:items-center sm:p-6" onClick={() => setOpen(false)}>
           <div
             className="max-h-[85dvh] w-full max-w-lg overflow-y-auto bg-porcelain p-6 shadow-[0_20px_60px_rgba(26,22,19,0.16)]"
             onClick={(event) => event.stopPropagation()}

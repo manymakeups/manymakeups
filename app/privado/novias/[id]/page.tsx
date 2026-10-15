@@ -69,10 +69,10 @@ export default async function StudioClientPage({
         />
       }
     >
-      <div className="shrink-0">
+      <div className="min-w-0 shrink-0">
         <PortalTabs basePath={`/privado/novias/${client.id}`} active={tab} />
       </div>
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden pb-4">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden pb-4">
       <div className="shrink-0 pt-6">
       {ok === "doc" ? <PortalNotice>Documento colgado.</PortalNotice> : null}
       {ok === "pagos" ? <PortalNotice>Pagos actualizados.</PortalNotice> : null}
@@ -214,7 +214,7 @@ export default async function StudioClientPage({
 
       {tab === "acompanantes" ? (
         <section className="flex min-h-0 flex-1 flex-col pt-4">
-          <div className="flex shrink-0 items-center justify-between gap-4">
+          <div className="flex shrink-0 flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="font-serif text-3xl">Acompañantes</h2>
             <AddCompanionModal clientId={client.id} action="/api/admin/companions" copy={portalEs} includeClientId />
           </div>
@@ -464,7 +464,7 @@ export default async function StudioClientPage({
 
       {tab === "agenda" ? (
         <section className="flex min-h-0 flex-1 flex-col pt-4">
-          <div className="flex shrink-0 items-center justify-between gap-4">
+          <div className="flex shrink-0 flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="font-serif text-3xl">Agenda</h2>
             <NewAppointmentModal clientId={client.id} />
           </div>

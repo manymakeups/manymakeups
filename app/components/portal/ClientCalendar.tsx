@@ -55,7 +55,7 @@ export function ClientCalendar({
   return (
     <>
       <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <h3 className="font-serif text-4xl">{monthLabel(year, month)}</h3>
+        <h3 className="font-serif text-3xl sm:text-4xl">{monthLabel(year, month)}</h3>
         <div className="flex gap-4 text-[0.68rem] uppercase tracking-[0.16em]">
           <button className="hover:text-gilt" type="button" onClick={() => showMonth(previous.year, previous.month)}>
             {previousLabel}
@@ -70,9 +70,9 @@ export function ClientCalendar({
         <span className="inline-block h-1.5 w-1.5 rounded-full bg-gilt" />
         {freeLabel}
       </p>
-      <div className="mt-4 grid grid-cols-7 border-l border-t border-ink/10 text-center text-[0.62rem] uppercase tracking-[0.14em] text-ash sm:mt-8">
+      <div className="mt-4 grid grid-cols-7 border-l border-t border-ink/10 text-center text-[0.62rem] uppercase tracking-normal text-ash sm:mt-8 sm:tracking-[0.14em]">
         {weekdayLabels().map((label) => (
-          <div key={label} className="border-b border-r border-ink/10 py-2">
+          <div key={label} className="border-b border-r border-ink/10 px-0.5 py-2">
             {label}
           </div>
         ))}

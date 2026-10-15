@@ -81,8 +81,8 @@ export function AgendaBoard({
 
   return (
     <>
-      <div className="mt-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <h2 className="font-serif text-4xl">{monthLabel(year, month)}</h2>
+      <div className="mt-6 flex flex-col gap-4 sm:mt-12 sm:flex-row sm:items-end sm:justify-between">
+        <h2 className="font-serif text-3xl sm:text-4xl">{monthLabel(year, month)}</h2>
         <div className="flex gap-4 text-[0.68rem] uppercase tracking-[0.16em]">
           <button className="hover:text-gilt" type="button" onClick={() => showMonth(previous.year, previous.month)}>
             Anterior
@@ -93,9 +93,9 @@ export function AgendaBoard({
         </div>
       </div>
 
-      <div className="mt-8 grid grid-cols-7 border-l border-t border-ink/10 text-center text-[0.62rem] uppercase tracking-[0.14em] text-ash">
+      <div className="mt-6 grid grid-cols-7 border-l border-t border-ink/10 text-center text-[0.62rem] uppercase tracking-normal text-ash sm:mt-8 sm:tracking-[0.14em]">
         {weekdayLabels().map((label) => (
-          <div key={label} className="border-b border-r border-ink/10 py-2">
+          <div key={label} className="border-b border-r border-ink/10 px-0.5 py-2">
             {label}
           </div>
         ))}
@@ -103,7 +103,7 @@ export function AgendaBoard({
       <div className="grid grid-cols-7 border-l border-ink/10">
         {cells.map((date, index) => {
           if (!date) {
-            return <div key={`empty-${index}`} className="min-h-16 border-b border-r border-ink/10 bg-linen/40 sm:min-h-24" />;
+            return <div key={`empty-${index}`} className="min-h-12 border-b border-r border-ink/10 bg-linen/40 sm:min-h-24" />;
           }
           const items = byDate.get(date) ?? [];
           const isToday = date === today;
@@ -114,22 +114,29 @@ export function AgendaBoard({
               type="button"
               onClick={() => showDay(date)}
               aria-pressed={isSelected}
-              className={`flex min-h-16 flex-col gap-1 border-b border-r border-ink/10 p-2 text-left sm:min-h-24 ${isSelected ? "bg-ink text-porcelain" : "hover:bg-linen/60"}`}
+              aria-label={items.length ? `${dayLabel(date)}. ${items.length}` : dayLabel(date)}
+              className={`flex min-h-12 flex-col gap-1 border-b border-r border-ink/10 p-1 text-left sm:min-h-24 sm:p-2 ${isSelected ? "bg-ink text-porcelain" : "hover:bg-linen/60"}`}
             >
               <span className={`text-sm ${isToday && !isSelected ? "font-medium text-gilt" : ""}`}>
                 {Number(date.slice(-2))}
               </span>
+              {items.length ? (
+                <span className={`mt-auto flex items-center gap-1 sm:hidden ${isSelected ? "text-porcelain" : "text-gilt"}`}>
+                  <span className={`block h-1.5 w-1.5 rounded-full ${isSelected ? "bg-porcelain" : "bg-gilt"}`} />
+                  {items.length > 1 ? <span className="text-[0.62rem] leading-none">{items.length}</span> : null}
+                </span>
+              ) : null}
               {items.slice(0, 3).map((event) => (
                 <span
                   key={event.id}
-                  className={`truncate text-[0.68rem] leading-tight ${isSelected ? "text-porcelain/90" : "text-ink"}`}
+                  className={`hidden truncate text-[0.68rem] leading-tight sm:block ${isSelected ? "text-porcelain/90" : "text-ink"}`}
                 >
                   {event.time ? `${event.time} ` : ""}
                   {event.title}
                 </span>
               ))}
               {items.length > 3 ? (
-                <span className={`text-[0.62rem] ${isSelected ? "text-porcelain/70" : "text-ash"}`}>+{items.length - 3}</span>
+                <span className={`hidden text-[0.62rem] sm:block ${isSelected ? "text-porcelain/70" : "text-ash"}`}>+{items.length - 3}</span>
               ) : null}
             </button>
           );

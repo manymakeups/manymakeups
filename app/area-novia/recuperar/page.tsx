@@ -24,11 +24,11 @@ export default async function RecoverPage({
           {t.email}
           <input className="field" name="email" type="email" required autoComplete="email" />
         </label>
-        <div className="mt-2 flex flex-wrap gap-3">
-          <button className="btn-atelier-solid btn-atelier" type="submit">
+        <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <button className="btn-atelier-solid btn-atelier w-full sm:w-auto" type="submit">
             {t.recoverSend}
           </button>
-          <a className="btn-atelier" href={localePath(locale, "/area-novia")}>
+          <a className="btn-atelier w-full sm:w-auto" href={localePath(locale, "/area-novia")}>
             {t.recoverBack}
           </a>
         </div>

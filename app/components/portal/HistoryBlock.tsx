@@ -273,7 +273,7 @@ export function HistoryView({
                   {notice.replies.map((reply) => (
                     <li key={reply.id}>
                       <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">{copy.threadReply}</p>
-                      <div className="mt-2 flex items-baseline justify-between gap-4">
+                      <div className="mt-2 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
                         <p className="text-sm">
                           {reply.fromClient ? person : copy.threadAuthor}
                           <span className="text-ash"> → {reply.fromClient ? copy.threadAuthor : person}</span>
@@ -290,7 +290,7 @@ export function HistoryView({
                   <li key={notice.id} className="px-4 py-5">
                     <article>
                       <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">{copy.mailLabel}</p>
-                      <div className="mt-3 flex items-baseline justify-between gap-4">
+                      <div className="mt-3 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
                         <p className="text-sm">
                           {copy.threadAuthor}
                           <span className="text-ash"> → {person}</span>
@@ -312,7 +312,7 @@ export function HistoryView({
                     <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">
                       {copy.mailLabel} · {copy.requestLabel}
                     </p>
-                    <div className="mt-3 flex items-baseline justify-between gap-4">
+                    <div className="mt-3 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
                       <p className="text-sm">
                         {person}
                         <span className="text-ash"> → {copy.threadAuthor}</span>

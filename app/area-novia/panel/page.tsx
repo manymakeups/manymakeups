@@ -93,7 +93,7 @@ export default async function BridePanelPage({
         </form>
       }
     >
-      <div className="shrink-0">
+      <div className="min-w-0 shrink-0">
         <PortalTabs
           basePath={localePath(locale, "/area-novia/panel")}
           active={tab}
@@ -101,7 +101,7 @@ export default async function BridePanelPage({
           badges={{ historico: tab === "historico" ? 0 : unreadComms }}
         />
       </div>
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       {ok && okText[ok] ? <div className="shrink-0 pt-6"><PortalNotice>{okText[ok]}</PortalNotice></div> : null}
       {error && errorText[error] ? <div className="shrink-0 pt-6"><PortalNotice>{errorText[error]}</PortalNotice></div> : null}
 
@@ -211,7 +211,7 @@ export default async function BridePanelPage({
 
       {tab === "acompanantes" ? (
         <section className="flex min-h-0 flex-1 flex-col pt-4">
-          <div className="flex shrink-0 items-center justify-between gap-4">
+          <div className="flex shrink-0 flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="font-serif text-3xl">{t.companionsTitle}</h2>
             {client.event.peopleLocked ? (
               <AddCompanionModal clientId={client.id} action="/api/portal/companions" copy={t} />
@@ -345,7 +345,7 @@ export default async function BridePanelPage({
 
       {tab === "documentacion" ? (
         <section className="flex min-h-0 flex-1 flex-col pt-4">
-          <div className="flex shrink-0 items-center justify-between gap-4">
+          <div className="flex shrink-0 flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="font-serif text-3xl">{t.docsTitle}</h2>
             <SendDocumentModal label={t.sendDocument} hint={t.sendDocumentHint} closeLabel={t.agendaClose} fileLabel={t.sendDocumentFile} />
           </div>
