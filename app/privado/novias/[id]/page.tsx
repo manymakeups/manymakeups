@@ -1,5 +1,5 @@
 import { AgendaLists, NewAppointmentModal } from "@/app/components/portal/AgendaBlock";
-import { BudgetView, HistoryForm } from "@/app/components/portal/HistoryBlock";
+import { BudgetView, HistoryComposer, HistoryForm } from "@/app/components/portal/HistoryBlock";
 import { AddCompanionModal, PersonDataForm, RemoveCompanionButton } from "@/app/components/portal/CompanionsForm";
 import { DeleteFileButton } from "@/app/components/portal/FileActions";
 import { EventForm } from "@/app/components/portal/EventForm";
@@ -8,7 +8,7 @@ import { PaymentsForm } from "@/app/components/portal/PaymentsBlock";
 import { PhotoGrid } from "@/app/components/portal/PhotoPicker";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { PortalTabs } from "@/app/components/portal/PortalTabs";
-import { EventSections, SubTabs } from "@/app/components/portal/SubTabs";
+import { CompanionDeck, EventSections, SubTabs } from "@/app/components/portal/SubTabs";
 import { StudioAside } from "@/app/components/portal/StudioAside";
 import { LookNotesForm, WorkForm } from "@/app/components/portal/WorkBlock";
 import { portalEs } from "@/lib/i18n/portal-messages";
@@ -223,8 +223,7 @@ export default async function StudioClientPage({
           </p>
           <div className="mt-4 flex min-h-0 flex-1 flex-col">
             {event.people.length ? (
-              <SubTabs
-                fill
+              <CompanionDeck
                 initial={sec?.match(/^(\d+)/)?.[1]}
                 tabs={event.people.map((person, i) => {
                   const piece = sec?.startsWith(`${i}-`) ? sec.slice(`${i}-`.length) : undefined;
@@ -239,8 +238,7 @@ export default async function StudioClientPage({
                   return {
                     id: String(i),
                     label: heading,
-                    above: <RemoveCompanionButton clientId={client.id} index={i} name={heading} />,
-                    nested: true,
+                    remove: <RemoveCompanionButton clientId={client.id} index={i} name={heading} label="Quitar" />,
                     body: (
                       <EventSections
                         section={piece}
@@ -424,19 +422,28 @@ export default async function StudioClientPage({
                   id: "nueva",
                   label: "Nueva comunicación",
                   body: (
-                    <form action="/api/admin/notices" method="post" className="flex max-w-xl flex-col gap-3">
-                      <input type="hidden" name="intent" value="compose" />
-                      <input type="hidden" name="clientId" value={client.id} />
-                      <input type="hidden" name="next" value={`/privado/novias/${client.id}?tab=historico&com=nueva`} />
-                      <p className="text-sm text-ash">Ella lo lee en comunicaciones, firmado como Ana Zarza.</p>
-                      <label className="field-label">
-                        Mensaje
-                        <textarea className="field min-h-28" name="message" required minLength={2} />
-                      </label>
-                      <button className="btn-atelier self-start" type="submit">
-                        Enviar
-                      </button>
-                    </form>
+                    <div className="flex max-w-xl flex-col gap-12">
+                      <form action="/api/admin/notices" method="post" className="flex flex-col gap-3">
+                        <input type="hidden" name="intent" value="compose" />
+                        <input type="hidden" name="clientId" value={client.id} />
+                        <input type="hidden" name="next" value={`/privado/novias/${client.id}?tab=historico&com=nueva`} />
+                        <p className="text-sm text-ash">Ella lo lee en comunicaciones, firmado como Ana Zarza.</p>
+                        <label className="field-label">
+                          Mensaje
+                          <textarea className="field min-h-28" name="message" required minLength={2} />
+                        </label>
+                        <button className="btn-atelier self-start" type="submit">
+                          Enviar
+                        </button>
+                      </form>
+                      <div>
+                        <h3 className="font-serif text-2xl">Añadir al histórico</h3>
+                        <p className="mt-2 text-sm text-ash">Queda anotado en el histórico. Ella no recibe un correo.</p>
+                        <div className="mt-6">
+                          <HistoryComposer clientId={client.id} />
+                        </div>
+                      </div>
+                    </div>
                   ),
                 },
               ]}

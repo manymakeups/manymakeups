@@ -251,10 +251,12 @@ export function RemoveCompanionButton({
   clientId,
   index,
   name,
+  label,
 }: {
   clientId: string;
   index: number;
   name: string;
+  label?: string;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -262,10 +264,14 @@ export function RemoveCompanionButton({
       <button
         type="button"
         aria-label={`Eliminar a ${name}`}
-        className="px-1 text-xs leading-none text-ash hover:text-ink"
+        className={
+          label
+            ? "mb-px inline-flex min-h-11 shrink-0 items-center text-[0.68rem] uppercase tracking-[0.14em] text-ash hover:text-ink"
+            : "px-1 text-xs leading-none text-ash hover:text-ink"
+        }
         onClick={() => setOpen(true)}
       >
-        ×
+        {label ?? "×"}
       </button>
       {open ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-ink/40 p-3 sm:items-center sm:p-6" onClick={() => setOpen(false)}>

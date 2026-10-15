@@ -80,6 +80,52 @@ export function SubTabs({
   );
 }
 
+export function CompanionDeck({
+  tabs,
+  initial,
+}: {
+  tabs: { id: string; label: string; body: ReactNode; remove?: ReactNode }[];
+  initial?: string;
+}) {
+  const start = initial && tabs.some((tab) => tab.id === initial) ? initial : tabs[0]?.id;
+  const [current, setCurrent] = useState(start);
+  const active = tabs.find((tab) => tab.id === current) ?? tabs[0];
+  if (!active) return null;
+  return (
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
+      <div className="flex shrink-0 items-end gap-3">
+        <label className="field-label min-w-0 flex-1">
+          Acompañante
+          <select className="field" value={active.id} onChange={(event) => setCurrent(event.target.value)}>
+            {tabs.map((tab) => (
+              <option key={tab.id} value={tab.id}>
+                {tab.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        {active.remove}
+      </div>
+      {tabs.map((tab) => {
+        const on = tab.id === active.id;
+        return (
+          <div
+            key={tab.id}
+            hidden={!on}
+            className={
+              on
+                ? "mt-4 flex min-h-0 flex-1 flex-col overflow-hidden [&>*]:flex [&>*]:h-full [&>*]:min-h-0 [&>*]:flex-1 [&>*]:flex-col"
+                : undefined
+            }
+          >
+            {tab.body}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function EventSections({
   labels,
   section,
