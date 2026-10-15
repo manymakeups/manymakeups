@@ -106,6 +106,17 @@ export function portalTab(value: string | undefined): PortalTab {
 
 export const PRODUCT_ZONES = ["Ojos", "Labios", "Piel", "Acabado", "Cejas", "Pestañas", "Mejillas"] as const;
 
+export const HAIR_ZONES = [
+  "Previo",
+  "Preparación",
+  "Acabado",
+  "Materiales",
+  "Decoración",
+  "Extensiones",
+  "Rellenos",
+  "Otros",
+] as const;
+
 export type UsedProduct = {
   brand: string;
   name: string;

@@ -2,7 +2,7 @@
 
 import { PhotoGrid, PhotoPicker } from "@/app/components/portal/PhotoPicker";
 import { portalEs, type PortalCopy } from "@/lib/i18n/portal-messages";
-import { PRODUCT_ZONES, filesFor, type PortalFile, type UsedProduct } from "@/lib/portal/types";
+import { HAIR_ZONES, PRODUCT_ZONES, filesFor, type PortalFile, type UsedProduct } from "@/lib/portal/types";
 import { useState } from "react";
 
 function zoneLabel(zone: string, copy: PortalCopy) {
@@ -28,8 +28,9 @@ export function ProductList({
     list.push(product);
     groups.set(zone, list);
   }
-  const known = PRODUCT_ZONES.filter((zone) => groups.has(zone));
-  const extra = [...groups.keys()].filter((zone) => !PRODUCT_ZONES.includes(zone as (typeof PRODUCT_ZONES)[number]));
+  const order = products.some((product) => product.look === "peinado") ? HAIR_ZONES : PRODUCT_ZONES;
+  const known = order.filter((zone) => groups.has(zone));
+  const extra = [...groups.keys()].filter((zone) => !(order as readonly string[]).includes(zone));
   return (
     <div className="mt-4 flex flex-col gap-6">
       {[...known, ...extra].map((zone) => (
@@ -102,11 +103,12 @@ export function WorkView({
 }
 
 function ProductFields({ prefix, products, look }: { prefix: string; products: UsedProduct[]; look: "maquillaje" | "peinado" }) {
-  const blank = (): UsedProduct => ({ brand: "", name: "", shade: "", zone: "Ojos", look });
+  const zones = look === "peinado" ? HAIR_ZONES : PRODUCT_ZONES;
+  const blank = (): UsedProduct => ({ brand: "", name: "", shade: "", zone: zones[0], look });
   const [rows, setRows] = useState<UsedProduct[]>(products);
   const [draft, setDraft] = useState<UsedProduct>(blank());
-  const known = PRODUCT_ZONES.includes(draft.zone as (typeof PRODUCT_ZONES)[number]);
-  const picked = known || !draft.zone ? draft.zone || "Ojos" : "Otra";
+  const known = (zones as readonly string[]).includes(draft.zone);
+  const picked = known || !draft.zone ? draft.zone || zones[0] : look === "peinado" ? draft.zone : "Otra";
   function addDraft() {
     const zone = picked === "Otra" ? draft.zone.trim() : picked;
     if (!draft.brand.trim() && !draft.name.trim() && !draft.shade.trim() && !zone) return;
@@ -138,12 +140,15 @@ function ProductFields({ prefix, products, look }: { prefix: string; products: U
               setDraft({ ...draft, zone: zone === "Otra" ? "" : zone });
             }}
           >
-            {PRODUCT_ZONES.map((zone) => (
+            {look === "peinado" && picked && !(zones as readonly string[]).includes(picked) ? (
+              <option key={picked} value={picked}>{picked}</option>
+            ) : null}
+            {zones.map((zone) => (
               <option key={zone} value={zone}>
                 {zone}
               </option>
             ))}
-            <option value="Otra">Otra</option>
+            {look === "maquillaje" ? <option value="Otra">Otra</option> : null}
           </select>
         </label>
         {picked === "Otra" ? (
