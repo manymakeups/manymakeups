@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import {
   dayLabel,
   monthCells,
@@ -9,22 +9,6 @@ import {
   weekdayLabels,
   type RemoteEvent,
 } from "@/lib/portal/calendar";
-
-export function CalendarLinkFold({ startOpen, children }: { startOpen: boolean; children: ReactNode }) {
-  const [open, setOpen] = useState(startOpen);
-  return (
-    <details
-      className="max-w-xl border border-ink/10"
-      open={open}
-      onToggle={(event) => setOpen(event.currentTarget.open)}
-    >
-      <summary className="cursor-pointer list-none px-6 py-4 font-serif text-2xl [&::-webkit-details-marker]:hidden">
-        Enlaces de los calendarios
-      </summary>
-      <div className="border-t border-ink/10 px-6 py-6">{children}</div>
-    </details>
-  );
-}
 
 function pickDay(cells: Array<string | null>, today: string, events: RemoteEvent[]) {
   if (cells.includes(today)) return today;
