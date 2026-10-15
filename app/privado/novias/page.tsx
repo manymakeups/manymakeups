@@ -49,7 +49,7 @@ export default async function StudioClientsPage({
       lead="Creas la cuenta con su correo, le envías el enlace y ella elige la contraseña. Luego ves la ficha, las fotos y cuelgas los papeles."
       aside={<StudioAside />}
     >
-      <div className="shrink-0 pb-6">
+      <div className="flex shrink-0 items-center justify-between gap-3 pb-3 md:block md:pb-6">
         <NewClientModal />
         <ClientSearch mode={mode} query={query} partida={service} />
       </div>
