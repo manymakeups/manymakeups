@@ -34,7 +34,7 @@ function AppointmentMenu({ item, copy }: { item: Appointment; copy: PortalCopy }
   if (item.status === "hecha" || item.status === "anulada") return null;
   return (
     <>
-      <details className="relative shrink-0">
+      <details className="relative z-20 shrink-0">
         <summary
           className="inline-flex size-9 cursor-pointer list-none items-center justify-center text-ink hover:text-gilt [&::-webkit-details-marker]:hidden"
           aria-label={copy.agendaOptions}
@@ -134,11 +134,13 @@ export function AgendaView({
   copy = portalEs,
   locale = "es",
   editable = false,
+  studioClientId,
 }: {
   appointments: Appointment[];
   copy?: PortalCopy;
   locale?: Locale;
   editable?: boolean;
+  studioClientId?: string;
 }) {
   const ordered = [...appointments].sort((a, b) =>
     `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`),
@@ -146,10 +148,11 @@ export function AgendaView({
   if (!ordered.length) {
     return <p className="text-sm text-ash">{copy.agendaEmpty}</p>;
   }
+  const today = todayKey();
   return (
     <ul className="divide-y divide-ink/10 border border-ink/10">
       {ordered.map((item) => (
-        <li key={item.id} className="flex items-start justify-between gap-3 px-4 py-4">
+        <li key={item.id} className="relative flex items-start justify-between gap-3 px-4 py-4 has-[details[open]]:z-30">
           <div>
             <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">
               {copy.appointmentTitles[item.title] || item.title || copy.appointment} ·{" "}
@@ -162,19 +165,129 @@ export function AgendaView({
               <p className="mt-2 whitespace-pre-wrap text-sm">{item.notes}</p>
             ) : null}
           </div>
-          {editable ? <AppointmentMenu item={item} copy={copy} /> : null}
+          {studioClientId && item.date >= today ? (
+            <StudioAppointmentMenu clientId={studioClientId} item={item} />
+          ) : editable ? (
+            <AppointmentMenu item={item} copy={copy} />
+          ) : null}
         </li>
       ))}
     </ul>
   );
 }
 
-function AppointmentFields() {
+function todayKey() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Madrid",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+function StudioAppointmentMenu({ clientId, item }: { clientId: string; item: Appointment }) {
+  const [mode, setMode] = useState<"edit" | "cancel" | null>(null);
+  return (
+    <>
+      <details className="relative z-20 shrink-0">
+        <summary
+          className="inline-flex size-9 cursor-pointer list-none items-center justify-center text-ink hover:text-gilt [&::-webkit-details-marker]:hidden"
+          aria-label="Opciones de la cita"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+            <circle cx="3" cy="8" r="1.3" fill="currentColor" />
+            <circle cx="8" cy="8" r="1.3" fill="currentColor" />
+            <circle cx="13" cy="8" r="1.3" fill="currentColor" />
+          </svg>
+        </summary>
+        <div className="absolute right-0 top-10 z-20 w-56 border border-ink/15 bg-porcelain py-1 shadow-sm">
+          <button
+            type="button"
+            className="block w-full px-4 py-3 text-left text-[0.72rem] uppercase tracking-[0.14em] hover:bg-ink/5"
+            onClick={(event) => {
+              const menu = event.currentTarget.closest("details");
+              if (menu) menu.open = false;
+              setMode("edit");
+            }}
+          >
+            Modificar
+          </button>
+          <button
+            type="button"
+            className="block w-full px-4 py-3 text-left text-[0.72rem] uppercase tracking-[0.14em] hover:bg-ink/5"
+            onClick={(event) => {
+              const menu = event.currentTarget.closest("details");
+              if (menu) menu.open = false;
+              setMode("cancel");
+            }}
+          >
+            Anular
+          </button>
+          <form action="/api/admin/reminders" method="post">
+            <input type="hidden" name="intent" value="appointment" />
+            <input type="hidden" name="clientId" value={clientId} />
+            <input type="hidden" name="appointmentId" value={item.id} />
+            <button
+              type="submit"
+              className="block w-full px-4 py-3 text-left text-[0.72rem] uppercase tracking-[0.14em] hover:bg-ink/5"
+            >
+              Enviar recordatorio
+            </button>
+          </form>
+        </div>
+      </details>
+      {mode ? (
+        <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-ink/40 p-3 sm:items-center sm:p-6" onClick={() => setMode(null)}>
+          <div
+            className="max-h-[85dvh] w-full max-w-lg overflow-y-auto bg-porcelain p-6 shadow-[0_20px_60px_rgba(26,22,19,0.16)]"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            <h2 className="font-serif text-3xl">{mode === "edit" ? "Modificar cita" : "Anular cita"}</h2>
+            {mode === "edit" ? (
+              <form action="/api/admin/appointments" method="post" className="mt-6 grid gap-4">
+                <input type="hidden" name="intent" value="update" />
+                <input type="hidden" name="clientId" value={clientId} />
+                <input type="hidden" name="editId" value={item.id} />
+                <AppointmentFields item={item} />
+                <button className="btn-atelier self-start" type="submit">
+                  Guardar
+                </button>
+              </form>
+            ) : (
+              <form action="/api/admin/appointments" method="post" className="mt-6">
+                <input type="hidden" name="intent" value="cancel" />
+                <input type="hidden" name="clientId" value={clientId} />
+                <input type="hidden" name="editId" value={item.id} />
+                <p className="text-sm text-ash">
+                  La cita pasa a anulada. Si tenía importe, el pendiente sigue en el budget hasta que lo quites.
+                </p>
+                <button className="btn-atelier mt-6" type="submit">
+                  Anular
+                </button>
+              </form>
+            )}
+            <button
+              type="button"
+              className="mt-4 text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink"
+              onClick={() => setMode(null)}
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+function AppointmentFields({ item }: { item?: Appointment }) {
   return (
     <>
       <label className="field-label">
         Tipo de cita
-        <select className="field" name="title" defaultValue={APPOINTMENT_TITLES[0]}>
+        <select className="field" name="title" defaultValue={item?.title || APPOINTMENT_TITLES[0]}>
           {APPOINTMENT_TITLES.map((title) => (
             <option key={title} value={title}>
               {title}
@@ -185,24 +298,24 @@ function AppointmentFields() {
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="field-label">
           Fecha
-          <input className="field" name="date" type="date" required />
+          <input className="field" name="date" type="date" required defaultValue={item?.date} />
         </label>
         <label className="field-label">
           Hora
-          <input className="field" name="time" type="time" />
+          <input className="field" name="time" type="time" defaultValue={item?.time} />
         </label>
       </div>
       <label className="field-label">
         Lugar
-        <input className="field" name="place" />
+        <input className="field" name="place" defaultValue={item?.place} />
       </label>
       <label className="field-label">
         Importe
-        <input className="field" name="amount" type="number" min="0" step="0.01" />
+        <input className="field" name="amount" type="number" min="0" step="0.01" defaultValue={item?.amount || undefined} />
       </label>
       <label className="field-label">
         Estado
-        <select className="field" name="status" defaultValue="planificada">
+        <select className="field" name="status" defaultValue={item?.status || "planificada"}>
           {APPOINTMENT_STATUSES.filter((status) => status !== "anulada").map((status) => (
             <option key={status} value={status}>
               {statusLabelEs[status]}
@@ -212,7 +325,7 @@ function AppointmentFields() {
       </label>
       <label className="field-label">
         Notas
-        <textarea className="field min-h-24" name="notes" />
+        <textarea className="field min-h-24" name="notes" defaultValue={item?.notes} />
       </label>
     </>
   );
@@ -274,7 +387,7 @@ export function AgendaLists({
       <div>
         <p className="font-serif text-2xl">Planificadas</p>
         <div className="mt-4">
-          <AgendaView appointments={planned} />
+          <AgendaView appointments={planned} studioClientId={clientId} />
         </div>
       </div>
       {done.length ? (

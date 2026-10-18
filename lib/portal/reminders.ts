@@ -1,6 +1,7 @@
 import { site } from "@/lib/site";
 import { madridToday } from "./calendar";
 import { hashToken, randomToken } from "./crypto";
+import { stampInvite } from "./invite";
 import { dateLocale, getPortalCopy, interpolate } from "@/lib/i18n/portal-messages";
 import { localePath } from "@/lib/i18n/path";
 import { brandedClientEmail } from "./mail-html";
@@ -53,8 +54,8 @@ function formatWhen(date: string, locale: ReturnType<typeof clientLocale>) {
   });
 }
 
-async function sendActivation(client: ClientRecord) {
-  if (!client.inviteToken || client.remindersOptOut || client.passwordHash) return false;
+function activationMail(client: ClientRecord) {
+  if (!client.inviteToken || client.passwordHash) return Promise.resolve(false);
   const locale = clientLocale(client);
   const t = getPortalCopy(locale);
   const name = mailName(client.event, client.name);
@@ -65,7 +66,7 @@ async function sendActivation(client: ClientRecord) {
       { text: interpolate(t.activationReminderHello, { name }) },
       { text: t.activationReminderBody },
       { href: link, label: t.activationReminderLink },
-      { text: t.activationReminderClose },
+      { text: t.activationReminderClose, muted: true },
     ],
     signoff: [t.recoverMailSignoff],
     footer: footer(client, "recordatorios", t.unsubRemindersFooter),
@@ -73,32 +74,49 @@ async function sendActivation(client: ClientRecord) {
   return notifyEmail(client.email, t.activationReminderSubject, mail.text, mail.html);
 }
 
+export async function deliverActivationReminder(client: ClientRecord) {
+  if (client.passwordHash) return false;
+  const expired = !client.inviteExpiresAt || new Date(client.inviteExpiresAt).getTime() <= Date.now();
+  if (!client.inviteToken || expired) stampInvite(client, randomToken());
+  return activationMail(client);
+}
+
 async function sendAppointment(client: ClientRecord, appointment: Appointment, token: string) {
   const locale = clientLocale(client);
   const t = getPortalCopy(locale);
   const name = mailName(client.event, client.name);
   const when = formatWhen(appointment.date, locale);
-  const details = [
-    `${t.mailService}: ${appointment.title}`,
-    `${t.mailDate}: ${when}`,
-    `${t.mailTime}: ${appointment.time || "—"}`,
-    `${t.mailPlace}: ${appointment.place || "—"}`,
-    `${t.mailAmount}: ${appointment.amount > 0 ? euros(appointment.amount) : "—"}`,
-  ].join("\n");
   const confirm = `${site.url}${localePath(locale, "/area-novia/confirmar-cita")}?cliente=${encodeURIComponent(client.id)}&cita=${encodeURIComponent(appointment.id)}&token=${encodeURIComponent(token)}`;
   const mail = brandedClientEmail({
     lang: locale,
     blocks: [
       { text: interpolate(t.appointmentReminderHello, { name }) },
       { text: t.appointmentReminderIntro },
-      { text: details },
+      {
+        rows: [
+          { label: t.mailService, value: appointment.title },
+          { label: t.mailDate, value: when },
+          { label: t.mailTime, value: appointment.time || "—" },
+          { label: t.mailPlace, value: appointment.place || "—" },
+          { label: t.mailAmount, value: appointment.amount > 0 ? euros(appointment.amount) : "—" },
+        ],
+      },
       { href: confirm, label: t.appointmentReminderConfirm },
-      { text: t.appointmentReminderClose },
+      { text: t.appointmentReminderClose, muted: true },
     ],
     signoff: [t.recoverMailSignoff],
     footer: footer(client, "recordatorios", t.unsubRemindersFooter),
   });
   return notifyEmail(client.email, t.appointmentReminderSubject, mail.text, mail.html);
+}
+
+export async function deliverAppointmentReminder(client: ClientRecord, appointment: Appointment) {
+  if (appointment.status === "anulada" || appointment.status === "hecha") return false;
+  const token = randomToken();
+  const ok = await sendAppointment(client, appointment, token);
+  if (!ok) return false;
+  appointment.confirmTokenHash = hashToken(token);
+  return true;
 }
 
 export async function runReminders() {
@@ -117,7 +135,7 @@ export async function runReminders() {
         const sent = new Set(client.activationRemindersSent ?? []);
         const next = due.find((day) => !sent.has(day));
         if (next) {
-          const ok = await sendActivation(client);
+          const ok = await activationMail(client);
           if (ok) {
             sent.add(next);
             client.activationRemindersSent = [...sent];

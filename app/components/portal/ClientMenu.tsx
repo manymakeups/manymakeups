@@ -19,11 +19,13 @@ export function ClientMenu({
   name,
   phone,
   email,
+  pending = false,
 }: {
   id: string;
   name: string;
   phone: string;
   email: string;
+  pending?: boolean;
 }) {
   const whatsapp = whatsappHref(phone);
   const call = telHref(phone);
@@ -31,7 +33,7 @@ export function ClientMenu({
 
   return (
     <>
-      <details className="relative">
+      <details className="relative z-20">
         <summary
           className="inline-flex size-11 cursor-pointer list-none items-center justify-center border border-ink/15 text-ink hover:border-ink [&::-webkit-details-marker]:hidden"
           aria-label={`Opciones de ${name}`}
@@ -52,6 +54,18 @@ export function ClientMenu({
             <a className="block px-4 py-3 text-[0.72rem] uppercase tracking-[0.14em] hover:bg-ink/5" href={`mailto:${email}`}>
               Enviar mail
             </a>
+          ) : null}
+          {pending ? (
+            <form action="/api/admin/reminders" method="post">
+              <input type="hidden" name="intent" value="activation" />
+              <input type="hidden" name="clientId" value={id} />
+              <button
+                type="submit"
+                className="block w-full px-4 py-3 text-left text-[0.72rem] uppercase tracking-[0.14em] hover:bg-ink/5"
+              >
+                Enviar recordatorio de activación
+              </button>
+            </form>
           ) : null}
           <form action="/api/admin/invite" method="post">
             <input type="hidden" name="id" value={id} />

@@ -40,9 +40,14 @@ export function PlanningView({
     planning.packUp ||
     planning.notes ||
     slots.length;
-  if (!filled) return <p className="text-sm text-ash">{copy.planningEmpty}</p>;
   return (
     <div className="flex max-w-2xl flex-col gap-6 text-sm">
+      <div className="flex justify-center">
+        <img src="/brand/logo.jpg" alt="Many Makeups" width={168} height={168} className="size-40" />
+      </div>
+      {!filled ? <p className="text-center text-sm text-ash">{copy.planningEmpty}</p> : null}
+      {filled ? (
+      <>
       <dl className="space-y-3">
         {planning.location ? (
           <div>
@@ -94,6 +99,8 @@ export function PlanningView({
           <p className="text-ash">{copy.planningNotes}</p>
           <p className="mt-1 whitespace-pre-wrap">{planning.notes}</p>
         </div>
+      ) : null}
+      </>
       ) : null}
     </div>
   );

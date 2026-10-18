@@ -77,6 +77,13 @@ export default async function StudioClientPage({
       {ok === "doc" ? <PortalNotice>Documento colgado.</PortalNotice> : null}
       {ok === "pagos" ? <PortalNotice>Pagos actualizados.</PortalNotice> : null}
       {ok === "agenda" ? <PortalNotice>Agenda actualizada.</PortalNotice> : null}
+      {ok === "anulada" ? <PortalNotice>Cita anulada.</PortalNotice> : null}
+      {ok === "recordatorio" && error !== "correo" ? (
+        <PortalNotice>Recordatorio enviado. Ella lo recibe con la cita y el botón para confirmar.</PortalNotice>
+      ) : null}
+      {ok === "recordatorio" && error === "correo" ? (
+        <PortalNotice>No he podido enviar el recordatorio. Falta RESEND_API_KEY en Vercel.</PortalNotice>
+      ) : null}
       {ok === "historico" ? <PortalNotice>Histórico actualizado. Ella ya lo ve en su área.</PortalNotice> : null}
       {ok === "planning" && error !== "correo" ? <PortalNotice>Planning guardado.</PortalNotice> : null}
       {ok === "planning-mail" ? <PortalNotice>Planning guardado y enviado por mail.</PortalNotice> : null}

@@ -64,6 +64,14 @@ export default async function StudioClientsPage({
       {error === "datos" ? <PortalNotice>Nombre y correo válidos, por favor.</PortalNotice> : null}
       {error === "existe" ? <PortalNotice>Ese correo ya tiene cuenta.</PortalNotice> : null}
       {ok === "eliminada" ? <PortalNotice>Clienta eliminada.</PortalNotice> : null}
+      {ok === "recordatorio" && error !== "correo" ? (
+        <PortalNotice>Recordatorio de activación enviado.</PortalNotice>
+      ) : null}
+      {ok === "recordatorio" && error === "correo" ? (
+        <PortalNotice>
+          No he podido enviar el recordatorio. Si acaba de generarse el enlace, cópialo y envíaselo tú.
+        </PortalNotice>
+      ) : null}
 
       <ul className="divide-y divide-ink/10 border-t border-ink/10">
         {clients.length === 0 ? (
@@ -72,7 +80,7 @@ export default async function StudioClientsPage({
           <li className="py-6 text-sm text-ash">Ninguna clienta coincide con la búsqueda.</li>
         ) : (
           visible.map((client) => (
-            <li key={client.id} className="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
+            <li key={client.id} className="relative flex flex-col gap-4 py-5 has-[details[open]]:z-30 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="font-serif text-2xl">{fullName(client.event, client.name)}</p>
                 <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
@@ -98,6 +106,7 @@ export default async function StudioClientsPage({
                   name={fullName(client.event, client.name)}
                   phone={client.event.phone}
                   email={client.email}
+                  pending={!client.passwordHash}
                 />
               </div>
             </li>
