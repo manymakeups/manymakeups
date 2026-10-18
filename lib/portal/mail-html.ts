@@ -1,7 +1,7 @@
 import { site } from "@/lib/site";
 
-const logoUrl = `${site.url}${site.logo}`;
-const signatureUrl = `${site.url}/brand/firmas-correo/info.png?v=2`;
+const logoUrl = `${site.url}/brand/mail/logo.png?v=3`;
+const signatureUrl = `${site.url}/brand/mail/firma.png?v=3`;
 const signatureWidth = 168;
 
 const serif = "font-family:Georgia,'Times New Roman',serif;";

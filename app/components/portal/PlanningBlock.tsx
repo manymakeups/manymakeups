@@ -1,4 +1,6 @@
+import { PlanningExtras } from "@/app/components/portal/PlanningExtras";
 import { companionHeading, fullName } from "@/lib/portal/names";
+import { planningTimeline } from "@/lib/portal/planning-timeline";
 import { interpolate, portalEs, type PortalCopy } from "@/lib/i18n/portal-messages";
 import type { Attendee, EventPlanning } from "@/lib/portal/types";
 
@@ -25,82 +27,36 @@ export function PlanningView({
   people: Attendee[];
   copy: PortalCopy;
 }) {
-  const rows = peopleOf(eventName, event, people, copy);
-  const slots = rows
-    .map((person) => {
-      const slot = planning.slots.find((item) => item.id === person.id);
-      return { ...person, time: slot?.time || "", note: slot?.note || "" };
-    })
-    .filter((slot) => slot.time || slot.note);
-  const filled =
-    planning.location ||
-    planning.arrivalTime ||
-    planning.setPrep ||
-    planning.breaks ||
-    planning.packUp ||
-    planning.notes ||
-    slots.length;
+  const timeline = planningTimeline(planning, peopleOf(eventName, event, people, copy), copy);
+  const filled = Boolean(planning.location || planning.notes || timeline.length);
   return (
     <div className="flex max-w-2xl flex-col gap-6 text-sm">
       <div className="flex justify-center">
         <img src="/brand/logo.jpg" alt="Many Makeups" width={168} height={168} className="size-40" />
       </div>
       {!filled ? <p className="text-center text-sm text-ash">{copy.planningEmpty}</p> : null}
-      {filled ? (
-      <>
-      <dl className="space-y-3">
-        {planning.location ? (
-          <div>
-            <dt className="text-ash">{copy.planningLocation}</dt>
-            <dd className="mt-1">{planning.location}</dd>
-          </div>
-        ) : null}
-        {planning.arrivalTime ? (
-          <div>
-            <dt className="text-ash">{copy.planningArrival}</dt>
-            <dd className="mt-1">{planning.arrivalTime}</dd>
-          </div>
-        ) : null}
-        {planning.setPrep ? (
-          <div>
-            <dt className="text-ash">{copy.planningSet}</dt>
-            <dd className="mt-1 whitespace-pre-wrap">{planning.setPrep}</dd>
-          </div>
-        ) : null}
-      </dl>
-      {slots.length ? (
-        <div>
-          <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">{copy.planningSchedule}</p>
-          <ul className="mt-3 divide-y divide-ink/10 border border-ink/10">
-            {slots.map((slot) => (
-              <li key={slot.id} className="px-4 py-3">
-                <p className="font-serif text-xl">{slot.label}</p>
-                {slot.time ? <p className="mt-1">{slot.time}</p> : null}
-                {slot.note ? <p className="mt-1 whitespace-pre-wrap text-ash">{slot.note}</p> : null}
-              </li>
-            ))}
-          </ul>
-        </div>
+      {planning.location ? (
+        <p>
+          <span className="text-ash">{copy.planningLocation}</span>
+          <span className="mt-1 block">{planning.location}</span>
+        </p>
       ) : null}
-      {planning.breaks ? (
-        <div>
-          <p className="text-ash">{copy.planningBreaks}</p>
-          <p className="mt-1 whitespace-pre-wrap">{planning.breaks}</p>
-        </div>
-      ) : null}
-      {planning.packUp ? (
-        <div>
-          <p className="text-ash">{copy.planningPack}</p>
-          <p className="mt-1 whitespace-pre-wrap">{planning.packUp}</p>
-        </div>
+      {timeline.length ? (
+        <ul className="divide-y divide-ink/10 border border-ink/10">
+          {timeline.map((row) => (
+            <li key={row.id} className="px-4 py-3">
+              <p className="font-serif text-xl">{row.label}</p>
+              {row.when ? <p className="mt-1">{row.when}</p> : null}
+              {row.note ? <p className="mt-1 whitespace-pre-wrap text-ash">{row.note}</p> : null}
+            </li>
+          ))}
+        </ul>
       ) : null}
       {planning.notes ? (
         <div>
           <p className="text-ash">{copy.planningNotes}</p>
           <p className="mt-1 whitespace-pre-wrap">{planning.notes}</p>
         </div>
-      ) : null}
-      </>
       ) : null}
     </div>
   );
@@ -131,9 +87,19 @@ export function PlanningForm({
         Hora de llegada
         <input className="field" name="arrivalTime" type="time" defaultValue={planning.arrivalTime} />
       </label>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="field-label">
+          Preparación del set, desde
+          <input className="field" name="setPrepStart" type="time" defaultValue={planning.setPrepStart} />
+        </label>
+        <label className="field-label">
+          Hasta
+          <input className="field" name="setPrepEnd" type="time" defaultValue={planning.setPrepEnd} />
+        </label>
+      </div>
       <label className="field-label">
-        Preparación del set
-        <input className="field" name="setPrep" defaultValue={planning.setPrep} placeholder="45 min, desde las 8:00" />
+        Nota de la preparación
+        <input className="field" name="setPrep" defaultValue={planning.setPrep} />
       </label>
       <div className="flex flex-col gap-3">
         <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">Horario</p>
@@ -155,13 +121,22 @@ export function PlanningForm({
           );
         })}
       </div>
+      <PlanningExtras extras={planning.extras} />
       <label className="field-label">
-        Descansos
+        Hora del descanso
+        <input className="field" name="breakTime" type="time" defaultValue={planning.breakTime} />
+      </label>
+      <label className="field-label">
+        Nota del descanso
         <textarea className="field min-h-20" name="breaks" defaultValue={planning.breaks} />
       </label>
       <label className="field-label">
-        Recogida
-        <input className="field" name="packUp" defaultValue={planning.packUp} placeholder="20 min, a las 14:30" />
+        Fin de servicio
+        <input className="field" name="packUpTime" type="time" defaultValue={planning.packUpTime} />
+      </label>
+      <label className="field-label">
+        Nota del fin de servicio
+        <input className="field" name="packUp" defaultValue={planning.packUp} />
       </label>
       <label className="field-label">
         Notas adicionales

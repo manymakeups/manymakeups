@@ -55,11 +55,15 @@ export type PortalCopy = {
   planningTab: string;
   planningLocation: string;
   planningArrival: string;
+  planningArrivalShort: string;
+  planningAt: string;
+  planningFromTo: string;
   planningSet: string;
   planningSchedule: string;
   planningBreaks: string;
   planningPack: string;
   planningNotes: string;
+  planningExtra: string;
   planningEmpty: string;
   planningMailSubject: string;
   planningMailHello: string;
@@ -67,11 +71,17 @@ export type PortalCopy = {
   activationReminderSubject: string;
   activationReminderHello: string;
   activationReminderBody: string;
+  activationReminderWeekSubject: string;
+  activationReminderWeekBody: string;
+  activationReminderUrgentSubject: string;
+  activationReminderUrgentBody: string;
   activationReminderLink: string;
   activationReminderClose: string;
   appointmentReminderSubject: string;
   appointmentReminderHello: string;
   appointmentReminderIntro: string;
+  appointmentReminderSoonSubject: string;
+  appointmentReminderSoonIntro: string;
   appointmentReminderConfirm: string;
   appointmentReminderClose: string;
   mailService: string;
@@ -339,11 +349,15 @@ export const portalEs: PortalCopy = {
   planningTab: "Planning",
   planningLocation: "Localización",
   planningArrival: "Hora de llegada",
+  planningArrivalShort: "Llegada",
+  planningAt: "a las {time}",
+  planningFromTo: "de {start} a {end}",
   planningSet: "Preparación del set",
   planningSchedule: "Horario",
-  planningBreaks: "Descansos",
-  planningPack: "Recogida",
+  planningBreaks: "Descanso",
+  planningPack: "Fin de servicio",
   planningNotes: "Notas",
+  planningExtra: "Extra",
   planningEmpty: "Todavía no hay planning del día.",
   planningMailSubject: "Planning de tu evento",
   planningMailHello: "Hola {name},",
@@ -352,11 +366,19 @@ export const portalEs: PortalCopy = {
   activationReminderHello: "Hola {name},",
   activationReminderBody:
     "Tu área de clienta sigue sin activar. Entra con este enlace, el último que te he preparado, y elige tu contraseña.",
+  activationReminderWeekSubject: "Tu área de Many Makeups sigue esperándote",
+  activationReminderWeekBody:
+    "Han pasado unos días y tu área sigue sin activar. Entra con este enlace y elige tu contraseña.",
+  activationReminderUrgentSubject: "Tu enlace de acceso caduca pronto",
+  activationReminderUrgentBody:
+    "Tu área sigue sin activar y este enlace caduca en unos días. Si no entras ahora, dejará de servir y tendré que prepararte otro. Actívala hoy, por favor.",
   activationReminderLink: "Activar mi área",
   activationReminderClose: "Si ya lo has hecho, ignora este correo.",
   appointmentReminderSubject: "Recordatorio de tu cita",
   appointmentReminderHello: "Hola {name},",
-  appointmentReminderIntro: "Queda una semana o menos para tu cita. Confírmame que te viene bien.",
+  appointmentReminderIntro: "Queda una semana para tu cita. Confírmame que te viene bien.",
+  appointmentReminderSoonSubject: "Tu cita es dentro de 48 horas",
+  appointmentReminderSoonIntro: "Tu cita es dentro de 48 horas. Confírmame que seguimos adelante.",
   appointmentReminderConfirm: "Confirmar la cita",
   appointmentReminderClose: "Si necesitas cambiarla, respóndeme a este correo.",
   mailService: "Servicio",
@@ -703,11 +725,15 @@ export const portalEn: PortalCopy = {
   planningTab: "Planning",
   planningLocation: "Location",
   planningArrival: "Arrival time",
+  planningArrivalShort: "Arrival",
+  planningAt: "at {time}",
+  planningFromTo: "from {start} to {end}",
   planningSet: "Set preparation",
   planningSchedule: "Schedule",
-  planningBreaks: "Breaks",
-  planningPack: "Pack up",
+  planningBreaks: "Break",
+  planningPack: "End of service",
   planningNotes: "Notes",
+  planningExtra: "Extra",
   planningEmpty: "The event-day plan is not ready yet.",
   planningMailSubject: "Your event plan",
   planningMailHello: "Hello {name},",
@@ -716,11 +742,19 @@ export const portalEn: PortalCopy = {
   activationReminderHello: "Hello {name},",
   activationReminderBody:
     "Your client area is still not active. Use this link, the latest one I prepared for you, and choose your password.",
+  activationReminderWeekSubject: "Your Many Makeups area is still waiting",
+  activationReminderWeekBody:
+    "A few days have passed and your area is still not active. Use this link and choose your password.",
+  activationReminderUrgentSubject: "Your access link expires soon",
+  activationReminderUrgentBody:
+    "Your area is still not active and this link expires in a few days. If you do not come in now, it will stop working and I will have to prepare another one. Please activate it today.",
   activationReminderLink: "Activate my area",
   activationReminderClose: "If you have already done it, you can ignore this email.",
   appointmentReminderSubject: "A reminder of your appointment",
   appointmentReminderHello: "Hello {name},",
-  appointmentReminderIntro: "Your appointment is a week away or sooner. Please confirm that it still suits you.",
+  appointmentReminderIntro: "Your appointment is one week away. Please confirm that it still suits you.",
+  appointmentReminderSoonSubject: "Your appointment is in 48 hours",
+  appointmentReminderSoonIntro: "Your appointment is in 48 hours. Please confirm that we are still on.",
   appointmentReminderConfirm: "Confirm the appointment",
   appointmentReminderClose: "If you need to change it, reply to this email.",
   mailService: "Service",
@@ -1064,11 +1098,15 @@ export const portalFr: PortalCopy = {
   planningTab: "Planning",
   planningLocation: "Lieu",
   planningArrival: "Heure d’arrivée",
+  planningArrivalShort: "Arrivée",
+  planningAt: "à {time}",
+  planningFromTo: "de {start} à {end}",
   planningSet: "Préparation du set",
   planningSchedule: "Horaires",
-  planningBreaks: "Pauses",
-  planningPack: "Rangement",
+  planningBreaks: "Pause",
+  planningPack: "Fin du service",
   planningNotes: "Notes",
+  planningExtra: "Extra",
   planningEmpty: "Le planning du jour n’est pas encore prêt.",
   planningMailSubject: "Le planning de ton événement",
   planningMailHello: "Bonjour {name},",
@@ -1077,11 +1115,19 @@ export const portalFr: PortalCopy = {
   activationReminderHello: "Bonjour {name},",
   activationReminderBody:
     "Ton espace n’est pas encore activé. Utilise ce lien, le dernier que je t’ai préparé, et choisis ton mot de passe.",
+  activationReminderWeekSubject: "Ton espace Many Makeups t’attend encore",
+  activationReminderWeekBody:
+    "Quelques jours ont passé et ton espace n’est toujours pas activé. Utilise ce lien et choisis ton mot de passe.",
+  activationReminderUrgentSubject: "Ton lien d’accès expire bientôt",
+  activationReminderUrgentBody:
+    "Ton espace n’est toujours pas activé et ce lien expire dans quelques jours. Si tu n’entres pas maintenant, il ne servira plus et je devrai t’en préparer un autre. Active-le aujourd’hui, s’il te plaît.",
   activationReminderLink: "Activer mon espace",
   activationReminderClose: "Si c’est déjà fait, ignore ce message.",
   appointmentReminderSubject: "Rappel de ton rendez-vous",
   appointmentReminderHello: "Bonjour {name},",
-  appointmentReminderIntro: "Ton rendez-vous est dans une semaine ou moins. Confirme-moi qu’il te convient.",
+  appointmentReminderIntro: "Ton rendez-vous est dans une semaine. Confirme-moi qu’il te convient.",
+  appointmentReminderSoonSubject: "Ton rendez-vous est dans 48 heures",
+  appointmentReminderSoonIntro: "Ton rendez-vous est dans 48 heures. Confirme-moi que nous maintenons.",
   appointmentReminderConfirm: "Confirmer le rendez-vous",
   appointmentReminderClose: "S’il faut le changer, réponds à ce message.",
   mailService: "Prestation",

@@ -171,6 +171,7 @@ export type Appointment = {
   amount: number;
   status: AppointmentStatus;
   reminder7For?: string;
+  reminder48For?: string;
   confirmTokenHash?: string;
 };
 
@@ -180,14 +181,26 @@ export type PlanningSlot = {
   note: string;
 };
 
+export type PlanningExtra = {
+  id: string;
+  label: string;
+  time: string;
+  note: string;
+};
+
 export type EventPlanning = {
   location: string;
   arrivalTime: string;
   setPrep: string;
+  setPrepStart: string;
+  setPrepEnd: string;
   breaks: string;
+  breakTime: string;
   packUp: string;
+  packUpTime: string;
   notes: string;
   slots: PlanningSlot[];
+  extras: PlanningExtra[];
 };
 
 export const HISTORY_KINDS = ["contacto", "servicio"] as const;
@@ -419,15 +432,25 @@ export function emptyEvent(name = ""): EventDetails {
   };
 }
 
+function clock(value: unknown) {
+  const match = /^(\d{2}:\d{2})/.exec(String(value ?? "").trim());
+  return match ? match[1] : "";
+}
+
 export function emptyPlanning(): EventPlanning {
   return {
     location: "",
     arrivalTime: "",
     setPrep: "",
+    setPrepStart: "",
+    setPrepEnd: "",
     breaks: "",
+    breakTime: "",
     packUp: "",
+    packUpTime: "",
     notes: "",
     slots: [],
+    extras: [],
   };
 }
 
@@ -441,17 +464,34 @@ export function asPlanning(value: unknown): EventPlanning {
         const time = String(item.time ?? "").trim().slice(0, 8);
         const note = String(item.note ?? "").trim().slice(0, 240);
         if (!time && !note) return [];
-        return [{ id, time, note }];
+        return [{ id, time: clock(time) || time.slice(0, 8), note }];
+      })
+    : [];
+  const extras = Array.isArray(row.extras)
+    ? row.extras.flatMap((item) => {
+        if (!item || typeof item !== "object") return [];
+        const id = String(item.id ?? "");
+        if (!/^[a-z0-9]{8,40}$/i.test(id)) return [];
+        const label = String(item.label ?? "").trim().slice(0, 80);
+        const time = clock(item.time);
+        const note = String(item.note ?? "").trim().slice(0, 240);
+        if (!label && !time && !note) return [];
+        return [{ id, label, time, note }];
       })
     : [];
   return {
     location: String(row.location ?? "").trim().slice(0, 240),
-    arrivalTime: String(row.arrivalTime ?? "").trim().slice(0, 8),
+    arrivalTime: clock(row.arrivalTime),
     setPrep: String(row.setPrep ?? "").trim().slice(0, 240),
+    setPrepStart: clock(row.setPrepStart),
+    setPrepEnd: clock(row.setPrepEnd),
     breaks: String(row.breaks ?? "").trim().slice(0, 2000),
+    breakTime: clock(row.breakTime),
     packUp: String(row.packUp ?? "").trim().slice(0, 240),
+    packUpTime: clock(row.packUpTime),
     notes: String(row.notes ?? "").trim().slice(0, 4000),
     slots,
+    extras,
   };
 }
 
@@ -558,6 +598,7 @@ function asAppointment(value: unknown): Appointment | null {
     amount: Math.max(0, Number(row.amount) || 0),
     status,
     reminder7For: typeof row.reminder7For === "string" && row.reminder7For ? row.reminder7For : undefined,
+    reminder48For: typeof row.reminder48For === "string" && row.reminder48For ? row.reminder48For : undefined,
     confirmTokenHash: typeof row.confirmTokenHash === "string" && row.confirmTokenHash ? row.confirmTokenHash : undefined,
   };
 }

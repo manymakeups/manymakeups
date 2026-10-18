@@ -3,7 +3,8 @@ import { clientLocale, clientPanelUrl } from "./client-mail";
 import { brandedClientEmail } from "./mail-html";
 import { companionHeading, fullName, mailName } from "./names";
 import { notifyEmail } from "./notify";
-import type { ClientRecord, EventPlanning } from "./types";
+import { planningTimeline } from "./planning-timeline";
+import type { ClientRecord } from "./types";
 
 function slotLabel(client: ClientRecord, id: string) {
   const t = getPortalCopy(clientLocale(client));
@@ -14,21 +15,19 @@ function slotLabel(client: ClientRecord, id: string) {
   return companionHeading(person, t.whoOptions, interpolate(t.guestN, { n: index + 1 }));
 }
 
-function planningRows(client: ClientRecord, planning: EventPlanning) {
+function planningRows(client: ClientRecord) {
   const t = getPortalCopy(clientLocale(client));
+  const planning = client.event.planning;
+  const people = [
+    { id: "contractor", label: slotLabel(client, "contractor") },
+    ...client.event.people.map((_, index) => ({ id: `g:${index}`, label: slotLabel(client, `g:${index}`) })),
+  ];
   const rows: { label: string; value: string }[] = [];
   if (planning.location) rows.push({ label: t.planningLocation, value: planning.location });
-  if (planning.arrivalTime) rows.push({ label: t.planningArrival, value: planning.arrivalTime });
-  if (planning.setPrep) rows.push({ label: t.planningSet, value: planning.setPrep });
-  for (const slot of planning.slots) {
-    if (!slot.time && !slot.note) continue;
-    rows.push({
-      label: slotLabel(client, slot.id) || t.planningSchedule,
-      value: [slot.time, slot.note].filter(Boolean).join(" · "),
-    });
+  for (const row of planningTimeline(planning, people, t)) {
+    const value = [row.when, row.note].filter(Boolean).join("\n");
+    if (value) rows.push({ label: row.label, value });
   }
-  if (planning.breaks) rows.push({ label: t.planningBreaks, value: planning.breaks });
-  if (planning.packUp) rows.push({ label: t.planningPack, value: planning.packUp });
   if (planning.notes) rows.push({ label: t.planningNotes, value: planning.notes });
   return rows;
 }
@@ -37,7 +36,7 @@ export async function mailPlanning(client: ClientRecord) {
   const locale = clientLocale(client);
   const t = getPortalCopy(locale);
   const name = mailName(client.event, client.name);
-  const rows = planningRows(client, client.event.planning);
+  const rows = planningRows(client);
   const href = `${clientPanelUrl(client, "contratante")}&sec=planning`;
   const mail = brandedClientEmail({
     lang: locale,
