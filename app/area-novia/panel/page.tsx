@@ -12,6 +12,7 @@ import { PhotoPicker } from "@/app/components/portal/PhotoPicker";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { StudioNav } from "@/app/components/portal/PortalTabs";
 import { CompanionSwitch, EventSections, SubTabs } from "@/app/components/portal/SubTabs";
+import { PlanningView } from "@/app/components/portal/PlanningBlock";
 import { LookNotesView, WorkView } from "@/app/components/portal/WorkBlock";
 import { studioBusyDates } from "@/lib/portal/availability";
 import { madridToday, parseMonth } from "@/lib/portal/calendar";
@@ -119,6 +120,7 @@ export default async function BridePanelPage({
               photos: t.photosTab,
               products: t.productsTab,
               comments: t.commentsTab,
+              planning: t.planningTab,
             }}
             details={
               <div>
@@ -209,6 +211,15 @@ export default async function BridePanelPage({
                   empty="—"
                 />
               )
+            }
+            planning={
+              <PlanningView
+                planning={client.event.planning}
+                eventName={client.name}
+                event={client.event}
+                people={client.event.people}
+                copy={t}
+              />
             }
           />
         </section>

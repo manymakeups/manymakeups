@@ -1,6 +1,7 @@
 import { site } from "@/lib/site";
 import { getPortalCopy, interpolate } from "@/lib/i18n";
-import { hashToken, isEmail, normalizeEmail, randomToken } from "@/lib/portal/crypto";
+import { isEmail, normalizeEmail, randomToken } from "@/lib/portal/crypto";
+import { stampInvite } from "@/lib/portal/invite";
 import { goPortal, localizedPath, requestLocale } from "@/lib/portal/http";
 import { brandedClientEmail } from "@/lib/portal/mail-html";
 import { mailName } from "@/lib/portal/names";
@@ -14,8 +15,7 @@ export async function POST(request: Request) {
   const client = await getClientByEmail(email);
   if (client) {
     const token = randomToken();
-    client.inviteTokenHash = hashToken(token);
-    client.inviteExpiresAt = new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString();
+    stampInvite(client, token);
     await saveClient(client);
     const locale = await requestLocale();
     const t = getPortalCopy(locale);

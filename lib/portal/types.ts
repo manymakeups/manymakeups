@@ -170,6 +170,24 @@ export type Appointment = {
   notes: string;
   amount: number;
   status: AppointmentStatus;
+  reminder7For?: string;
+  confirmTokenHash?: string;
+};
+
+export type PlanningSlot = {
+  id: string;
+  time: string;
+  note: string;
+};
+
+export type EventPlanning = {
+  location: string;
+  arrivalTime: string;
+  setPrep: string;
+  breaks: string;
+  packUp: string;
+  notes: string;
+  slots: PlanningSlot[];
 };
 
 export const HISTORY_KINDS = ["contacto", "servicio"] as const;
@@ -262,6 +280,7 @@ export type EventDetails = {
   hairNotes: string;
   contractorLocked: boolean;
   peopleLocked: boolean;
+  planning: EventPlanning;
 };
 
 export type StudioNoticeKind = "ficha" | "acompanantes" | "cambio" | "fotos" | "documento" | "agenda" | "respuesta";
@@ -308,6 +327,11 @@ export type ClientRecord = {
   passwordHash: string | null;
   inviteTokenHash: string | null;
   inviteExpiresAt: string | null;
+  inviteToken?: string | null;
+  inviteIssuedAt?: string | null;
+  activationRemindersSent?: number[];
+  remindersOptOut?: boolean;
+  commercialOptOut?: boolean;
   createdAt: string;
   locale?: "es" | "en" | "fr";
   event: EventDetails;
@@ -391,6 +415,43 @@ export function emptyEvent(name = ""): EventDetails {
     hairNotes: "",
     contractorLocked: false,
     peopleLocked: false,
+    planning: emptyPlanning(),
+  };
+}
+
+export function emptyPlanning(): EventPlanning {
+  return {
+    location: "",
+    arrivalTime: "",
+    setPrep: "",
+    breaks: "",
+    packUp: "",
+    notes: "",
+    slots: [],
+  };
+}
+
+export function asPlanning(value: unknown): EventPlanning {
+  const row = value && typeof value === "object" ? (value as EventPlanning) : emptyPlanning();
+  const slots = Array.isArray(row.slots)
+    ? row.slots.flatMap((item) => {
+        if (!item || typeof item !== "object") return [];
+        const id = String(item.id ?? "");
+        if (!/^(contractor|g:\d+)$/.test(id)) return [];
+        const time = String(item.time ?? "").trim().slice(0, 8);
+        const note = String(item.note ?? "").trim().slice(0, 240);
+        if (!time && !note) return [];
+        return [{ id, time, note }];
+      })
+    : [];
+  return {
+    location: String(row.location ?? "").trim().slice(0, 240),
+    arrivalTime: String(row.arrivalTime ?? "").trim().slice(0, 8),
+    setPrep: String(row.setPrep ?? "").trim().slice(0, 240),
+    breaks: String(row.breaks ?? "").trim().slice(0, 2000),
+    packUp: String(row.packUp ?? "").trim().slice(0, 240),
+    notes: String(row.notes ?? "").trim().slice(0, 4000),
+    slots,
   };
 }
 
@@ -496,6 +557,8 @@ function asAppointment(value: unknown): Appointment | null {
     notes: row.notes ?? "",
     amount: Math.max(0, Number(row.amount) || 0),
     status,
+    reminder7For: typeof row.reminder7For === "string" && row.reminder7For ? row.reminder7For : undefined,
+    confirmTokenHash: typeof row.confirmTokenHash === "string" && row.confirmTokenHash ? row.confirmTokenHash : undefined,
   };
 }
 
@@ -570,7 +633,15 @@ export function normalizeClient(client: ClientRecord): ClientRecord {
       clientLastName: client.event?.clientLastName ?? "",
       contractorLocked: Boolean(client.event?.contractorLocked),
       peopleLocked: Boolean(client.event?.peopleLocked),
+      planning: asPlanning(client.event?.planning),
     },
+    inviteToken: typeof client.inviteToken === "string" && client.inviteToken ? client.inviteToken : null,
+    inviteIssuedAt: typeof client.inviteIssuedAt === "string" && client.inviteIssuedAt ? client.inviteIssuedAt : null,
+    activationRemindersSent: Array.isArray(client.activationRemindersSent)
+      ? client.activationRemindersSent.filter((day) => day === 3 || day === 7 || day === 14 || day === 20)
+      : [],
+    remindersOptOut: Boolean(client.remindersOptOut),
+    commercialOptOut: Boolean(client.commercialOptOut),
     payments: migratePayments(client.payments, count),
     inspiration: client.inspiration ?? [],
     documents: client.documents ?? [],

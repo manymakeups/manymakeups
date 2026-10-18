@@ -6,6 +6,13 @@ const typeface = "font-family:Helvetica,Arial,sans-serif;font-size:14px;line-hei
 
 type MailBlock = { text: string; muted?: boolean; quote?: boolean } | { href: string; label: string };
 
+export type ClientEmail = {
+  blocks: MailBlock[];
+  signoff: string[];
+  lang?: string;
+  footer?: { href: string; label: string };
+};
+
 function escapeHtml(value: string) {
   return value
     .replaceAll("&", "&amp;")
@@ -15,7 +22,7 @@ function escapeHtml(value: string) {
     .replaceAll("\n", "<br>");
 }
 
-export function brandedClientEmail(input: { blocks: MailBlock[]; signoff: string[]; lang?: string }) {
+export function brandedClientEmail(input: ClientEmail) {
   const textLines: string[] = [];
   for (const block of input.blocks) {
     if ("href" in block) {
@@ -25,6 +32,7 @@ export function brandedClientEmail(input: { blocks: MailBlock[]; signoff: string
     }
   }
   textLines.push("", ...input.signoff);
+  if (input.footer) textLines.push("", input.footer.label, input.footer.href);
   const text = textLines.join("\n").replace(/^\n/, "");
 
   const body = input.blocks
@@ -38,6 +46,9 @@ export function brandedClientEmail(input: { blocks: MailBlock[]; signoff: string
     })
     .join("");
   const signoff = `<p style="margin:0 0 24px;${typeface}color:#1a1613;">${input.signoff.map(escapeHtml).join("<br>")}</p>`;
+  const footer = input.footer
+    ? `<p style="margin:0 0 24px;font-family:Helvetica,Arial,sans-serif;font-size:12px;line-height:1.5;"><a href="${escapeHtml(input.footer.href)}" style="color:#6d645b;text-decoration:underline;">${escapeHtml(input.footer.label)}</a></p>`
+    : "";
 
   const html = `<!DOCTYPE html>
 <html lang="${escapeHtml(input.lang || "es")}">
@@ -50,6 +61,7 @@ export function brandedClientEmail(input: { blocks: MailBlock[]; signoff: string
               <td style="font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;color:#1a1613;">
                 ${body}
                 ${signoff}
+                ${footer}
                 <img src="${signatureUrl}" width="${signatureWidth}" alt="Ana Zarza, Makeup Artist. Many Makeups. @m.any_makeups · www.manymakeups.com · +34 645 800 760 · info@manymakeups.com" style="display:block;width:${signatureWidth}px;max-width:100%;height:auto;border:0;" />
               </td>
             </tr>

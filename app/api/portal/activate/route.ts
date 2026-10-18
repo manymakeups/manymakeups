@@ -1,4 +1,5 @@
 import { hashPassword, hashToken, passwordIssue } from "@/lib/portal/crypto";
+import { clearInvite } from "@/lib/portal/invite";
 import { fullName } from "@/lib/portal/names";
 import { goPortal, requestLocale } from "@/lib/portal/http";
 import { setSessionCookie } from "@/lib/portal/session";
@@ -19,8 +20,7 @@ export async function POST(request: Request) {
   const client = await getClientByInviteHash(hashToken(token));
   if (!client) return goPortal(request, "/area-novia?error=invitacion");
   client.passwordHash = await hashPassword(password);
-  client.inviteTokenHash = null;
-  client.inviteExpiresAt = null;
+  clearInvite(client);
   client.locale = await requestLocale();
   await saveClient(client);
   await setSessionCookie({

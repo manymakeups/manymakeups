@@ -10,6 +10,9 @@ export async function StudioAside({ extra }: { extra?: ReactNode }) {
       <a className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink" href="/privado/calendario">
         Agenda
       </a>
+      <a className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink" href="/privado/difusion">
+        Difusión
+      </a>
       <InboxLink unread={unread} />
       <form action="/api/portal/logout?next=/privado" method="post">
         <button className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink" type="submit">

@@ -7,8 +7,26 @@ function whatsappHref(phone: string) {
   return `https://wa.me/${full}`;
 }
 
-export function ClientMenu({ id, name, phone }: { id: string; name: string; phone: string }) {
+function telHref(phone: string) {
+  const digits = phone.replace(/\D/g, "");
+  if (!digits) return null;
+  const full = digits.startsWith("34") || digits.length > 9 ? digits : `34${digits}`;
+  return `tel:+${full}`;
+}
+
+export function ClientMenu({
+  id,
+  name,
+  phone,
+  email,
+}: {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+}) {
   const whatsapp = whatsappHref(phone);
+  const call = telHref(phone);
   const dialogId = `eliminar-${id}`;
 
   return (
@@ -25,6 +43,16 @@ export function ClientMenu({ id, name, phone }: { id: string; name: string; phon
           </svg>
         </summary>
         <div className="absolute right-0 top-12 z-20 w-64 max-w-[calc(100vw-2rem)] border border-ink/15 bg-porcelain py-1 shadow-sm">
+          {call ? (
+            <a className="block px-4 py-3 text-[0.72rem] uppercase tracking-[0.14em] hover:bg-ink/5" href={call}>
+              Llamar
+            </a>
+          ) : null}
+          {email ? (
+            <a className="block px-4 py-3 text-[0.72rem] uppercase tracking-[0.14em] hover:bg-ink/5" href={`mailto:${email}`}>
+              Enviar mail
+            </a>
+          ) : null}
           <form action="/api/admin/invite" method="post">
             <input type="hidden" name="id" value={id} />
             <button

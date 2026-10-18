@@ -9,6 +9,7 @@ import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { StudioNav } from "@/app/components/portal/PortalTabs";
 import { CompanionDeck, EventSections, SubTabs } from "@/app/components/portal/SubTabs";
 import { StudioAside } from "@/app/components/portal/StudioAside";
+import { PlanningForm } from "@/app/components/portal/PlanningBlock";
 import { LookNotesForm, WorkForm } from "@/app/components/portal/WorkBlock";
 import { portalEs } from "@/lib/i18n/portal-messages";
 import { companionHeading, fullName } from "@/lib/portal/names";
@@ -77,6 +78,11 @@ export default async function StudioClientPage({
       {ok === "pagos" ? <PortalNotice>Pagos actualizados.</PortalNotice> : null}
       {ok === "agenda" ? <PortalNotice>Agenda actualizada.</PortalNotice> : null}
       {ok === "historico" ? <PortalNotice>Histórico actualizado. Ella ya lo ve en su área.</PortalNotice> : null}
+      {ok === "planning" && error !== "correo" ? <PortalNotice>Planning guardado.</PortalNotice> : null}
+      {ok === "planning-mail" ? <PortalNotice>Planning guardado y enviado por mail.</PortalNotice> : null}
+      {ok === "planning" && error === "correo" ? (
+        <PortalNotice>Planning guardado, pero no he podido enviarle el correo.</PortalNotice>
+      ) : null}
       {ok === "estudio" ? <PortalNotice>Productos guardados.</PortalNotice> : null}
       {ok === "fotos" ? <PortalNotice>Fotos de la prueba colgadas.</PortalNotice> : null}
       {ok === "mensaje" ? <PortalNotice>Mensaje enviado. Ella lo ve en comunicaciones.</PortalNotice> : null}
@@ -116,6 +122,7 @@ export default async function StudioClientPage({
               photos: "Fotografías",
               products: "Productos",
               comments: "Comentarios",
+              planning: "Planning",
             }}
             details={
               <EventForm
@@ -205,6 +212,15 @@ export default async function StudioClientPage({
                   hairNotes={event.hairNotes}
                 />
               </div>
+            }
+            planning={
+              <PlanningForm
+                clientId={client.id}
+                planning={event.planning}
+                eventName={client.name}
+                event={event}
+                people={event.people}
+              />
             }
           />
         </section>

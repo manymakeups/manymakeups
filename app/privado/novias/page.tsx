@@ -97,6 +97,7 @@ export default async function StudioClientsPage({
                   id={client.id}
                   name={fullName(client.event, client.name)}
                   phone={client.event.phone}
+                  email={client.email}
                 />
               </div>
             </li>

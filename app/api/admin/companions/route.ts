@@ -51,6 +51,16 @@ export async function POST(request: Request) {
     client.event.people = client.event.people.filter((_, i) => i !== index);
     client.event.peopleCount = client.event.people.length;
     client.payments.guests = client.payments.guests.filter((_, i) => i !== index);
+    client.event.planning = {
+      ...client.event.planning,
+      slots: client.event.planning.slots.flatMap((slot) => {
+        if (!slot.id.startsWith("g:")) return [slot];
+        const slotIndex = Number(slot.id.slice(2));
+        if (slotIndex === index) return [];
+        if (slotIndex > index) return [{ ...slot, id: `g:${slotIndex - 1}` }];
+        return [slot];
+      }),
+    };
     await saveClient(client);
     await mutateNotices((notices) =>
       notices.map((notice) => {

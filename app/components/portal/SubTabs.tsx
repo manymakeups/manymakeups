@@ -187,9 +187,11 @@ type EventLabels = {
   photos: string;
   products: string;
   comments: string;
+  planning?: string;
 };
 
 function eventFocus(section?: string) {
+  if (section === "planning") return { area: "planning", look: "maquillaje", trial: "fotos" };
   const inComments = section === "comentarios" || section === "notas" || section === "productos-notas";
   const inProducts = section === "productos" || section?.startsWith("productos-");
   const inTrial = section === "fotos" || inProducts || inComments;
@@ -251,6 +253,7 @@ function EventFilters({
   makeupProducts,
   hairProducts,
   trialComments,
+  planning,
   bars = false,
 }: {
   labels: EventLabels;
@@ -262,6 +265,7 @@ function EventFilters({
   makeupProducts: ReactNode;
   hairProducts: ReactNode;
   trialComments: ReactNode;
+  planning?: ReactNode;
   bars?: boolean;
 }) {
   const start = eventFocus(section);
@@ -276,6 +280,7 @@ function EventFilters({
     { id: "productos-maquillaje", show: area === "prueba" && trial === "productos" && look === "maquillaje", node: makeupProducts },
     { id: "productos-peinado", show: area === "prueba" && trial === "productos" && look === "peinado", node: hairProducts },
     { id: "comentarios", show: area === "prueba" && trial === "comentarios", node: trialComments },
+    ...(planning ? [{ id: "planning", show: area === "planning", node: planning }] : []),
   ];
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
@@ -284,6 +289,7 @@ function EventFilters({
           <option value="datos">{labels.data}</option>
           <option value="inspiraciones">{labels.inspirations}</option>
           <option value="prueba">{labels.trial}</option>
+          {planning ? <option value="planning">{labels.planning || "Planning"}</option> : null}
         </select>
         {area === "inspiraciones" ? (
           <select className="field min-w-0 flex-1" aria-label="Look" value={look} onChange={(event) => setLook(event.target.value)}>
@@ -315,6 +321,7 @@ function EventFilters({
               { id: "datos", label: labels.data },
               { id: "inspiraciones", label: labels.inspirations },
               { id: "prueba", label: labels.trial },
+              ...(planning ? [{ id: "planning", label: labels.planning || "Planning" }] : []),
             ]}
           />
           {area === "inspiraciones" ? (
@@ -379,6 +386,7 @@ export function EventSections({
   makeupProducts,
   hairProducts,
   trialComments,
+  planning,
   variant = "tabs",
 }: {
   labels: EventLabels;
@@ -390,6 +398,7 @@ export function EventSections({
   makeupProducts: ReactNode;
   hairProducts: ReactNode;
   trialComments: ReactNode;
+  planning?: ReactNode;
   variant?: "tabs" | "filters" | "responsive";
 }) {
   if (variant === "filters" || variant === "responsive") {
@@ -405,6 +414,7 @@ export function EventSections({
         makeupProducts={makeupProducts}
         hairProducts={hairProducts}
         trialComments={trialComments}
+        planning={planning}
       />
     );
   }
@@ -412,7 +422,9 @@ export function EventSections({
   return (
     <SubTabs
       fill
-      initial={focus.area === "prueba" ? "prueba" : focus.area === "inspiraciones" ? "inspiraciones" : "datos"}
+      initial={
+        focus.area === "prueba" || focus.area === "inspiraciones" || focus.area === "planning" ? focus.area : "datos"
+      }
       tabs={[
         { id: "datos", label: labels.data, body: details },
         {
@@ -460,6 +472,9 @@ export function EventSections({
             />
           ),
         },
+        ...(planning
+          ? [{ id: "planning", label: labels.planning || "Planning", body: planning }]
+          : []),
       ]}
     />
   );

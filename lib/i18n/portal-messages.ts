@@ -52,6 +52,46 @@ export type PortalCopy = {
   saveCard: string;
   trialHeading: string;
   trialLead: string;
+  planningTab: string;
+  planningLocation: string;
+  planningArrival: string;
+  planningSet: string;
+  planningSchedule: string;
+  planningBreaks: string;
+  planningPack: string;
+  planningNotes: string;
+  planningEmpty: string;
+  planningMailSubject: string;
+  planningMailHello: string;
+  planningMailIntro: string;
+  activationReminderSubject: string;
+  activationReminderHello: string;
+  activationReminderBody: string;
+  activationReminderLink: string;
+  activationReminderClose: string;
+  appointmentReminderSubject: string;
+  appointmentReminderHello: string;
+  appointmentReminderIntro: string;
+  appointmentReminderConfirm: string;
+  appointmentReminderClose: string;
+  mailService: string;
+  mailDate: string;
+  mailTime: string;
+  mailPlace: string;
+  mailAmount: string;
+  unsubRemindersFooter: string;
+  unsubCommercialFooter: string;
+  unsubTitle: string;
+  unsubRemindersLead: string;
+  unsubCommercialLead: string;
+  unsubButton: string;
+  unsubDone: string;
+  unsubBad: string;
+  confirmCitaTitle: string;
+  confirmCitaLead: string;
+  confirmCitaButton: string;
+  confirmCitaDone: string;
+  confirmCitaBad: string;
   companionsTitle: string;
   companionOne: string;
   companionsLead: string;
@@ -296,6 +336,47 @@ export const portalEs: PortalCopy = {
   saveCard: "Guardar ficha",
   trialHeading: "Prueba",
   trialLead: "Aquí verás las fotos que haga el día de la prueba y los productos que hayamos usado.",
+  planningTab: "Planning",
+  planningLocation: "Localización",
+  planningArrival: "Hora de llegada",
+  planningSet: "Preparación del set",
+  planningSchedule: "Horario",
+  planningBreaks: "Descansos",
+  planningPack: "Recogida",
+  planningNotes: "Notas",
+  planningEmpty: "Todavía no hay planning del día.",
+  planningMailSubject: "Planning de tu evento",
+  planningMailHello: "Hola {name},",
+  planningMailIntro: "Te dejo el planning del día del evento.",
+  activationReminderSubject: "Tu acceso a Many Makeups sigue pendiente",
+  activationReminderHello: "Hola {name},",
+  activationReminderBody:
+    "Tu área de clienta sigue sin activar. Entra con este enlace, el último que te he preparado, y elige tu contraseña.",
+  activationReminderLink: "Activar mi área",
+  activationReminderClose: "Si ya lo has hecho, ignora este correo.",
+  appointmentReminderSubject: "Recordatorio de tu cita",
+  appointmentReminderHello: "Hola {name},",
+  appointmentReminderIntro: "Queda una semana o menos para tu cita. Confírmame que te viene bien.",
+  appointmentReminderConfirm: "Confirmar la cita",
+  appointmentReminderClose: "Si necesitas cambiarla, respóndeme a este correo.",
+  mailService: "Servicio",
+  mailDate: "Fecha",
+  mailTime: "Hora",
+  mailPlace: "Ubicación",
+  mailAmount: "Importe",
+  unsubRemindersFooter: "Darme de baja de estos recordatorios",
+  unsubCommercialFooter: "Darme de baja de la información comercial",
+  unsubTitle: "Avisos",
+  unsubRemindersLead: "Dejas de recibir recordatorios de activación y de citas.",
+  unsubCommercialLead: "Dejas de recibir información comercial.",
+  unsubButton: "Darme de baja",
+  unsubDone: "Listo. No te enviaremos más este tipo de correos.",
+  unsubBad: "Este enlace no sirve.",
+  confirmCitaTitle: "Confirmar cita",
+  confirmCitaLead: "Confirma que vienes a esta cita.",
+  confirmCitaButton: "Confirmar",
+  confirmCitaDone: "Cita confirmada. Te espero.",
+  confirmCitaBad: "Este enlace no sirve.",
   companionsTitle: "Acompañantes",
   companionOne: "Acompañante",
   companionsLead:
@@ -619,6 +700,47 @@ export const portalEn: PortalCopy = {
   saveCard: "Save details",
   trialHeading: "Trial",
   trialLead: "Here you will see the photos from the trial and the products we used.",
+  planningTab: "Planning",
+  planningLocation: "Location",
+  planningArrival: "Arrival time",
+  planningSet: "Set preparation",
+  planningSchedule: "Schedule",
+  planningBreaks: "Breaks",
+  planningPack: "Pack up",
+  planningNotes: "Notes",
+  planningEmpty: "The event-day plan is not ready yet.",
+  planningMailSubject: "Your event plan",
+  planningMailHello: "Hello {name},",
+  planningMailIntro: "Here is the plan for the day of the event.",
+  activationReminderSubject: "Your Many Makeups access is still waiting",
+  activationReminderHello: "Hello {name},",
+  activationReminderBody:
+    "Your client area is still not active. Use this link, the latest one I prepared for you, and choose your password.",
+  activationReminderLink: "Activate my area",
+  activationReminderClose: "If you have already done it, you can ignore this email.",
+  appointmentReminderSubject: "A reminder of your appointment",
+  appointmentReminderHello: "Hello {name},",
+  appointmentReminderIntro: "Your appointment is a week away or sooner. Please confirm that it still suits you.",
+  appointmentReminderConfirm: "Confirm the appointment",
+  appointmentReminderClose: "If you need to change it, reply to this email.",
+  mailService: "Service",
+  mailDate: "Date",
+  mailTime: "Time",
+  mailPlace: "Location",
+  mailAmount: "Amount",
+  unsubRemindersFooter: "Unsubscribe from these reminders",
+  unsubCommercialFooter: "Unsubscribe from news and offers",
+  unsubTitle: "Messages",
+  unsubRemindersLead: "You will stop receiving activation and appointment reminders.",
+  unsubCommercialLead: "You will stop receiving news and offers.",
+  unsubButton: "Unsubscribe",
+  unsubDone: "Done. We will not send you this kind of email again.",
+  unsubBad: "This link does not work.",
+  confirmCitaTitle: "Confirm appointment",
+  confirmCitaLead: "Confirm that you are coming to this appointment.",
+  confirmCitaButton: "Confirm",
+  confirmCitaDone: "Appointment confirmed. I will see you there.",
+  confirmCitaBad: "This link does not work.",
   companionsTitle: "Guests",
   companionOne: "Guest",
   companionsLead:
@@ -939,6 +1061,47 @@ export const portalFr: PortalCopy = {
   saveCard: "Enregistrer la fiche",
   trialHeading: "Essai",
   trialLead: "Tu verras ici les photos du jour de l’essai et les produits utilisés.",
+  planningTab: "Planning",
+  planningLocation: "Lieu",
+  planningArrival: "Heure d’arrivée",
+  planningSet: "Préparation du set",
+  planningSchedule: "Horaires",
+  planningBreaks: "Pauses",
+  planningPack: "Rangement",
+  planningNotes: "Notes",
+  planningEmpty: "Le planning du jour n’est pas encore prêt.",
+  planningMailSubject: "Le planning de ton événement",
+  planningMailHello: "Bonjour {name},",
+  planningMailIntro: "Voici le planning du jour de l’événement.",
+  activationReminderSubject: "Ton accès à Many Makeups est encore en attente",
+  activationReminderHello: "Bonjour {name},",
+  activationReminderBody:
+    "Ton espace n’est pas encore activé. Utilise ce lien, le dernier que je t’ai préparé, et choisis ton mot de passe.",
+  activationReminderLink: "Activer mon espace",
+  activationReminderClose: "Si c’est déjà fait, ignore ce message.",
+  appointmentReminderSubject: "Rappel de ton rendez-vous",
+  appointmentReminderHello: "Bonjour {name},",
+  appointmentReminderIntro: "Ton rendez-vous est dans une semaine ou moins. Confirme-moi qu’il te convient.",
+  appointmentReminderConfirm: "Confirmer le rendez-vous",
+  appointmentReminderClose: "S’il faut le changer, réponds à ce message.",
+  mailService: "Prestation",
+  mailDate: "Date",
+  mailTime: "Heure",
+  mailPlace: "Lieu",
+  mailAmount: "Montant",
+  unsubRemindersFooter: "Se désinscrire de ces rappels",
+  unsubCommercialFooter: "Se désinscrire des informations commerciales",
+  unsubTitle: "Messages",
+  unsubRemindersLead: "Tu ne recevras plus les rappels d’activation ni de rendez-vous.",
+  unsubCommercialLead: "Tu ne recevras plus d’informations commerciales.",
+  unsubButton: "Se désinscrire",
+  unsubDone: "C’est fait. Nous ne t’enverrons plus ce type de message.",
+  unsubBad: "Ce lien ne fonctionne pas.",
+  confirmCitaTitle: "Confirmer le rendez-vous",
+  confirmCitaLead: "Confirme que tu viens à ce rendez-vous.",
+  confirmCitaButton: "Confirmer",
+  confirmCitaDone: "Rendez-vous confirmé. Je t’attends.",
+  confirmCitaBad: "Ce lien ne fonctionne pas.",
   companionsTitle: "Accompagnants",
   companionOne: "Accompagnant",
   companionsLead:

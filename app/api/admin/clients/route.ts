@@ -1,5 +1,6 @@
 import { site } from "@/lib/site";
-import { hashToken, isEmail, newId, normalizeEmail, randomToken } from "@/lib/portal/crypto";
+import { isEmail, newId, normalizeEmail, randomToken } from "@/lib/portal/crypto";
+import { stampInvite } from "@/lib/portal/invite";
 import { go } from "@/lib/portal/http";
 import { requireAdmin } from "@/lib/portal/session";
 import { deleteClient, getClientByEmail, saveClient } from "@/lib/portal/store";
@@ -24,8 +25,8 @@ export async function POST(request: Request) {
     email,
     name,
     passwordHash: null,
-    inviteTokenHash: hashToken(token),
-    inviteExpiresAt: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(),
+    inviteTokenHash: null,
+    inviteExpiresAt: null,
     createdAt: new Date().toISOString(),
     event: emptyEvent(name),
     payments: emptyPayments(),
@@ -35,6 +36,7 @@ export async function POST(request: Request) {
     appointments: [],
     history: [],
   };
+  stampInvite(client, token);
   await saveClient(client);
   const invite = `${site.url}/area-novia/activar?token=${encodeURIComponent(token)}`;
   return go(request, `/privado/novias?invite=${encodeURIComponent(invite)}&client=${client.id}`);
