@@ -219,6 +219,8 @@ export default async function BridePanelPage({
                 event={client.event}
                 people={client.event.people}
                 copy={t}
+                locale={locale}
+                client={client}
               />
             }
           />

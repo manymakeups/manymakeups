@@ -69,7 +69,26 @@ function activationMail(client: ClientRecord, stage: (typeof MILESTONES)[number]
   const name = mailName(client.event, client.name);
   const link = `${site.url}/area-novia/activar?token=${encodeURIComponent(client.inviteToken)}`;
   const subject = stage === 14 ? t.activationReminderUrgentSubject : stage === 7 ? t.activationReminderWeekSubject : t.activationReminderSubject;
-  const body = stage === 14 ? t.activationReminderUrgentBody : stage === 7 ? t.activationReminderWeekBody : t.activationReminderBody;
+  const expires = client.inviteExpiresAt
+    ? new Date(client.inviteExpiresAt)
+    : client.inviteIssuedAt
+      ? new Date(new Date(client.inviteIssuedAt).getTime() + 21 * 24 * 60 * 60 * 1000)
+      : null;
+  const expiry =
+    expires && !Number.isNaN(expires.getTime())
+      ? expires.toLocaleDateString(dateLocale(locale), {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+          timeZone: "Europe/Madrid",
+        })
+      : "";
+  const body =
+    stage === 14
+      ? interpolate(t.activationReminderUrgentBody, { date: expiry })
+      : stage === 7
+        ? t.activationReminderWeekBody
+        : t.activationReminderBody;
   const mail = brandedClientEmail({
     lang: locale,
     blocks: [

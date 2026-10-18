@@ -14,7 +14,7 @@ type Row = PlanningExtra & { preset: string; custom: string };
 
 function fresh(): Row {
   const id = crypto.randomUUID().replace(/-/g, "").slice(0, 24);
-  return { id, label: PRESETS[0], time: "", note: "", preset: PRESETS[0], custom: "" };
+  return { id, label: PRESETS[0], time: "", endTime: "", note: "", preset: PRESETS[0], custom: "" };
 }
 
 export function PlanningExtras({ extras }: { extras: PlanningExtra[] }) {
@@ -63,10 +63,16 @@ export function PlanningExtras({ extras }: { extras: PlanningExtra[] }) {
               />
             </label>
           ) : null}
-          <label className="field-label mt-3">
-            Hora
-            <input className="field" name={`extraTime.${row.id}`} type="time" defaultValue={row.time} />
-          </label>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <label className="field-label">
+              Desde
+              <input className="field" name={`extraTime.${row.id}`} type="time" defaultValue={row.time} />
+            </label>
+            <label className="field-label">
+              Hasta
+              <input className="field" name={`extraEnd.${row.id}`} type="time" defaultValue={row.endTime} />
+            </label>
+          </div>
           <label className="field-label mt-3">
             Notas
             <input className="field" name={`extraNote.${row.id}`} defaultValue={row.note} />

@@ -58,6 +58,9 @@ export type PortalCopy = {
   planningArrivalShort: string;
   planningAt: string;
   planningFromTo: string;
+  planningRange: string;
+  planningPending: string;
+  planningCashNote: string;
   planningSet: string;
   planningSchedule: string;
   planningBreaks: string;
@@ -352,6 +355,10 @@ export const portalEs: PortalCopy = {
   planningArrivalShort: "Llegada",
   planningAt: "a las {time}",
   planningFromTo: "de {start} a {end}",
+  planningRange: "{start} – {end}",
+  planningPending: "Pendiente de pago del servicio: {amount}",
+  planningCashNote:
+    "Si vas a abonar este importe en metálico y necesitas cambio, avísame con un par de días de antelación.",
   planningSet: "Preparación del set",
   planningSchedule: "Horario",
   planningBreaks: "Descanso",
@@ -371,7 +378,7 @@ export const portalEs: PortalCopy = {
     "Han pasado unos días y tu área sigue sin activar. Entra con este enlace y elige tu contraseña.",
   activationReminderUrgentSubject: "Tu enlace de acceso caduca pronto",
   activationReminderUrgentBody:
-    "Tu área sigue sin activar y este enlace caduca en unos días. Si no entras ahora, dejará de servir y tendré que prepararte otro. Actívala hoy, por favor.",
+    "Tu área sigue sin activar. Actívala cuanto antes, porque el enlace caducará el {date}.",
   activationReminderLink: "Activar mi área",
   activationReminderClose: "Si ya lo has hecho, ignora este correo.",
   appointmentReminderSubject: "Recordatorio de tu cita",
@@ -728,6 +735,9 @@ export const portalEn: PortalCopy = {
   planningArrivalShort: "Arrival",
   planningAt: "at {time}",
   planningFromTo: "from {start} to {end}",
+  planningRange: "{start} – {end}",
+  planningPending: "Outstanding for the service: {amount}",
+  planningCashNote: "If you will pay this in cash and need change, tell me a couple of days ahead.",
   planningSet: "Set preparation",
   planningSchedule: "Schedule",
   planningBreaks: "Break",
@@ -747,7 +757,7 @@ export const portalEn: PortalCopy = {
     "A few days have passed and your area is still not active. Use this link and choose your password.",
   activationReminderUrgentSubject: "Your access link expires soon",
   activationReminderUrgentBody:
-    "Your area is still not active and this link expires in a few days. If you do not come in now, it will stop working and I will have to prepare another one. Please activate it today.",
+    "Your area is still not active. Please activate it as soon as you can, because the link will expire on {date}.",
   activationReminderLink: "Activate my area",
   activationReminderClose: "If you have already done it, you can ignore this email.",
   appointmentReminderSubject: "A reminder of your appointment",
@@ -1101,6 +1111,9 @@ export const portalFr: PortalCopy = {
   planningArrivalShort: "Arrivée",
   planningAt: "à {time}",
   planningFromTo: "de {start} à {end}",
+  planningRange: "{start} – {end}",
+  planningPending: "Reste à payer pour la prestation : {amount}",
+  planningCashNote: "Si tu règles ce montant en espèces et qu’il te faut de la monnaie, préviens-moi quelques jours avant.",
   planningSet: "Préparation du set",
   planningSchedule: "Horaires",
   planningBreaks: "Pause",
@@ -1120,7 +1133,7 @@ export const portalFr: PortalCopy = {
     "Quelques jours ont passé et ton espace n’est toujours pas activé. Utilise ce lien et choisis ton mot de passe.",
   activationReminderUrgentSubject: "Ton lien d’accès expire bientôt",
   activationReminderUrgentBody:
-    "Ton espace n’est toujours pas activé et ce lien expire dans quelques jours. Si tu n’entres pas maintenant, il ne servira plus et je devrai t’en préparer un autre. Active-le aujourd’hui, s’il te plaît.",
+    "Ton espace n’est toujours pas activé. Active-le dès que possible, parce que le lien expirera le {date}.",
   activationReminderLink: "Activer mon espace",
   activationReminderClose: "Si c’est déjà fait, ignore ce message.",
   appointmentReminderSubject: "Rappel de ton rendez-vous",

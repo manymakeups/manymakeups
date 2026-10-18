@@ -1,15 +1,22 @@
 import { PlanningExtras } from "@/app/components/portal/PlanningExtras";
+import { contractedServiceNames, serviceAmountDue } from "@/lib/portal/budget";
 import { companionHeading, fullName } from "@/lib/portal/names";
 import { planningTimeline } from "@/lib/portal/planning-timeline";
-import { interpolate, portalEs, type PortalCopy } from "@/lib/i18n/portal-messages";
-import type { Attendee, EventPlanning } from "@/lib/portal/types";
+import type { Locale } from "@/lib/i18n/config";
+import { dateLocale, interpolate, portalEs, type PortalCopy } from "@/lib/i18n/portal-messages";
+import type { Attendee, ClientRecord, EventDetails, EventPlanning } from "@/lib/portal/types";
 
-function peopleOf(eventName: string, event: { clientName?: string; clientLastName?: string }, people: Attendee[], copy: PortalCopy) {
+function peopleOf(eventName: string, event: EventDetails, people: Attendee[], copy: PortalCopy) {
   return [
-    { id: "contractor", label: fullName(event, eventName) || copy.contractor },
+    {
+      id: "contractor",
+      label: fullName(event, eventName) || copy.contractor,
+      service: contractedServiceNames(event).join(" y "),
+    },
     ...people.map((person, index) => ({
       id: `g:${index}`,
       label: companionHeading(person, copy.whoOptions, interpolate(copy.guestN, { n: index + 1 })),
+      service: person.service?.trim() ?? "",
     })),
   ];
 }
@@ -20,34 +27,54 @@ export function PlanningView({
   event,
   people,
   copy,
+  locale = "es",
+  client,
 }: {
   planning: EventPlanning;
   eventName: string;
-  event: { clientName?: string; clientLastName?: string };
+  event: EventDetails;
   people: Attendee[];
   copy: PortalCopy;
+  locale?: Locale;
+  client?: Pick<ClientRecord, "history" | "payments"> | null;
 }) {
   const timeline = planningTimeline(planning, peopleOf(eventName, event, people, copy), copy);
-  const filled = Boolean(planning.location || planning.notes || timeline.length);
+  const due = client ? serviceAmountDue(client) : 0;
+  const amount =
+    due > 0
+      ? new Intl.NumberFormat(dateLocale(locale), { style: "currency", currency: "EUR" }).format(due)
+      : "";
+  const eventDate = event.eventDate
+    ? new Date(`${event.eventDate}T12:00:00`).toLocaleDateString(dateLocale(locale), {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : "";
+  const filled = Boolean(planning.location || planning.notes || timeline.length || amount || eventDate);
   return (
     <div className="flex max-w-2xl flex-col gap-6 text-sm">
       <div className="flex justify-center">
         <img src="/brand/logo.jpg" alt="Many Makeups" width={168} height={168} className="size-40" />
       </div>
       {!filled ? <p className="text-center text-sm text-ash">{copy.planningEmpty}</p> : null}
-      {planning.location ? (
-        <p>
-          <span className="text-ash">{copy.planningLocation}</span>
-          <span className="mt-1 block">{planning.location}</span>
-        </p>
+      {planning.location ? <p className="text-center uppercase tracking-[0.14em] text-ink">{planning.location}</p> : null}
+      {eventDate ? <p className="text-center text-ink">{eventDate}</p> : null}
+      {amount ? (
+        <div className="border-y border-ink/10 py-4 text-center">
+          <p className="font-serif text-xl text-ink">{interpolate(copy.planningPending, { amount })}</p>
+          <p className="mt-2 leading-6 text-ash">{copy.planningCashNote}</p>
+        </div>
       ) : null}
       {timeline.length ? (
         <ul className="divide-y divide-ink/10 border border-ink/10">
           {timeline.map((row) => (
-            <li key={row.id} className="px-4 py-3">
-              <p className="font-serif text-xl">{row.label}</p>
-              {row.when ? <p className="mt-1">{row.when}</p> : null}
-              {row.note ? <p className="mt-1 whitespace-pre-wrap text-ash">{row.note}</p> : null}
+            <li key={row.id} className="grid gap-1 px-4 py-3 sm:grid-cols-[9rem_1fr] sm:items-baseline sm:gap-4">
+              <p className="text-[0.72rem] uppercase tracking-[0.14em] text-gilt">{row.when}</p>
+              <div>
+                <p className="font-serif text-xl">{row.label}</p>
+                {row.note ? <p className="mt-1 whitespace-pre-wrap text-ash">{row.note}</p> : null}
+              </div>
             </li>
           ))}
         </ul>
@@ -72,7 +99,7 @@ export function PlanningForm({
   clientId: string;
   planning: EventPlanning;
   eventName: string;
-  event: { clientName?: string; clientLastName?: string };
+  event: EventDetails;
   people: Attendee[];
 }) {
   const rows = peopleOf(eventName, event, people, portalEs);
@@ -109,10 +136,16 @@ export function PlanningForm({
             <fieldset key={person.id} className="border border-ink/10 p-3">
               <legend className="px-1 text-sm">{person.label}</legend>
               <input type="hidden" name="slotId" value={person.id} />
-              <label className="field-label mt-2">
-                Hora
-                <input className="field" name={`slotTime.${person.id}`} type="time" defaultValue={slot?.time || ""} />
-              </label>
+              <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                <label className="field-label">
+                  Desde
+                  <input className="field" name={`slotTime.${person.id}`} type="time" defaultValue={slot?.time || ""} />
+                </label>
+                <label className="field-label">
+                  Hasta
+                  <input className="field" name={`slotEnd.${person.id}`} type="time" defaultValue={slot?.endTime || ""} />
+                </label>
+              </div>
               <label className="field-label mt-3">
                 Notas
                 <input className="field" name={`slotNote.${person.id}`} defaultValue={slot?.note || ""} />
@@ -122,18 +155,30 @@ export function PlanningForm({
         })}
       </div>
       <PlanningExtras extras={planning.extras} />
-      <label className="field-label">
-        Hora del descanso
-        <input className="field" name="breakTime" type="time" defaultValue={planning.breakTime} />
-      </label>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="field-label">
+          Descanso desde
+          <input className="field" name="breakTime" type="time" defaultValue={planning.breakTime} />
+        </label>
+        <label className="field-label">
+          Descanso hasta
+          <input className="field" name="breakEnd" type="time" defaultValue={planning.breakEnd} />
+        </label>
+      </div>
       <label className="field-label">
         Nota del descanso
         <textarea className="field min-h-20" name="breaks" defaultValue={planning.breaks} />
       </label>
-      <label className="field-label">
-        Fin de servicio
-        <input className="field" name="packUpTime" type="time" defaultValue={planning.packUpTime} />
-      </label>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="field-label">
+          Fin de servicio desde
+          <input className="field" name="packUpTime" type="time" defaultValue={planning.packUpTime} />
+        </label>
+        <label className="field-label">
+          Fin de servicio hasta
+          <input className="field" name="packUpEnd" type="time" defaultValue={planning.packUpEnd} />
+        </label>
+      </div>
       <label className="field-label">
         Nota del fin de servicio
         <input className="field" name="packUp" defaultValue={planning.packUp} />

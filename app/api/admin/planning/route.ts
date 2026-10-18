@@ -18,7 +18,14 @@ export async function POST(request: Request) {
   const slots = form.getAll("slotId").flatMap((value) => {
     const slotId = text(value);
     if (!/^(contractor|g:\d+)$/.test(slotId)) return [];
-    return [{ id: slotId, time: text(form.get(`slotTime.${slotId}`)), note: text(form.get(`slotNote.${slotId}`)) }];
+    return [
+      {
+        id: slotId,
+        time: text(form.get(`slotTime.${slotId}`)),
+        endTime: text(form.get(`slotEnd.${slotId}`)),
+        note: text(form.get(`slotNote.${slotId}`)),
+      },
+    ];
   });
   const extras = form.getAll("extraId").flatMap((value) => {
     const extraId = text(value);
@@ -30,6 +37,7 @@ export async function POST(request: Request) {
         id: extraId,
         label,
         time: text(form.get(`extraTime.${extraId}`)),
+        endTime: text(form.get(`extraEnd.${extraId}`)),
         note: text(form.get(`extraNote.${extraId}`)),
       },
     ];
@@ -42,8 +50,10 @@ export async function POST(request: Request) {
     setPrepEnd: text(form.get("setPrepEnd")),
     breaks: text(form.get("breaks")),
     breakTime: text(form.get("breakTime")),
+    breakEnd: text(form.get("breakEnd")),
     packUp: text(form.get("packUp")),
     packUpTime: text(form.get("packUpTime")),
+    packUpEnd: text(form.get("packUpEnd")),
     notes: text(form.get("notes")),
     slots,
     extras,

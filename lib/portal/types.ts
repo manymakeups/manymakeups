@@ -178,6 +178,7 @@ export type Appointment = {
 export type PlanningSlot = {
   id: string;
   time: string;
+  endTime: string;
   note: string;
 };
 
@@ -185,6 +186,7 @@ export type PlanningExtra = {
   id: string;
   label: string;
   time: string;
+  endTime: string;
   note: string;
 };
 
@@ -196,8 +198,10 @@ export type EventPlanning = {
   setPrepEnd: string;
   breaks: string;
   breakTime: string;
+  breakEnd: string;
   packUp: string;
   packUpTime: string;
+  packUpEnd: string;
   notes: string;
   slots: PlanningSlot[];
   extras: PlanningExtra[];
@@ -446,8 +450,10 @@ export function emptyPlanning(): EventPlanning {
     setPrepEnd: "",
     breaks: "",
     breakTime: "",
+    breakEnd: "",
     packUp: "",
     packUpTime: "",
+    packUpEnd: "",
     notes: "",
     slots: [],
     extras: [],
@@ -461,10 +467,11 @@ export function asPlanning(value: unknown): EventPlanning {
         if (!item || typeof item !== "object") return [];
         const id = String(item.id ?? "");
         if (!/^(contractor|g:\d+)$/.test(id)) return [];
-        const time = String(item.time ?? "").trim().slice(0, 8);
+        const time = clock(item.time);
+        const endTime = clock(item.endTime);
         const note = String(item.note ?? "").trim().slice(0, 240);
-        if (!time && !note) return [];
-        return [{ id, time: clock(time) || time.slice(0, 8), note }];
+        if (!time && !endTime && !note) return [];
+        return [{ id, time, endTime, note }];
       })
     : [];
   const extras = Array.isArray(row.extras)
@@ -474,9 +481,10 @@ export function asPlanning(value: unknown): EventPlanning {
         if (!/^[a-z0-9]{8,40}$/i.test(id)) return [];
         const label = String(item.label ?? "").trim().slice(0, 80);
         const time = clock(item.time);
+        const endTime = clock(item.endTime);
         const note = String(item.note ?? "").trim().slice(0, 240);
-        if (!label && !time && !note) return [];
-        return [{ id, label, time, note }];
+        if (!label && !time && !endTime && !note) return [];
+        return [{ id, label, time, endTime, note }];
       })
     : [];
   return {
@@ -487,8 +495,10 @@ export function asPlanning(value: unknown): EventPlanning {
     setPrepEnd: clock(row.setPrepEnd),
     breaks: String(row.breaks ?? "").trim().slice(0, 2000),
     breakTime: clock(row.breakTime),
+    breakEnd: clock(row.breakEnd),
     packUp: String(row.packUp ?? "").trim().slice(0, 240),
     packUpTime: clock(row.packUpTime),
+    packUpEnd: clock(row.packUpEnd),
     notes: String(row.notes ?? "").trim().slice(0, 4000),
     slots,
     extras,

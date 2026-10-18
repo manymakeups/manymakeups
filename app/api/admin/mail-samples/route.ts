@@ -1,4 +1,4 @@
-import { getPortalCopy } from "@/lib/i18n/portal-messages";
+import { getPortalCopy, interpolate } from "@/lib/i18n/portal-messages";
 import { go } from "@/lib/portal/http";
 import { brandedClientEmail } from "@/lib/portal/mail-html";
 import { notifyEmail } from "@/lib/portal/notify";
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       subject: t.activationReminderUrgentSubject,
       blocks: [
         { text: "Hola Ana," },
-        { text: t.activationReminderUrgentBody },
+        { text: interpolate(t.activationReminderUrgentBody, { date: "8 de noviembre de 2026" }) },
         { href: link, label: t.activationReminderLink },
         { text: t.activationReminderClose, muted: true as const },
       ],
@@ -75,16 +75,18 @@ export async function POST(request: Request) {
         { text: t.planningMailIntro },
         {
           rows: [
-            { label: t.planningLocation, value: "Masía" },
-            { label: t.planningArrivalShort, value: "a las 08:00" },
-            { label: t.planningSet, value: "de 08:00 a 08:45" },
-            { label: "Ana Martínez", value: "a las 09:15" },
-            { label: "Pareja", value: "a las 10:00" },
-            { label: t.planningBreaks, value: "a las 11:30" },
-            { label: "Colocación de velo", value: "a las 12:15" },
-            { label: t.planningPack, value: "a las 14:00" },
+            { label: t.planningLocation, value: "C/ Cascabeles 21, Arganda del Rey" },
+            { label: t.mailDate, value: "27 de septiembre de 2026" },
+            { label: "Pendiente de pago del servicio", value: "215,71 €" },
+            { label: t.planningSet, value: "08:45 – 09:00\nLlegada y colocación de productos" },
+            { label: "Maquillaje y peinado Natalia", value: "09:00 – 11:00" },
+            { label: "Maquillaje y peinado Mª Luisa", value: "11:00 – 13:00" },
+            { label: t.planningBreaks, value: "13:00 – 13:30" },
+            { label: "Colocación de velo", value: "16:30 – 16:45" },
+            { label: t.planningPack, value: "17:30 – 18:00" },
           ],
         },
+        { text: t.planningCashNote, muted: true as const },
         { href: link, label: t.planningTab },
       ],
     },

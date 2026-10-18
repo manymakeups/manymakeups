@@ -1,4 +1,33 @@
-import { historyBudget, type ClientRecord, type EventDetails, type PaymentSlice, type PersonPayments } from "./types";
+import { canonicalService, historyBudget, type ClientRecord, type EventDetails, type PaymentSlice, type PersonPayments } from "./types";
+
+const EVENT_SERVICE_TITLES = new Set([
+  "Maquillaje y Peinado",
+  "Sólo Maquillaje",
+  "Sólo peinado",
+  "Prueba",
+  "Glitter Bar",
+  "Beauty Corner",
+]);
+
+export function serviceAmountDue(client: Pick<ClientRecord, "history" | "payments">) {
+  const historyDue = (client.history ?? [])
+    .filter(
+      (entry) =>
+        entry.kind === "servicio" && !entry.paid && EVENT_SERVICE_TITLES.has(canonicalService(entry.title)),
+    )
+    .reduce((sum, entry) => sum + Math.max(0, Number(entry.amount) || 0), 0);
+  const slices = [
+    client.payments?.contractor?.deposit,
+    client.payments?.contractor?.trial,
+    client.payments?.contractor?.event,
+    ...(client.payments?.guests ?? []).flatMap((guest) => [guest?.deposit, guest?.trial, guest?.event]),
+  ];
+  const sliceDue = slices.reduce((sum, slice) => {
+    if (!slice || slice.paid) return sum;
+    return sum + Math.max(0, Number(slice.amount) || 0);
+  }, 0);
+  return Math.round((historyDue + sliceDue) * 100) / 100;
+}
 
 export type BudgetSlice = {
   id: string;

@@ -23,72 +23,79 @@ function clock(value: string) {
   return match ? match[1] : "";
 }
 
+function span(start: string, end: string, copy: PortalCopy) {
+  const from = clock(start);
+  const to = clock(end);
+  if (from && to) return interpolate(copy.planningRange, { start: from, end: to });
+  if (from) return interpolate(copy.planningAt, { time: from });
+  if (to) return interpolate(copy.planningAt, { time: to });
+  return "";
+}
+
 export function planningTimeline(
   planning: EventPlanning,
-  people: { id: string; label: string }[],
+  people: { id: string; label: string; service?: string }[],
   copy: PortalCopy,
 ): TimelineRow[] {
   const rows: TimelineRow[] = [];
-  const at = (time: string) => interpolate(copy.planningAt, { time: clock(time) });
-  if (planning.arrivalTime) {
+  const setStart = clock(planning.setPrepStart);
+  const setEnd = clock(planning.setPrepEnd);
+  if (planning.arrivalTime && clock(planning.arrivalTime) !== setStart) {
     rows.push({
       id: "arrival",
       label: copy.planningArrivalShort,
-      when: at(planning.arrivalTime),
+      when: span(planning.arrivalTime, "", copy),
       note: "",
       minutes: minutesOf(planning.arrivalTime),
     });
   }
-  const start = clock(planning.setPrepStart);
-  const end = clock(planning.setPrepEnd);
-  if (start || end || planning.setPrep) {
-    const when =
-      start && end ? interpolate(copy.planningFromTo, { start, end }) : start ? at(start) : end ? at(end) : "";
+  if (setStart || setEnd || planning.setPrep) {
     rows.push({
       id: "set",
       label: copy.planningSet,
-      when,
+      when: span(setStart, setEnd, copy),
       note: planning.setPrep,
-      minutes: minutesOf(start || end),
+      minutes: minutesOf(setStart || setEnd),
     });
   }
   for (const person of people) {
     const slot = planning.slots.find((item) => item.id === person.id);
-    if (!slot || (!slot.time && !slot.note)) continue;
+    if (!slot || (!slot.time && !slot.endTime && !slot.note)) continue;
+    const service = person.service?.trim();
     rows.push({
       id: person.id,
-      label: person.label,
-      when: slot.time ? at(slot.time) : "",
+      label: service ? `${service} ${person.label}` : person.label,
+      when: span(slot.time, slot.endTime, copy),
       note: slot.note,
-      minutes: minutesOf(slot.time),
+      minutes: minutesOf(slot.time || slot.endTime),
     });
   }
-  if (planning.breakTime || planning.breaks) {
+  if (planning.breakTime || planning.breakEnd || planning.breaks) {
     rows.push({
       id: "break",
       label: copy.planningBreaks,
-      when: planning.breakTime ? at(planning.breakTime) : "",
+      when: span(planning.breakTime, planning.breakEnd, copy),
       note: planning.breaks,
-      minutes: minutesOf(planning.breakTime),
+      minutes: minutesOf(planning.breakTime || planning.breakEnd),
     });
   }
   for (const extra of planning.extras) {
-    if (!extra.label && !extra.time && !extra.note) continue;
+    if (!extra.label && !extra.time && !extra.endTime && !extra.note) continue;
     rows.push({
       id: extra.id,
       label: extra.label || copy.planningExtra,
-      when: extra.time ? at(extra.time) : "",
+      when: span(extra.time, extra.endTime, copy),
       note: extra.note,
-      minutes: minutesOf(extra.time),
+      minutes: minutesOf(extra.time || extra.endTime),
     });
   }
-  if (planning.packUpTime || planning.packUp) {
+  if (planning.packUpTime || planning.packUpEnd || planning.packUp) {
     rows.push({
       id: "pack",
       label: copy.planningPack,
-      when: planning.packUpTime ? at(planning.packUpTime) : "",
+      when: span(planning.packUpTime, planning.packUpEnd, copy),
       note: planning.packUp,
-      minutes: minutesOf(planning.packUpTime),
+      minutes: minutesOf(planning.packUpTime || planning.packUpEnd),
     });
   }
   return rows
