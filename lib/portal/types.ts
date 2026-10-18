@@ -168,6 +168,7 @@ export type Appointment = {
   time: string;
   place: string;
   notes: string;
+  amount: number;
   status: AppointmentStatus;
 };
 
@@ -491,6 +492,7 @@ function asAppointment(value: unknown): Appointment | null {
     time: row.time ?? "",
     place: row.place ?? "",
     notes: row.notes ?? "",
+    amount: Math.max(0, Number(row.amount) || 0),
     status,
   };
 }

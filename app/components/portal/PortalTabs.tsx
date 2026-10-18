@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PORTAL_TABS, type PortalTab } from "@/lib/portal/types";
 
 const tabClass =
@@ -51,5 +51,71 @@ export function PortalTabs({
         })}
       </div>
     </nav>
+  );
+}
+
+export function StudioNav({ basePath, active }: { basePath: string; active: PortalTab }) {
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    function onPointer(event: PointerEvent) {
+      if (!root.current?.contains(event.target as Node)) setOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("pointerdown", onPointer);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointerdown", onPointer);
+    };
+  }, [open]);
+
+  const current = PORTAL_TABS.find((tab) => tab.id === active);
+  return (
+    <div ref={root} className="relative">
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          className="inline-flex size-11 items-center justify-center text-ink"
+          aria-expanded={open}
+          aria-haspopup="menu"
+          aria-label="Secciones"
+          onClick={() => setOpen((value) => !value)}
+        >
+          <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden>
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+        </button>
+        {current ? (
+          <span className="text-[0.68rem] uppercase tracking-[0.16em] text-ink">{current.label}</span>
+        ) : null}
+      </div>
+      {open ? (
+        <div role="menu" className="absolute left-0 top-full z-40 flex min-w-52 flex-col border border-ink/10 bg-porcelain py-1 shadow-[0_16px_40px_rgba(26,22,19,0.12)]">
+          {PORTAL_TABS.map((tab) => {
+            const on = tab.id === active;
+            return (
+              <a
+                key={tab.id}
+                role="menuitem"
+                href={`${basePath}?tab=${tab.id}`}
+                aria-current={on ? "page" : undefined}
+                className={
+                  on
+                    ? "px-4 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ink"
+                    : "px-4 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ash hover:text-ink"
+                }
+              >
+                {tab.label}
+              </a>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
   );
 }

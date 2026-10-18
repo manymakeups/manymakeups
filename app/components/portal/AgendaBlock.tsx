@@ -7,6 +7,7 @@ import type { Locale } from "@/lib/i18n/config";
 import {
   APPOINTMENT_STATUSES,
   APPOINTMENT_TITLES,
+  euros,
   type Appointment,
 } from "@/lib/portal/types";
 
@@ -156,6 +157,7 @@ export function AgendaView({
             </p>
             <p className="mt-1 font-serif text-2xl capitalize">{formatWhen(item, locale, copy)}</p>
             {item.place ? <p className="mt-1 text-sm text-ash">{item.place}</p> : null}
+            {item.amount > 0 ? <p className="mt-1 text-sm">{euros(item.amount)}</p> : null}
             {item.notes ? (
               <p className="mt-2 whitespace-pre-wrap text-sm">{item.notes}</p>
             ) : null}
@@ -193,6 +195,10 @@ function AppointmentFields() {
       <label className="field-label">
         Lugar
         <input className="field" name="place" />
+      </label>
+      <label className="field-label">
+        Importe
+        <input className="field" name="amount" type="number" min="0" step="0.01" />
       </label>
       <label className="field-label">
         Estado

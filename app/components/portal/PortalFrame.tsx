@@ -13,6 +13,7 @@ export async function PortalFrame({
   children,
   localize = false,
   pinned = false,
+  dense = false,
 }: {
   kicker: string;
   title: string;
@@ -21,6 +22,7 @@ export async function PortalFrame({
   children: ReactNode;
   localize?: boolean;
   pinned?: boolean;
+  dense?: boolean;
 }) {
   const locale = localize ? await getLocale() : "es";
   const copy = getPortalCopy(locale);
@@ -71,7 +73,9 @@ export async function PortalFrame({
         </div>
       </header>
   );
-  const intro = (
+  const intro = dense ? (
+    <h1 className="font-serif text-2xl leading-tight tracking-tight md:text-3xl">{title}</h1>
+  ) : (
     <>
       <p className="text-[0.62rem] uppercase tracking-[0.18em] text-gilt md:text-[0.68rem] md:tracking-[0.32em]">{kicker}</p>
       <h1 className="mt-2 font-serif text-[2rem] leading-tight tracking-tight md:mt-4 md:text-5xl">{title}</h1>
@@ -84,7 +88,7 @@ export async function PortalFrame({
       <div className="portal-shell flex h-dvh flex-col overflow-hidden bg-porcelain text-ink">
         {header}
         <div className="mx-auto flex min-h-0 w-full min-w-0 max-w-[960px] flex-1 flex-col px-4 md:px-10">
-          <div className="shrink-0 pt-5 md:pt-10">{intro}</div>
+          <div className={dense ? "shrink-0 pt-3 md:pt-5" : "shrink-0 pt-5 md:pt-10"}>{intro}</div>
           {children}
         </div>
       </div>

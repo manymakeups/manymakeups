@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { usePortalCopy } from "@/app/components/portal/usePortalCopy";
 import { interpolate } from "@/lib/i18n/portal-messages";
 import {
@@ -118,12 +119,43 @@ export function PaymentsForm({
   payments: Payments;
   people: Attendee[];
 }) {
+  const choices = [
+    { id: "contractor", label: "Tu servicio" },
+    ...people.map((person, i) => ({
+      id: String(i),
+      label: person.name
+        ? `${person.name}${person.who ? ` · ${person.who}` : ""}`
+        : person.who || `Acompañante ${i + 1}`,
+    })),
+  ];
+  const [who, setWho] = useState("contractor");
+  const selected = choices.some((choice) => choice.id === who) ? who : "contractor";
+  const guestIndex = selected === "contractor" ? -1 : Number(selected);
+  const guest = guestIndex >= 0 ? people[guestIndex] : undefined;
+  const guestPay = guest
+    ? (payments.guests[guestIndex] ?? {
+        deposit: { amount: 0, paid: false },
+        trial: { amount: 0, paid: false },
+        event: { amount: 0, paid: false },
+      })
+    : null;
   return (
-    <form action="/api/admin/payments" method="post" className="flex flex-col gap-8 sm:gap-12">
+    <form action="/api/admin/payments" method="post" className="flex flex-col gap-6">
       <input type="hidden" name="clientId" value={clientId} />
-      <div>
-        <h3 className="font-serif text-xl sm:text-2xl">Tu servicio</h3>
-        <div className="mt-3 grid gap-3 sm:mt-4 sm:grid-cols-3 sm:gap-6">
+      {choices.length > 1 ? (
+        <label className="field-label max-w-md">
+          Persona
+          <select className="field" value={selected} onChange={(event) => setWho(event.target.value)}>
+            {choices.map((choice) => (
+              <option key={choice.id} value={choice.id}>
+                {choice.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
+      {selected === "contractor" ? (
+        <div className="grid gap-3 sm:grid-cols-3 sm:gap-6">
           <SliceFields
             title="Reserva"
             amountName="contractor.depositAmount"
@@ -143,43 +175,30 @@ export function PaymentsForm({
             slice={payments.contractor.event}
           />
         </div>
-      </div>
-      {people.map((person, i) => {
-        const row = payments.guests[i] ?? {
-          deposit: { amount: 0, paid: false },
-          trial: { amount: 0, paid: false },
-          event: { amount: 0, paid: false },
-        };
-        return (
-          <div key={i}>
-            <h3 className="font-serif text-xl sm:text-2xl">
-              {person.name ? `${person.name}${person.who ? ` · ${person.who}` : ""}` : person.who || `Acompañante ${i + 1}`}
-            </h3>
-            <div className="mt-3 grid gap-3 sm:mt-4 sm:grid-cols-3 sm:gap-6">
-              <SliceFields
-                title="Reserva"
-                amountName={`guests.${i}.depositAmount`}
-                paidName={`guests.${i}.depositPaid`}
-                slice={row.deposit}
-              />
-              {person.wantsTrial ? (
-                <SliceFields
-                  title="Día de la prueba"
-                  amountName={`guests.${i}.trialAmount`}
-                  paidName={`guests.${i}.trialPaid`}
-                  slice={row.trial}
-                />
-              ) : null}
-              <SliceFields
-                title="Día del evento"
-                amountName={`guests.${i}.eventAmount`}
-                paidName={`guests.${i}.eventPaid`}
-                slice={row.event}
-              />
-            </div>
-          </div>
-        );
-      })}
+      ) : guest && guestPay ? (
+        <div className="grid gap-3 sm:grid-cols-3 sm:gap-6">
+          <SliceFields
+            title="Reserva"
+            amountName={`guests.${guestIndex}.depositAmount`}
+            paidName={`guests.${guestIndex}.depositPaid`}
+            slice={guestPay.deposit}
+          />
+          {guest.wantsTrial ? (
+            <SliceFields
+              title="Día de la prueba"
+              amountName={`guests.${guestIndex}.trialAmount`}
+              paidName={`guests.${guestIndex}.trialPaid`}
+              slice={guestPay.trial}
+            />
+          ) : null}
+          <SliceFields
+            title="Día del evento"
+            amountName={`guests.${guestIndex}.eventAmount`}
+            paidName={`guests.${guestIndex}.eventPaid`}
+            slice={guestPay.event}
+          />
+        </div>
+      ) : null}
       <button className="btn-atelier-solid btn-atelier self-start" type="submit">
         Guardar pagos
       </button>

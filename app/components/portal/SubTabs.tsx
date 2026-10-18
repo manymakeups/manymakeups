@@ -126,6 +126,107 @@ export function CompanionDeck({
   );
 }
 
+type EventLabels = {
+  data: string;
+  inspirations: string;
+  makeup: string;
+  hair: string;
+  trial: string;
+  photos: string;
+  products: string;
+  comments: string;
+};
+
+function eventFocus(section?: string) {
+  const inComments = section === "comentarios" || section === "notas" || section === "productos-notas";
+  const inProducts = section === "productos" || section?.startsWith("productos-");
+  const inTrial = section === "fotos" || inProducts || inComments;
+  const inInspiration = section === "maquillaje" || section === "peinado";
+  return {
+    area: inTrial ? "prueba" : inInspiration ? "inspiraciones" : "datos",
+    look: section === "peinado" || section === "productos-peinado" ? "peinado" : "maquillaje",
+    trial: inComments ? "comentarios" : inProducts ? "productos" : "fotos",
+  };
+}
+
+function EventFilters({
+  labels,
+  section,
+  details,
+  makeupInspiration,
+  hairInspiration,
+  photos,
+  makeupProducts,
+  hairProducts,
+  trialComments,
+}: {
+  labels: EventLabels;
+  section?: string;
+  details: ReactNode;
+  makeupInspiration: ReactNode;
+  hairInspiration: ReactNode;
+  photos: ReactNode;
+  makeupProducts: ReactNode;
+  hairProducts: ReactNode;
+  trialComments: ReactNode;
+}) {
+  const start = eventFocus(section);
+  const [area, setArea] = useState(start.area);
+  const [look, setLook] = useState(start.look);
+  const [trial, setTrial] = useState(start.trial);
+  const panels = [
+    { id: "datos", show: area === "datos", node: details },
+    { id: "maquillaje", show: area === "inspiraciones" && look === "maquillaje", node: makeupInspiration },
+    { id: "peinado", show: area === "inspiraciones" && look === "peinado", node: hairInspiration },
+    { id: "fotos", show: area === "prueba" && trial === "fotos", node: photos },
+    { id: "productos-maquillaje", show: area === "prueba" && trial === "productos" && look === "maquillaje", node: makeupProducts },
+    { id: "productos-peinado", show: area === "prueba" && trial === "productos" && look === "peinado", node: hairProducts },
+    { id: "comentarios", show: area === "prueba" && trial === "comentarios", node: trialComments },
+  ];
+  return (
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
+      <div className="flex shrink-0 flex-wrap gap-2">
+        <select className="field min-w-0 flex-1" aria-label="Sección" value={area} onChange={(event) => setArea(event.target.value)}>
+          <option value="datos">{labels.data}</option>
+          <option value="inspiraciones">{labels.inspirations}</option>
+          <option value="prueba">{labels.trial}</option>
+        </select>
+        {area === "inspiraciones" ? (
+          <select className="field min-w-0 flex-1" aria-label="Look" value={look} onChange={(event) => setLook(event.target.value)}>
+            <option value="maquillaje">{labels.makeup}</option>
+            <option value="peinado">{labels.hair}</option>
+          </select>
+        ) : null}
+        {area === "prueba" ? (
+          <select className="field min-w-0 flex-1" aria-label="Prueba" value={trial} onChange={(event) => setTrial(event.target.value)}>
+            <option value="fotos">{labels.photos}</option>
+            <option value="productos">{labels.products}</option>
+            <option value="comentarios">{labels.comments}</option>
+          </select>
+        ) : null}
+        {area === "prueba" && trial === "productos" ? (
+          <select className="field min-w-0 flex-1" aria-label="Look" value={look} onChange={(event) => setLook(event.target.value)}>
+            <option value="maquillaje">{labels.makeup}</option>
+            <option value="peinado">{labels.hair}</option>
+          </select>
+        ) : null}
+      </div>
+      <div className="relative min-h-0 flex-1">
+        {panels.map((panel) => (
+          <div
+            key={panel.id}
+            hidden={!panel.show}
+            data-portal-scroll={panel.show ? "" : undefined}
+            className={panel.show ? "h-full overflow-y-auto overscroll-contain pb-16 pt-4" : undefined}
+          >
+            {panel.node}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function EventSections({
   labels,
   section,
@@ -135,20 +236,10 @@ export function EventSections({
   photos,
   makeupProducts,
   hairProducts,
-  notes,
   trialComments,
+  variant = "tabs",
 }: {
-  labels: {
-    data: string;
-    inspirations: string;
-    makeup: string;
-    hair: string;
-    trial: string;
-    photos: string;
-    products: string;
-    notes: string;
-    comments: string;
-  };
+  labels: EventLabels;
   section?: string;
   details: ReactNode;
   makeupInspiration: ReactNode;
@@ -156,19 +247,29 @@ export function EventSections({
   photos: ReactNode;
   makeupProducts: ReactNode;
   hairProducts: ReactNode;
-  notes: ReactNode;
   trialComments: ReactNode;
+  variant?: "tabs" | "filters";
 }) {
-  const inProducts = section === "productos" || section?.startsWith("productos-") || section === "notas";
-  const inComments = section === "comentarios";
-  const inTrial = section === "fotos" || inProducts || inComments;
-  const inInspiration = section === "maquillaje" || section === "peinado";
-  const productTab =
-    section === "productos-peinado" ? "peinado" : section === "productos-notas" || section === "notas" ? "notas" : "maquillaje";
+  if (variant === "filters") {
+    return (
+      <EventFilters
+        labels={labels}
+        section={section}
+        details={details}
+        makeupInspiration={makeupInspiration}
+        hairInspiration={hairInspiration}
+        photos={photos}
+        makeupProducts={makeupProducts}
+        hairProducts={hairProducts}
+        trialComments={trialComments}
+      />
+    );
+  }
+  const focus = eventFocus(section);
   return (
     <SubTabs
       fill
-      initial={inTrial ? "prueba" : inInspiration ? "inspiraciones" : "datos"}
+      initial={focus.area === "prueba" ? "prueba" : focus.area === "inspiraciones" ? "inspiraciones" : "datos"}
       tabs={[
         { id: "datos", label: labels.data, body: details },
         {
@@ -178,7 +279,7 @@ export function EventSections({
           body: (
             <SubTabs
               fill
-              initial={section === "peinado" ? "peinado" : "maquillaje"}
+              initial={focus.look}
               tabs={[
                 { id: "maquillaje", label: labels.makeup, body: makeupInspiration },
                 { id: "peinado", label: labels.hair, body: hairInspiration },
@@ -193,7 +294,7 @@ export function EventSections({
           body: (
             <SubTabs
               fill
-              initial={inComments ? "comentarios" : inProducts ? "productos" : "fotos"}
+              initial={focus.trial}
               tabs={[
                 { id: "fotos", label: labels.photos, body: photos },
                 {
@@ -203,11 +304,10 @@ export function EventSections({
                   body: (
                     <SubTabs
                       fill
-                      initial={productTab}
+                      initial={focus.look}
                       tabs={[
                         { id: "maquillaje", label: labels.makeup, body: makeupProducts },
                         { id: "peinado", label: labels.hair, body: hairProducts },
-                        { id: "notas", label: labels.notes, body: notes },
                       ]}
                     />
                   ),

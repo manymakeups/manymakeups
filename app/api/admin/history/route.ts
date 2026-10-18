@@ -43,5 +43,6 @@ export async function POST(request: Request) {
     });
   }
   await saveClient(client);
-  return go(request, `/privado/novias/${client.id}?tab=historico&ok=historico`);
+  const back = text(form.get("returnTab")) === "budget" ? "budget" : "historico";
+  return go(request, `/privado/novias/${client.id}?tab=${back}&ok=historico`);
 }

@@ -5,7 +5,7 @@ import { BudgetView, HistoryView } from "@/app/components/portal/HistoryBlock";
 import { ClientCompose } from "@/app/components/portal/ClientCompose";
 import { CompanionView } from "@/app/components/portal/CompanionView";
 import { AddCompanionModal, CompanionsForm } from "@/app/components/portal/CompanionsForm";
-import { EventForm, TrialNotesEditor } from "@/app/components/portal/EventForm";
+import { EventForm } from "@/app/components/portal/EventForm";
 import { InfoTip } from "@/app/components/portal/InfoTip";
 import { EventView } from "@/app/components/portal/EventView";
 import { PaymentsView } from "@/app/components/portal/PaymentsBlock";
@@ -118,7 +118,6 @@ export default async function BridePanelPage({
               trial: t.trialHeading,
               photos: t.photosTab,
               products: t.productsTab,
-              notes: t.notesTab,
               comments: t.commentsTab,
             }}
             details={
@@ -198,24 +197,16 @@ export default async function BridePanelPage({
                 copy={t}
               />
             }
-            notes={
-              <LookNotesView
-                makeupNotes={client.event.makeupNotes}
-                hairNotes={client.event.hairNotes}
-                makeupLabel={t.makeupTab}
-                hairLabel={t.hairTab}
-                empty="—"
-              />
-            }
             trialComments={
-              client.event.contractorLocked ? (
-                <p className="whitespace-pre-wrap text-sm">{client.event.trialNotes.trim() || "—"}</p>
+              !client.event.makeupNotes.trim() && !client.event.hairNotes.trim() && client.event.trialNotes.trim() ? (
+                <p className="whitespace-pre-wrap text-sm">{client.event.trialNotes}</p>
               ) : (
-                <TrialNotesEditor
-                  action="/api/portal/event"
-                  notes={client.event.trialNotes}
-                  label={t.commentsTab}
-                  submitLabel={t.agendaSave}
+                <LookNotesView
+                  makeupNotes={client.event.makeupNotes}
+                  hairNotes={client.event.hairNotes}
+                  makeupLabel={t.makeupTab}
+                  hairLabel={t.hairTab}
+                  empty="—"
                 />
               )
             }

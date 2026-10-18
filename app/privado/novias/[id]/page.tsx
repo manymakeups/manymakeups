@@ -2,12 +2,12 @@ import { AgendaLists, NewAppointmentModal } from "@/app/components/portal/Agenda
 import { BudgetView, HistoryComposer, HistoryForm } from "@/app/components/portal/HistoryBlock";
 import { AddCompanionModal, PersonDataForm, RemoveCompanionButton } from "@/app/components/portal/CompanionsForm";
 import { DeleteFileButton } from "@/app/components/portal/FileActions";
-import { EventForm, TrialNotesEditor } from "@/app/components/portal/EventForm";
+import { EventForm } from "@/app/components/portal/EventForm";
 import { MailSetupNotice } from "@/app/components/portal/MailSetupNotice";
 import { PaymentsForm } from "@/app/components/portal/PaymentsBlock";
 import { PhotoGrid } from "@/app/components/portal/PhotoPicker";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
-import { PortalTabs } from "@/app/components/portal/PortalTabs";
+import { StudioNav } from "@/app/components/portal/PortalTabs";
 import { CompanionDeck, EventSections, SubTabs } from "@/app/components/portal/SubTabs";
 import { StudioAside } from "@/app/components/portal/StudioAside";
 import { LookNotesForm, WorkForm } from "@/app/components/portal/WorkBlock";
@@ -56,9 +56,9 @@ export default async function StudioClientPage({
   return (
     <PortalFrame
       pinned
+      dense
       kicker="Estudio"
       title={fullName(event, client.name)}
-      lead={client.email}
       aside={
         <StudioAside
           extra={
@@ -69,8 +69,8 @@ export default async function StudioClientPage({
         />
       }
     >
-      <div className="min-w-0 shrink-0">
-        <PortalTabs basePath={`/privado/novias/${client.id}`} active={tab} />
+      <div className="relative z-30 min-w-0 shrink-0">
+        <StudioNav basePath={`/privado/novias/${client.id}`} active={tab} />
       </div>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden pb-4">
       <div className="shrink-0 pt-6">
@@ -106,6 +106,7 @@ export default async function StudioClientPage({
       {tab === "contratante" ? (
         <section className="flex min-h-0 flex-1 flex-col pt-4">
           <EventSections
+            variant="filters"
             section={sec}
             labels={{
               data: "Datos del evento",
@@ -115,27 +116,19 @@ export default async function StudioClientPage({
               trial: "Prueba",
               photos: "Fotografías",
               products: "Productos",
-              notes: "Notas / comentarios",
               comments: "Comentarios",
             }}
             details={
-              <div>
-                <p className="max-w-2xl text-sm text-ash">
-                  Si pide un cambio, corrige aquí y guarda. Ella lo verá en su área, sin poder editarlo.
-                </p>
-                <div className="mt-8">
-                  <EventForm
-                    event={event}
-                    clientId={client.id}
-                    inspiration={client.inspiration}
-                    action="/api/admin/event"
-                    submitLabel="Guardar ficha"
-                    copy={portalEs}
-                    includeClientId
-                    showInspiration={false}
-                  />
-                </div>
-              </div>
+              <EventForm
+                event={event}
+                clientId={client.id}
+                inspiration={client.inspiration}
+                action="/api/admin/event"
+                submitLabel="Guardar ficha"
+                copy={portalEs}
+                includeClientId
+                showInspiration={false}
+              />
             }
             makeupInspiration={
               filesFor(client.inspiration, contractorInspirationKey("maquillaje")).length ? (
@@ -200,38 +193,30 @@ export default async function StudioClientPage({
                 tab="contratante"
               />
             }
-            notes={
-              <LookNotesForm
-                clientId={client.id}
-                tab="contratante"
-                section="productos-notas"
-                makeupNotes={event.makeupNotes}
-                hairNotes={event.hairNotes}
-              />
-            }
             trialComments={
-              <TrialNotesEditor
-                action="/api/admin/event"
-                clientId={client.id}
-                notes={event.trialNotes}
-                label="Comentarios"
-                submitLabel="Guardar"
-              />
+              <div className="flex flex-col gap-4">
+                {event.trialNotes.trim() && !event.makeupNotes.trim() && !event.hairNotes.trim() ? (
+                  <p className="whitespace-pre-wrap text-sm">{event.trialNotes}</p>
+                ) : null}
+                <LookNotesForm
+                  clientId={client.id}
+                  tab="contratante"
+                  section="comentarios"
+                  makeupNotes={event.makeupNotes}
+                  hairNotes={event.hairNotes}
+                />
+              </div>
             }
           />
         </section>
       ) : null}
 
       {tab === "acompanantes" ? (
-        <section className="flex min-h-0 flex-1 flex-col pt-4">
-          <div className="flex shrink-0 flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="font-serif text-3xl">Acompañantes</h2>
+        <section className="flex min-h-0 flex-1 flex-col pt-2">
+          <div className="shrink-0">
             <AddCompanionModal clientId={client.id} action="/api/admin/companions" copy={portalEs} includeClientId />
           </div>
-          <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">
-            Corrige nombre, parentesco y servicio en Datos. Inspiraciones y prueba van en sus pestañas.
-          </p>
-          <div className="mt-4 flex min-h-0 flex-1 flex-col">
+          <div className="mt-3 flex min-h-0 flex-1 flex-col">
             {event.people.length ? (
               <CompanionDeck
                 initial={sec?.match(/^(\d+)/)?.[1]}
@@ -251,6 +236,7 @@ export default async function StudioClientPage({
                     remove: <RemoveCompanionButton clientId={client.id} index={i} name={heading} label="Quitar" />,
                     body: (
                       <EventSections
+                        variant="filters"
                         section={piece}
                         labels={{
                           data: "Datos del evento",
@@ -260,7 +246,6 @@ export default async function StudioClientPage({
                           trial: "Prueba",
                           photos: "Fotografías",
                           products: "Productos",
-                          notes: "Notas / comentarios",
                           comments: "Comentarios",
                         }}
                         details={
@@ -328,25 +313,20 @@ export default async function StudioClientPage({
                             tab="acompanantes"
                           />
                         }
-                        notes={
-                          <LookNotesForm
-                            clientId={client.id}
-                            tab="acompanantes"
-                            section={`${i}-productos-notas`}
-                            personIndex={i}
-                            makeupNotes={person.makeupNotes}
-                            hairNotes={person.hairNotes}
-                          />
-                        }
                         trialComments={
-                          <TrialNotesEditor
-                            action="/api/admin/companions"
-                            clientId={client.id}
-                            personIndex={i}
-                            notes={person.trialNotes}
-                            label="Comentarios"
-                            submitLabel="Guardar"
-                          />
+                          <div className="flex flex-col gap-4">
+                            {person.trialNotes.trim() && !person.makeupNotes.trim() && !person.hairNotes.trim() ? (
+                              <p className="whitespace-pre-wrap text-sm">{person.trialNotes}</p>
+                            ) : null}
+                            <LookNotesForm
+                              clientId={client.id}
+                              tab="acompanantes"
+                              section={`${i}-comentarios`}
+                              personIndex={i}
+                              makeupNotes={person.makeupNotes}
+                              hairNotes={person.hairNotes}
+                            />
+                          </div>
                         }
                       />
                     ),
@@ -361,17 +341,13 @@ export default async function StudioClientPage({
       ) : null}
 
       {tab === "documentacion" ? (
-        <section className="flex min-h-0 flex-1 flex-col pt-4">
-          <h2 className="shrink-0 font-serif text-3xl">Documentación</h2>
-          <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">
-            Presupuestos, contratos, facturas y el resto de papeles. Ella los ve en su área.
-          </p>
+        <section className="flex min-h-0 flex-1 flex-col pt-2">
           <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
           <form
             action="/api/admin/documents"
             method="post"
             encType="multipart/form-data"
-            className="mt-6 grid max-w-xl gap-4"
+            className="grid max-w-xl gap-4"
           >
             <input type="hidden" name="clientId" value={client.id} />
             <label className="field-label">
@@ -420,9 +396,8 @@ export default async function StudioClientPage({
       ) : null}
 
       {tab === "historico" ? (
-        <section className="flex min-h-0 flex-1 flex-col pt-4">
-          <h2 className="shrink-0 font-serif text-3xl">Comunicaciones</h2>
-          <div className="mt-4 flex min-h-0 flex-1 flex-col">
+        <section className="flex min-h-0 flex-1 flex-col pt-2">
+          <div className="flex min-h-0 flex-1 flex-col">
             <SubTabs
               fill
               initial={com === "nueva" || ok === "mensaje" ? "nueva" : "historico"}
@@ -443,28 +418,18 @@ export default async function StudioClientPage({
                   id: "nueva",
                   label: "Nueva comunicación",
                   body: (
-                    <div className="flex max-w-xl flex-col gap-12">
-                      <form action="/api/admin/notices" method="post" className="flex flex-col gap-3">
-                        <input type="hidden" name="intent" value="compose" />
-                        <input type="hidden" name="clientId" value={client.id} />
-                        <input type="hidden" name="next" value={`/privado/novias/${client.id}?tab=historico&com=nueva`} />
-                        <p className="text-sm text-ash">Ella lo lee en comunicaciones, firmado como Ana Zarza.</p>
-                        <label className="field-label">
-                          Mensaje
-                          <textarea className="field min-h-28" name="message" required minLength={2} />
-                        </label>
-                        <button className="btn-atelier self-start" type="submit">
-                          Enviar
-                        </button>
-                      </form>
-                      <div>
-                        <h3 className="font-serif text-2xl">Añadir al histórico</h3>
-                        <p className="mt-2 text-sm text-ash">Queda anotado en el histórico. Ella no recibe un correo.</p>
-                        <div className="mt-6">
-                          <HistoryComposer clientId={client.id} />
-                        </div>
-                      </div>
-                    </div>
+                    <form action="/api/admin/notices" method="post" className="flex max-w-xl flex-col gap-3">
+                      <input type="hidden" name="intent" value="compose" />
+                      <input type="hidden" name="clientId" value={client.id} />
+                      <input type="hidden" name="next" value={`/privado/novias/${client.id}?tab=historico&com=nueva`} />
+                      <label className="field-label">
+                        Mensaje
+                        <textarea className="field min-h-28" name="message" required minLength={2} />
+                      </label>
+                      <button className="btn-atelier self-start" type="submit">
+                        Enviar
+                      </button>
+                    </form>
                   ),
                 },
               ]}
@@ -474,32 +439,26 @@ export default async function StudioClientPage({
       ) : null}
 
       {tab === "budget" ? (
-        <section className="flex min-h-0 flex-1 flex-col pt-4">
-          <h2 className="shrink-0 font-serif text-3xl">Budget</h2>
-          <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">
-            El resumen junta el evento y los otros gastos, estén pagados o pendientes. Ella lo ve igual en su budget.
-          </p>
-          <div data-portal-scroll className="mt-6 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
+        <section className="flex min-h-0 flex-1 flex-col pt-2">
+          <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
             <BudgetView
               entries={client.history}
               event={client.event}
               payments={client.payments}
               billing={<PaymentsForm clientId={client.id} payments={client.payments} people={event.people} />}
+              expenseLabel="Nuevo gasto"
+              expense={<HistoryComposer clientId={client.id} returnTab="budget" />}
             />
           </div>
         </section>
       ) : null}
 
       {tab === "agenda" ? (
-        <section className="flex min-h-0 flex-1 flex-col pt-4">
-          <div className="flex shrink-0 flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="font-serif text-3xl">Agenda</h2>
+        <section className="flex min-h-0 flex-1 flex-col pt-2">
+          <div className="shrink-0">
             <NewAppointmentModal clientId={client.id} />
           </div>
-          <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">
-            Citas planificadas y las que ya hayáis tenido. Ella las ve en su panel.
-          </p>
-          <div data-portal-scroll className="mt-6 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
+          <div data-portal-scroll className="mt-3 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
             <AgendaLists clientId={client.id} appointments={client.appointments} />
           </div>
         </section>

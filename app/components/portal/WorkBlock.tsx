@@ -2,7 +2,7 @@
 
 import { PhotoGrid, PhotoPicker } from "@/app/components/portal/PhotoPicker";
 import { portalEs, type PortalCopy } from "@/lib/i18n/portal-messages";
-import { HAIR_ZONES, PRODUCT_ZONES, filesFor, type PortalFile, type UsedProduct } from "@/lib/portal/types";
+import { HAIR_ZONES, PRODUCT_ZONES, type PortalFile, type UsedProduct } from "@/lib/portal/types";
 import { useState } from "react";
 
 function zoneLabel(zone: string, copy: PortalCopy) {
@@ -102,13 +102,19 @@ export function WorkView({
   );
 }
 
+const FACE_ONLY = new Set(["Ojos", "Labios", "Piel", "Cejas", "Pestañas", "Mejillas"]);
+
 function ProductFields({ prefix, products, look }: { prefix: string; products: UsedProduct[]; look: "maquillaje" | "peinado" }) {
-  const zones = look === "peinado" ? HAIR_ZONES : PRODUCT_ZONES;
+  const zones = (look === "peinado" ? HAIR_ZONES : PRODUCT_ZONES).filter(
+    (zone) => look !== "peinado" || !FACE_ONLY.has(zone),
+  );
   const blank = (): UsedProduct => ({ brand: "", name: "", shade: "", zone: zones[0], look });
   const [rows, setRows] = useState<UsedProduct[]>(products);
   const [draft, setDraft] = useState<UsedProduct>(blank());
   const known = (zones as readonly string[]).includes(draft.zone);
-  const picked = known || !draft.zone ? draft.zone || zones[0] : look === "peinado" ? draft.zone : "Otra";
+  const stray =
+    look === "peinado" && draft.zone && !known && !FACE_ONLY.has(draft.zone) ? draft.zone : "";
+  const picked = known ? draft.zone : stray || (look === "maquillaje" && draft.zone && !known ? "Otra" : zones[0]);
   function addDraft() {
     const zone = picked === "Otra" ? draft.zone.trim() : picked;
     if (!draft.brand.trim() && !draft.name.trim() && !draft.shade.trim() && !zone) return;
@@ -140,8 +146,8 @@ function ProductFields({ prefix, products, look }: { prefix: string; products: U
               setDraft({ ...draft, zone: zone === "Otra" ? "" : zone });
             }}
           >
-            {look === "peinado" && picked && !(zones as readonly string[]).includes(picked) ? (
-              <option key={picked} value={picked}>{picked}</option>
+            {stray ? (
+              <option key={stray} value={stray}>{stray}</option>
             ) : null}
             {zones.map((zone) => (
               <option key={zone} value={zone}>
@@ -215,7 +221,6 @@ export function WorkForm({
   photoSection?: string;
   personIndex?: number;
 }) {
-  const shown = filesFor(photos, personKey);
   return (
     <div className="flex flex-col gap-6">
       {mode !== "photos" ? (
@@ -248,9 +253,6 @@ export function WorkForm({
             section={photoSection}
             kind="work"
           />
-          {!shown.length ? (
-            <p className="text-sm text-ash">Cuando cuelgues las fotos de la prueba, ella las verá aquí.</p>
-          ) : null}
         </>
       ) : null}
     </div>

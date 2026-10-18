@@ -123,12 +123,16 @@ export function BudgetView({
   payments,
   copy = portalEs,
   billing,
+  expense,
+  expenseLabel = "Nuevo gasto",
 }: {
   entries: HistoryEntry[];
   event?: EventDetails;
   payments?: Payments;
   copy?: PortalCopy;
   billing?: ReactNode;
+  expense?: ReactNode;
+  expenseLabel?: string;
 }) {
   const booked = event && payments ? clientBudget({ history: entries, event, payments }) : null;
   const history = booked?.history ?? historyBudget(entries);
@@ -166,6 +170,15 @@ export function BudgetView({
                 </>
               ),
             },
+            ...(expense
+              ? [
+                  {
+                    id: "gasto",
+                    label: expenseLabel,
+                    body: expense,
+                  },
+                ]
+              : []),
           ]}
         />
       </div>
@@ -405,7 +418,7 @@ export function HistoryForm({
   );
 }
 
-export function HistoryComposer({ clientId }: { clientId: string }) {
+export function HistoryComposer({ clientId, returnTab }: { clientId: string; returnTab?: string }) {
   const [kind, setKind] = useState<HistoryKind>("servicio");
   const [title, setTitle] = useState<string>(SERVICE_TITLES[0]);
   const titles = kind === "servicio" ? SERVICE_TITLES : CONTACT_TITLES;
@@ -418,6 +431,7 @@ export function HistoryComposer({ clientId }: { clientId: string }) {
   return (
       <form action="/api/admin/history" method="post" className="grid max-w-xl gap-4">
         <input type="hidden" name="clientId" value={clientId} />
+        {returnTab ? <input type="hidden" name="returnTab" value={returnTab} /> : null}
         <label className="field-label">
           Tipo
           <select className="field" name="kind" value={kind} onChange={(event) => chooseKind(event.target.value as HistoryKind)}>

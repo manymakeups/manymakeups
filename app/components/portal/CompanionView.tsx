@@ -36,7 +36,6 @@ export function CompanionView({
     trial: copy.trialHeading,
     photos: copy.photosTab,
     products: copy.productsTab,
-    notes: copy.notesTab,
     comments: copy.commentsTab,
   };
   return (
@@ -123,16 +122,19 @@ export function CompanionView({
               copy={copy}
             />
           }
-          notes={
-            <LookNotesView
-              makeupNotes={person.makeupNotes}
-              hairNotes={person.hairNotes}
-              makeupLabel={copy.makeupTab}
-              hairLabel={copy.hairTab}
-              empty="—"
-            />
+          trialComments={
+            !person.makeupNotes.trim() && !person.hairNotes.trim() && person.trialNotes.trim() ? (
+              <p className="whitespace-pre-wrap text-sm">{person.trialNotes}</p>
+            ) : (
+              <LookNotesView
+                makeupNotes={person.makeupNotes}
+                hairNotes={person.hairNotes}
+                makeupLabel={copy.makeupTab}
+                hairLabel={copy.hairTab}
+                empty="—"
+              />
+            )
           }
-          trialComments={<p className="whitespace-pre-wrap text-sm">{person.trialNotes.trim() || "—"}</p>}
         />
     </article>
   );

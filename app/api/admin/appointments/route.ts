@@ -8,6 +8,12 @@ function text(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function money(value: string) {
+  const amount = Number(value.replace(/\s/g, "").replace(",", "."));
+  if (!Number.isFinite(amount) || amount < 0) return 0;
+  return Math.round(amount * 100) / 100;
+}
+
 export async function POST(request: Request) {
   const admin = await requireAdmin();
   if (!admin) return go(request, "/privado");
@@ -36,6 +42,7 @@ export async function POST(request: Request) {
       time: text(form.get("time")),
       place: text(form.get("place")),
       notes: text(form.get("notes")),
+      amount: money(text(form.get("amount"))),
       status,
     });
   }
