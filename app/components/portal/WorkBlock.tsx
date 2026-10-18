@@ -115,55 +115,99 @@ function ProductFields({ prefix, products, look }: { prefix: string; products: U
   const stray =
     look === "peinado" && draft.zone && !known && !FACE_ONLY.has(draft.zone) ? draft.zone : "";
   const picked = known ? draft.zone : stray || (look === "maquillaje" && draft.zone && !known ? "Otra" : zones[0]);
-  function addDraft() {
+  const [open, setOpen] = useState(false);
+  function addDraft(close: boolean) {
     const zone = picked === "Otra" ? draft.zone.trim() : picked;
     if (!draft.brand.trim() && !draft.name.trim() && !draft.shade.trim() && !zone) return;
     setRows([...rows, { ...draft, zone: zone || "Otra", look }]);
     setDraft(blank());
+    if (close) setOpen(false);
+  }
+  function fields() {
+    return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      <label className="field-label">
+        Marca
+        <input className="field" value={draft.brand} onChange={(event) => setDraft({ ...draft, brand: event.target.value })} />
+      </label>
+      <label className="field-label">
+        Producto
+        <input className="field" value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} />
+      </label>
+      <label className="field-label">
+        Tono
+        <input className="field" value={draft.shade} onChange={(event) => setDraft({ ...draft, shade: event.target.value })} />
+      </label>
+      <label className="field-label">
+        Área
+        <select
+          className="field"
+          value={picked}
+          onChange={(event) => {
+            const zone = event.target.value;
+            setDraft({ ...draft, zone: zone === "Otra" ? "" : zone });
+          }}
+        >
+          {stray ? (
+            <option key={stray} value={stray}>{stray}</option>
+          ) : null}
+          {zones.map((zone) => (
+            <option key={zone} value={zone}>
+              {zone}
+            </option>
+          ))}
+          {look === "maquillaje" ? <option value="Otra">Otra</option> : null}
+        </select>
+      </label>
+      {picked === "Otra" ? (
+        <label className="field-label sm:col-span-2">
+          Qué área
+          <input className="field" value={draft.zone} onChange={(event) => setDraft({ ...draft, zone: event.target.value })} />
+        </label>
+      ) : null}
+    </div>
+    );
   }
   return (
     <div className="flex flex-col gap-4">
-      <div className="sticky top-0 z-10 grid gap-3 border border-ink/10 bg-porcelain p-4 sm:grid-cols-2">
-        <label className="field-label">
-          Marca
-          <input className="field" value={draft.brand} onChange={(event) => setDraft({ ...draft, brand: event.target.value })} />
-        </label>
-        <label className="field-label">
-          Producto
-          <input className="field" value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} />
-        </label>
-        <label className="field-label">
-          Tono
-          <input className="field" value={draft.shade} onChange={(event) => setDraft({ ...draft, shade: event.target.value })} />
-        </label>
-        <label className="field-label">
-          Área
-          <select
-            className="field"
-            value={picked}
-            onChange={(event) => {
-              const zone = event.target.value;
-              setDraft({ ...draft, zone: zone === "Otra" ? "" : zone });
-            }}
+      <div className="md:hidden">
+        <button
+          type="button"
+          className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink"
+          onClick={() => setOpen(true)}
+        >
+          Añadir producto
+        </button>
+        {open ? (
+          <div
+            className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-ink/40 p-3 sm:items-center sm:p-6"
+            onClick={() => setOpen(false)}
           >
-            {stray ? (
-              <option key={stray} value={stray}>{stray}</option>
-            ) : null}
-            {zones.map((zone) => (
-              <option key={zone} value={zone}>
-                {zone}
-              </option>
-            ))}
-            {look === "maquillaje" ? <option value="Otra">Otra</option> : null}
-          </select>
-        </label>
-        {picked === "Otra" ? (
-          <label className="field-label sm:col-span-2">
-            Qué área
-            <input className="field" value={draft.zone} onChange={(event) => setDraft({ ...draft, zone: event.target.value })} />
-          </label>
+            <div
+              className="max-h-[85dvh] w-full max-w-lg overflow-y-auto bg-porcelain p-6 shadow-[0_20px_60px_rgba(26,22,19,0.16)]"
+              onClick={(event) => event.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Añadir producto"
+            >
+              {fields()}
+              <button className="btn-atelier mt-4" type="button" onClick={() => addDraft(true)}>
+                Añadir producto
+              </button>
+              <button
+                type="button"
+                className="mt-4 block text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink"
+                onClick={() => setOpen(false)}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
         ) : null}
-        <button className="btn-atelier self-end justify-self-start" type="button" onClick={addDraft}>
+      </div>
+      <div className="sticky top-0 z-10 hidden border border-ink/10 bg-porcelain p-4 md:block">
+        {fields()}
+        <button className="btn-atelier mt-3" type="button" onClick={() => addDraft(false)}>
           Añadir producto
         </button>
       </div>

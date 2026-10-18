@@ -232,6 +232,7 @@ export type HistoryEntry = {
   amount: number;
   paid: boolean;
   seenByClient?: boolean;
+  appointmentId?: string;
 };
 
 export type EventDetails = {
@@ -512,6 +513,7 @@ function asHistory(value: unknown): HistoryEntry | null {
     amount: row.kind === "servicio" ? Math.max(0, Number(row.amount) || 0) : 0,
     paid: row.kind === "servicio" ? row.paid !== false : true,
     seenByClient: row.seenByClient !== false,
+    appointmentId: typeof row.appointmentId === "string" && row.appointmentId ? row.appointmentId : undefined,
   };
 }
 

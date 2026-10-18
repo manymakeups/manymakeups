@@ -91,7 +91,17 @@ function MoneyBoxes({
   );
 }
 
-function ServiceLines({ entries, copy }: { entries: HistoryEntry[]; copy: PortalCopy }) {
+function ServiceLines({
+  entries,
+  copy,
+  locale = "es",
+  showDate = false,
+}: {
+  entries: HistoryEntry[];
+  copy: PortalCopy;
+  locale?: Locale;
+  showDate?: boolean;
+}) {
   if (!entries.length) return null;
   return (
     <ul className="mt-8 divide-y divide-ink/10 border border-ink/10">
@@ -106,6 +116,9 @@ function ServiceLines({ entries, copy }: { entries: HistoryEntry[]; copy: Portal
               {category ? ` · ${category}` : ""}
             </p>
             {specific ? <p className="mt-1 font-serif text-2xl">{specific}</p> : null}
+            {showDate && entry.date ? (
+              <p className="mt-1 text-sm capitalize text-ash">{formatWhen(entry.date, locale, copy)}</p>
+            ) : null}
             <p className="mt-2 text-sm">
               {euros(entry.amount)}
               {` · ${entry.paid ? copy.paid : copy.unpaid}`}
@@ -125,6 +138,7 @@ export function BudgetView({
   billing,
   expense,
   expenseLabel = "Nuevo gasto",
+  locale = "es",
 }: {
   entries: HistoryEntry[];
   event?: EventDetails;
@@ -133,6 +147,7 @@ export function BudgetView({
   billing?: ReactNode;
   expense?: ReactNode;
   expenseLabel?: string;
+  locale?: Locale;
 }) {
   const booked = event && payments ? clientBudget({ history: entries, event, payments }) : null;
   const history = booked?.history ?? historyBudget(entries);
@@ -163,7 +178,7 @@ export function BudgetView({
                 <>
                   <MoneyBoxes total={care.total} paid={care.paid} pending={care.pending} copy={copy} />
                   {careServices.length ? (
-                    <ServiceLines entries={careServices} copy={copy} />
+                    <ServiceLines entries={careServices} copy={copy} locale={locale} showDate />
                   ) : (
                     <p className="text-sm text-ash">{copy.budgetCareEmpty}</p>
                   )}

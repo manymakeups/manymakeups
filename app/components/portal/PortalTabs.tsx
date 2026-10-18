@@ -54,7 +54,19 @@ export function PortalTabs({
   );
 }
 
-export function StudioNav({ basePath, active }: { basePath: string; active: PortalTab }) {
+export function StudioNav({
+  basePath,
+  active,
+  labels,
+  badges,
+  menuLabel = "Secciones",
+}: {
+  basePath: string;
+  active: PortalTab;
+  labels?: Record<PortalTab, string>;
+  badges?: Partial<Record<PortalTab, number>>;
+  menuLabel?: string;
+}) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
 
@@ -75,6 +87,7 @@ export function StudioNav({ basePath, active }: { basePath: string; active: Port
   }, [open]);
 
   const current = PORTAL_TABS.find((tab) => tab.id === active);
+  const currentLabel = current ? (labels?.[current.id] ?? current.label) : "";
   return (
     <div ref={root} className="relative">
       <div className="flex items-center gap-1">
@@ -83,21 +96,22 @@ export function StudioNav({ basePath, active }: { basePath: string; active: Port
           className="inline-flex size-11 items-center justify-center text-ink"
           aria-expanded={open}
           aria-haspopup="menu"
-          aria-label="Secciones"
+          aria-label={menuLabel}
           onClick={() => setOpen((value) => !value)}
         >
           <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden>
             <path d="M4 7h16M4 12h16M4 17h16" />
           </svg>
         </button>
-        {current ? (
-          <span className="text-[0.68rem] uppercase tracking-[0.16em] text-ink">{current.label}</span>
+        {currentLabel ? (
+          <span className="text-[0.68rem] uppercase tracking-[0.16em] text-ink">{currentLabel}</span>
         ) : null}
       </div>
       {open ? (
         <div role="menu" className="absolute left-0 top-full z-40 flex min-w-52 flex-col border border-ink/10 bg-porcelain py-1 shadow-[0_16px_40px_rgba(26,22,19,0.12)]">
           {PORTAL_TABS.map((tab) => {
             const on = tab.id === active;
+            const count = badges?.[tab.id] ?? 0;
             return (
               <a
                 key={tab.id}
@@ -106,11 +120,16 @@ export function StudioNav({ basePath, active }: { basePath: string; active: Port
                 aria-current={on ? "page" : undefined}
                 className={
                   on
-                    ? "px-4 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ink"
-                    : "px-4 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ash hover:text-ink"
+                    ? "flex items-center px-4 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ink"
+                    : "flex items-center px-4 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ash hover:text-ink"
                 }
               >
-                {tab.label}
+                {labels?.[tab.id] ?? tab.label}
+                {count > 0 ? (
+                  <span className="ml-2 inline-flex min-w-4 items-center justify-center rounded-full bg-ink px-1 text-[0.6rem] font-medium leading-4 tracking-normal text-porcelain">
+                    {count > 9 ? "9+" : count}
+                  </span>
+                ) : null}
               </a>
             );
           })}

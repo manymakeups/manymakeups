@@ -14,6 +14,17 @@ function money(value: string) {
   return Math.round(amount * 100) / 100;
 }
 
+function budgetLine(title: string) {
+  if (title === "Maquillaje") return { title: "Sólo Maquillaje", name: "" };
+  if (title === "Peinado") return { title: "Sólo peinado", name: "" };
+  if (title === "Maquillaje y peinado") return { title: "Maquillaje y Peinado", name: "" };
+  if (title === "Prueba") return { title: "Prueba", name: "" };
+  if (title === "Tratamiento facial") return { title: "Tratamiento facial", name: title };
+  if (title === "Tratamientos de ojos") return { title: "Servicios de ojos", name: title };
+  if (title === "Curso") return { title: "Formaciones", name: title };
+  return { title: "otro", name: title || "Cita" };
+}
+
 export async function POST(request: Request) {
   const admin = await requireAdmin();
   if (!admin) return go(request, "/privado");
@@ -24,6 +35,7 @@ export async function POST(request: Request) {
   const deleteId = text(form.get("deleteId"));
   if (deleteId) {
     client.appointments = client.appointments.filter((item) => item.id !== deleteId);
+    client.history = client.history.filter((entry) => entry.appointmentId !== deleteId);
   } else {
     const statusRaw = text(form.get("status"));
     const status: AppointmentStatus = APPOINTMENT_STATUSES.includes(
@@ -35,16 +47,34 @@ export async function POST(request: Request) {
     const title = (APPOINTMENT_TITLES as readonly string[]).includes(titleRaw)
       ? titleRaw
       : APPOINTMENT_TITLES[0];
+    const appointmentId = newId();
+    const amount = money(text(form.get("amount")));
+    const date = text(form.get("date"));
     client.appointments.push({
-      id: newId(),
+      id: appointmentId,
       title,
-      date: text(form.get("date")),
+      date,
       time: text(form.get("time")),
       place: text(form.get("place")),
       notes: text(form.get("notes")),
-      amount: money(text(form.get("amount"))),
+      amount,
       status,
     });
+    if (amount > 0) {
+      const line = budgetLine(title);
+      client.history.push({
+        id: newId(),
+        kind: "servicio",
+        title: line.title,
+        name: line.name,
+        date,
+        notes: "",
+        amount,
+        paid: false,
+        seenByClient: true,
+        appointmentId,
+      });
+    }
   }
   await saveClient(client);
   return go(request, `/privado/novias/${client.id}?tab=agenda&ok=agenda`);

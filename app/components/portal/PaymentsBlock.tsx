@@ -39,14 +39,21 @@ function PersonPayView({
   const t = usePortalCopy();
   return (
     <div>
-      <h3 className="font-serif text-xl sm:text-2xl">{title}</h3>
-      <div className="mt-3 grid gap-2 sm:mt-4 sm:grid-cols-3 sm:gap-4">
+      {title ? <h3 className="font-serif text-xl sm:text-2xl">{title}</h3> : null}
+      <div className={title ? "mt-3 grid gap-2 sm:mt-4 sm:grid-cols-3 sm:gap-4" : "grid gap-2 sm:grid-cols-3 sm:gap-4"}>
         <SliceView title={t.deposit} slice={payments.deposit} />
         {showTrial ? <SliceView title={t.trialDay} slice={payments.trial} /> : null}
         <SliceView title={t.eventDay} slice={payments.event} />
       </div>
     </div>
   );
+}
+
+function personLabel(person: Attendee, index: number, whoOptions: Record<string, string>, guestN: string) {
+  if (person.name) {
+    return `${person.name}${person.who ? ` · ${whoOptions[person.who] || person.who}` : ""}`;
+  }
+  return whoOptions[person.who] || person.who || interpolate(guestN, { n: index + 1 });
 }
 
 export function PaymentsView({
@@ -57,21 +64,45 @@ export function PaymentsView({
   people: Attendee[];
 }) {
   const t = usePortalCopy();
+  const choices = [
+    { id: "contractor", label: t.budgetService },
+    ...people.map((person, i) => ({
+      id: String(i),
+      label: personLabel(person, i, t.whoOptions, t.guestN),
+    })),
+  ];
+  const [who, setWho] = useState("contractor");
+  const selected = choices.some((choice) => choice.id === who) ? who : "contractor";
+  const guestIndex = selected === "contractor" ? -1 : Number(selected);
+  const guest = guestIndex >= 0 ? people[guestIndex] : undefined;
+  const shown =
+    selected === "contractor"
+      ? { title: t.budgetService, payments: payments.contractor, showTrial: true }
+      : {
+          title: guest ? personLabel(guest, guestIndex, t.whoOptions, t.guestN) : "",
+          payments: payments.guests[guestIndex] ?? emptyPersonPayments(),
+          showTrial: Boolean(guest?.wantsTrial),
+        };
   return (
-    <div className="flex flex-col gap-8 sm:gap-12">
-      <PersonPayView title={t.budgetService} payments={payments.contractor} showTrial />
-      {people.map((person, i) => (
-        <PersonPayView
-          key={i}
-          title={
-            person.name
-              ? `${person.name}${person.who ? ` · ${t.whoOptions[person.who] || person.who}` : ""}`
-              : t.whoOptions[person.who] || person.who || interpolate(t.guestN, { n: i + 1 })
-          }
-          payments={payments.guests[i] ?? emptyPersonPayments()}
-          showTrial={person.wantsTrial}
-        />
-      ))}
+    <div className="flex flex-col gap-6">
+      {choices.length > 1 ? (
+        <label className="field-label max-w-md">
+          {t.budgetPerson}
+          <select className="field" value={selected} onChange={(event) => setWho(event.target.value)}>
+            {choices.map((choice) => (
+              <option key={choice.id} value={choice.id}>
+                {choice.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
+      <PersonPayView
+        key={selected}
+        title={choices.length > 1 ? "" : shown.title}
+        payments={shown.payments}
+        showTrial={shown.showTrial}
+      />
     </div>
   );
 }
@@ -155,7 +186,7 @@ export function PaymentsForm({
         </label>
       ) : null}
       {selected === "contractor" ? (
-        <div className="grid gap-3 sm:grid-cols-3 sm:gap-6">
+        <div key={selected} className="grid gap-3 sm:grid-cols-3 sm:gap-6">
           <SliceFields
             title="Reserva"
             amountName="contractor.depositAmount"
@@ -176,7 +207,7 @@ export function PaymentsForm({
           />
         </div>
       ) : guest && guestPay ? (
-        <div className="grid gap-3 sm:grid-cols-3 sm:gap-6">
+        <div key={selected} className="grid gap-3 sm:grid-cols-3 sm:gap-6">
           <SliceFields
             title="Reserva"
             amountName={`guests.${guestIndex}.depositAmount`}

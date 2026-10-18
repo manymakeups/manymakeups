@@ -96,6 +96,7 @@ export type PortalCopy = {
   budgetCare: string;
   budgetCareEmpty: string;
   budgetService: string;
+  budgetPerson: string;
   requestLabel: string;
   filterShow: string;
   filterAll: string;
@@ -338,6 +339,7 @@ export const portalEs: PortalCopy = {
   budgetCare: "Otros",
   budgetCareEmpty: "Todavía no hay otros gastos.",
   budgetService: "Tu servicio",
+  budgetPerson: "Persona",
   requestLabel: "Solicitud",
   filterShow: "Ver",
   filterAll: "Todo",
@@ -656,6 +658,7 @@ export const portalEn: PortalCopy = {
   budgetCare: "Other",
   budgetCareEmpty: "No other expenses yet.",
   budgetService: "Your service",
+  budgetPerson: "Person",
   requestLabel: "Request",
   filterShow: "Show",
   filterAll: "All",
@@ -973,6 +976,7 @@ export const portalFr: PortalCopy = {
   budgetCare: "Autres",
   budgetCareEmpty: "Pas encore d’autres dépenses.",
   budgetService: "Ton service",
+  budgetPerson: "Personne",
   requestLabel: "Demande",
   filterShow: "Voir",
   filterAll: "Tout",

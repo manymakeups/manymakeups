@@ -11,7 +11,7 @@ import { EventView } from "@/app/components/portal/EventView";
 import { PaymentsView } from "@/app/components/portal/PaymentsBlock";
 import { PhotoPicker } from "@/app/components/portal/PhotoPicker";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
-import { PortalTabs } from "@/app/components/portal/PortalTabs";
+import { StudioNav } from "@/app/components/portal/PortalTabs";
 import { EventSections, SubTabs } from "@/app/components/portal/SubTabs";
 import { LookNotesView, WorkView } from "@/app/components/portal/WorkBlock";
 import { studioBusyDates } from "@/lib/portal/availability";
@@ -94,12 +94,13 @@ export default async function BridePanelPage({
         </form>
       }
     >
-      <div className="min-w-0 shrink-0">
-        <PortalTabs
+      <div className="relative z-30 min-w-0 shrink-0">
+        <StudioNav
           basePath={localePath(locale, "/area-novia/panel")}
           active={tab}
           labels={t.tabs}
           badges={{ historico: tab === "historico" ? 0 : unreadComms }}
+          menuLabel={t.menu}
         />
       </div>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
@@ -342,6 +343,7 @@ export default async function BridePanelPage({
               event={client.event}
               payments={client.payments}
               copy={t}
+              locale={locale}
               billing={<PaymentsView payments={client.payments} people={client.event.people} />}
             />
           </div>
