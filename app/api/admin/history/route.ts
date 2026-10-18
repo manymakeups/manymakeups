@@ -14,6 +14,15 @@ function money(value: string) {
   return Math.round(amount * 100) / 100;
 }
 
+function assigneeFrom(value: string, guestCount: number) {
+  if (value === "contractor") return "contractor";
+  const match = /^g:(\d+)$/.exec(value);
+  if (!match) return "contractor";
+  const index = Number(match[1]);
+  if (!Number.isInteger(index) || index < 0 || index >= guestCount) return "contractor";
+  return `g:${index}`;
+}
+
 export async function POST(request: Request) {
   const admin = await requireAdmin();
   if (!admin) return go(request, "/privado");
@@ -40,6 +49,7 @@ export async function POST(request: Request) {
       amount: kind === "servicio" ? money(text(form.get("amount"))) : 0,
       paid: kind !== "servicio" || form.get("payLater") !== "1",
       seenByClient: kind !== "contacto",
+      assignee: assigneeFrom(text(form.get("assignee")), client.event.people.length),
     });
   }
   await saveClient(client);

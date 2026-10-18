@@ -4,7 +4,6 @@ import { AddCompanionModal, PersonDataForm, RemoveCompanionButton } from "@/app/
 import { DeleteFileButton } from "@/app/components/portal/FileActions";
 import { EventForm } from "@/app/components/portal/EventForm";
 import { MailSetupNotice } from "@/app/components/portal/MailSetupNotice";
-import { PaymentsForm } from "@/app/components/portal/PaymentsBlock";
 import { PhotoGrid } from "@/app/components/portal/PhotoPicker";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { StudioNav } from "@/app/components/portal/PortalTabs";
@@ -443,11 +442,24 @@ export default async function StudioClientPage({
           <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
             <BudgetView
               entries={client.history}
-              event={client.event}
               payments={client.payments}
-              billing={<PaymentsForm clientId={client.id} payments={client.payments} people={event.people} />}
+              people={event.people}
+              contractorLabel={fullName(event, client.name)}
+              clientId={client.id}
               expenseLabel="Nuevo gasto"
-              expense={<HistoryComposer clientId={client.id} returnTab="budget" />}
+              expense={
+                <HistoryComposer
+                  clientId={client.id}
+                  returnTab="budget"
+                  people={[
+                    { id: "contractor", label: fullName(event, client.name) || "Contratante" },
+                    ...event.people.map((person, index) => ({
+                      id: `g:${index}`,
+                      label: companionHeading(person, portalEs.whoOptions, `Acompañante ${index + 1}`),
+                    })),
+                  ]}
+                />
+              }
             />
           </div>
         </section>

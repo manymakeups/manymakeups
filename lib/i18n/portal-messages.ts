@@ -53,6 +53,7 @@ export type PortalCopy = {
   trialHeading: string;
   trialLead: string;
   companionsTitle: string;
+  companionOne: string;
   companionsLead: string;
   companionsTrials: string;
   billingTitle: string;
@@ -97,6 +98,8 @@ export type PortalCopy = {
   budgetCareEmpty: string;
   budgetService: string;
   budgetPerson: string;
+  budgetEveryone: string;
+  budgetFilterEmpty: string;
   requestLabel: string;
   filterShow: string;
   filterAll: string;
@@ -294,6 +297,7 @@ export const portalEs: PortalCopy = {
   trialHeading: "Prueba",
   trialLead: "Aquí verás las fotos que haga el día de la prueba y los productos que hayamos usado.",
   companionsTitle: "Acompañantes",
+  companionOne: "Acompañante",
   companionsLead:
     "El número de personas abre una ficha por cada una. Alergias y notas van siempre; las notas de la prueba, sólo si la marcan.",
   companionsTrials: "Pruebas de acompañantes",
@@ -340,6 +344,8 @@ export const portalEs: PortalCopy = {
   budgetCareEmpty: "Todavía no hay otros gastos.",
   budgetService: "Tu servicio",
   budgetPerson: "Persona",
+  budgetEveryone: "Todas",
+  budgetFilterEmpty: "No hay importes en este apartado.",
   requestLabel: "Solicitud",
   filterShow: "Ver",
   filterAll: "Todo",
@@ -614,6 +620,7 @@ export const portalEn: PortalCopy = {
   trialHeading: "Trial",
   trialLead: "Here you will see the photos from the trial and the products we used.",
   companionsTitle: "Guests",
+  companionOne: "Guest",
   companionsLead:
     "The number of people opens a card for each one. Allergies and notes are always there; trial notes only if they want a trial.",
   companionsTrials: "Guest trials",
@@ -659,6 +666,8 @@ export const portalEn: PortalCopy = {
   budgetCareEmpty: "No other expenses yet.",
   budgetService: "Your service",
   budgetPerson: "Person",
+  budgetEveryone: "Everyone",
+  budgetFilterEmpty: "There are no amounts in this view.",
   requestLabel: "Request",
   filterShow: "Show",
   filterAll: "All",
@@ -931,6 +940,7 @@ export const portalFr: PortalCopy = {
   trialHeading: "Essai",
   trialLead: "Tu verras ici les photos du jour de l’essai et les produits utilisés.",
   companionsTitle: "Accompagnants",
+  companionOne: "Accompagnant",
   companionsLead:
     "Le nombre de personnes ouvre une fiche pour chacune. Allergies et notes sont toujours là ; les notes d’essai seulement si elles le demandent.",
   companionsTrials: "Essais des accompagnants",
@@ -977,6 +987,8 @@ export const portalFr: PortalCopy = {
   budgetCareEmpty: "Pas encore d’autres dépenses.",
   budgetService: "Ton service",
   budgetPerson: "Personne",
+  budgetEveryone: "Toutes",
+  budgetFilterEmpty: "Il n’y a pas de montants dans cette vue.",
   requestLabel: "Demande",
   filterShow: "Voir",
   filterAll: "Tout",

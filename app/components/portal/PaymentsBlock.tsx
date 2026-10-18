@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { usePortalCopy } from "@/app/components/portal/usePortalCopy";
 import { interpolate } from "@/lib/i18n/portal-messages";
 import {
@@ -49,62 +48,31 @@ function PersonPayView({
   );
 }
 
-function personLabel(person: Attendee, index: number, whoOptions: Record<string, string>, guestN: string) {
-  if (person.name) {
-    return `${person.name}${person.who ? ` · ${whoOptions[person.who] || person.who}` : ""}`;
-  }
-  return whoOptions[person.who] || person.who || interpolate(guestN, { n: index + 1 });
+function guestIndexOf(who: string) {
+  if (!who.startsWith("g:")) return -1;
+  const index = Number(who.slice(2));
+  return Number.isInteger(index) && index >= 0 ? index : -1;
 }
 
 export function PaymentsView({
   payments,
   people,
+  who,
 }: {
   payments: Payments;
   people: Attendee[];
+  who: string;
 }) {
-  const t = usePortalCopy();
-  const choices = [
-    { id: "contractor", label: t.budgetService },
-    ...people.map((person, i) => ({
-      id: String(i),
-      label: personLabel(person, i, t.whoOptions, t.guestN),
-    })),
-  ];
-  const [who, setWho] = useState("contractor");
-  const selected = choices.some((choice) => choice.id === who) ? who : "contractor";
-  const guestIndex = selected === "contractor" ? -1 : Number(selected);
+  const guestIndex = guestIndexOf(who);
   const guest = guestIndex >= 0 ? people[guestIndex] : undefined;
   const shown =
-    selected === "contractor"
-      ? { title: t.budgetService, payments: payments.contractor, showTrial: true }
+    guestIndex < 0
+      ? { payments: payments.contractor, showTrial: true }
       : {
-          title: guest ? personLabel(guest, guestIndex, t.whoOptions, t.guestN) : "",
           payments: payments.guests[guestIndex] ?? emptyPersonPayments(),
           showTrial: Boolean(guest?.wantsTrial),
         };
-  return (
-    <div className="flex flex-col gap-6">
-      {choices.length > 1 ? (
-        <label className="field-label max-w-md">
-          {t.budgetPerson}
-          <select className="field" value={selected} onChange={(event) => setWho(event.target.value)}>
-            {choices.map((choice) => (
-              <option key={choice.id} value={choice.id}>
-                {choice.label}
-              </option>
-            ))}
-          </select>
-        </label>
-      ) : null}
-      <PersonPayView
-        key={selected}
-        title={choices.length > 1 ? "" : shown.title}
-        payments={shown.payments}
-        showTrial={shown.showTrial}
-      />
-    </div>
-  );
+  return <PersonPayView key={who} title="" payments={shown.payments} showTrial={shown.showTrial} />;
 }
 
 function SliceFields({
@@ -145,23 +113,14 @@ export function PaymentsForm({
   clientId,
   payments,
   people,
+  who,
 }: {
   clientId: string;
   payments: Payments;
   people: Attendee[];
+  who: string;
 }) {
-  const choices = [
-    { id: "contractor", label: "Tu servicio" },
-    ...people.map((person, i) => ({
-      id: String(i),
-      label: person.name
-        ? `${person.name}${person.who ? ` · ${person.who}` : ""}`
-        : person.who || `Acompañante ${i + 1}`,
-    })),
-  ];
-  const [who, setWho] = useState("contractor");
-  const selected = choices.some((choice) => choice.id === who) ? who : "contractor";
-  const guestIndex = selected === "contractor" ? -1 : Number(selected);
+  const guestIndex = guestIndexOf(who);
   const guest = guestIndex >= 0 ? people[guestIndex] : undefined;
   const guestPay = guest
     ? (payments.guests[guestIndex] ?? {
@@ -173,20 +132,8 @@ export function PaymentsForm({
   return (
     <form action="/api/admin/payments" method="post" className="flex flex-col gap-6">
       <input type="hidden" name="clientId" value={clientId} />
-      {choices.length > 1 ? (
-        <label className="field-label max-w-md">
-          Persona
-          <select className="field" value={selected} onChange={(event) => setWho(event.target.value)}>
-            {choices.map((choice) => (
-              <option key={choice.id} value={choice.id}>
-                {choice.label}
-              </option>
-            ))}
-          </select>
-        </label>
-      ) : null}
-      {selected === "contractor" ? (
-        <div key={selected} className="grid gap-3 sm:grid-cols-3 sm:gap-6">
+      {guestIndex < 0 ? (
+        <div key={who} className="grid gap-3 sm:grid-cols-3 sm:gap-6">
           <SliceFields
             title="Reserva"
             amountName="contractor.depositAmount"
@@ -207,7 +154,7 @@ export function PaymentsForm({
           />
         </div>
       ) : guest && guestPay ? (
-        <div key={selected} className="grid gap-3 sm:grid-cols-3 sm:gap-6">
+        <div key={who} className="grid gap-3 sm:grid-cols-3 sm:gap-6">
           <SliceFields
             title="Reserva"
             amountName={`guests.${guestIndex}.depositAmount`}

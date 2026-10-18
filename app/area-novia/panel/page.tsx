@@ -8,11 +8,10 @@ import { AddCompanionModal, CompanionsForm } from "@/app/components/portal/Compa
 import { EventForm } from "@/app/components/portal/EventForm";
 import { InfoTip } from "@/app/components/portal/InfoTip";
 import { EventView } from "@/app/components/portal/EventView";
-import { PaymentsView } from "@/app/components/portal/PaymentsBlock";
 import { PhotoPicker } from "@/app/components/portal/PhotoPicker";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { StudioNav } from "@/app/components/portal/PortalTabs";
-import { EventSections, SubTabs } from "@/app/components/portal/SubTabs";
+import { CompanionSwitch, EventSections, SubTabs } from "@/app/components/portal/SubTabs";
 import { LookNotesView, WorkView } from "@/app/components/portal/WorkBlock";
 import { studioBusyDates } from "@/lib/portal/availability";
 import { madridToday, parseMonth } from "@/lib/portal/calendar";
@@ -236,15 +235,15 @@ export default async function BridePanelPage({
           >
             {client.event.peopleLocked ? (
               client.event.people.length ? (
-                <SubTabs
-                  fill
+                <CompanionSwitch
+                  label={t.companionOne}
                   initial={sec?.match(/^(\d+)/)?.[1]}
                   tabs={client.event.people.map((person, i) => ({
                     id: String(i),
                     label: companionHeading(person, t.whoOptions, interpolate(t.personN, { n: i + 1 })),
-                    nested: true,
                     body: (
                       <CompanionView
+                        variant="responsive"
                         index={i}
                         person={person}
                         clientId={client.id}
@@ -340,11 +339,11 @@ export default async function BridePanelPage({
           <div data-portal-scroll className="mt-6 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
             <BudgetView
               entries={client.history}
-              event={client.event}
               payments={client.payments}
+              people={client.event.people}
               copy={t}
               locale={locale}
-              billing={<PaymentsView payments={client.payments} people={client.event.people} />}
+              contractorLabel={fullName(client.event, client.name)}
             />
           </div>
         </section>

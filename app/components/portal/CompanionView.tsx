@@ -19,6 +19,7 @@ export function CompanionView({
   workPhotos,
   copy,
   section,
+  variant = "tabs",
 }: {
   index: number;
   person: Attendee;
@@ -27,6 +28,7 @@ export function CompanionView({
   workPhotos: PortalFile[];
   copy: PortalCopy;
   section?: string;
+  variant?: "tabs" | "filters" | "responsive";
 }) {
   const labels = {
     data: copy.eventData,
@@ -41,6 +43,7 @@ export function CompanionView({
   return (
     <article className="flex h-full min-h-0 flex-1 flex-col">
         <EventSections
+          variant={variant}
           labels={labels}
           section={section}
           details={

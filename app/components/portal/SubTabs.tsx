@@ -80,12 +80,64 @@ export function SubTabs({
   );
 }
 
+export function CompanionSwitch({
+  tabs,
+  initial,
+  label,
+}: {
+  tabs: { id: string; label: string; body: ReactNode }[];
+  initial?: string;
+  label: string;
+}) {
+  const start = initial && tabs.some((tab) => tab.id === initial) ? initial : tabs[0]?.id;
+  const [current, setCurrent] = useState(start);
+  const active = tabs.find((tab) => tab.id === current) ?? tabs[0];
+  if (!active) return null;
+  return (
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
+      <div className="shrink-0 md:hidden">
+        <label className="field-label">
+          {label}
+          <select className="field" value={active.id} onChange={(event) => setCurrent(event.target.value)}>
+            {tabs.map((tab) => (
+              <option key={tab.id} value={tab.id}>
+                {tab.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <div className="hidden shrink-0 md:block">
+        <TabBar label={label} current={active.id} onChange={setCurrent} tabs={tabs.map(({ id, label: text }) => ({ id, label: text }))} />
+      </div>
+      {tabs.map((tab) => {
+        const on = tab.id === active.id;
+        return (
+          <div
+            key={tab.id}
+            hidden={!on}
+            className={
+              on
+                ? "mt-4 flex min-h-0 flex-1 flex-col overflow-hidden [&>*]:flex [&>*]:h-full [&>*]:min-h-0 [&>*]:flex-1 [&>*]:flex-col"
+                : undefined
+            }
+          >
+            {tab.body}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function CompanionDeck({
   tabs,
   initial,
+  label = "Acompañante",
 }: {
   tabs: { id: string; label: string; body: ReactNode; remove?: ReactNode }[];
   initial?: string;
+  label?: string;
 }) {
   const start = initial && tabs.some((tab) => tab.id === initial) ? initial : tabs[0]?.id;
   const [current, setCurrent] = useState(start);
@@ -95,7 +147,7 @@ export function CompanionDeck({
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
       <div className="flex shrink-0 items-end gap-3">
         <label className="field-label min-w-0 flex-1">
-          Acompañante
+          {label}
           <select className="field" value={active.id} onChange={(event) => setCurrent(event.target.value)}>
             {tabs.map((tab) => (
               <option key={tab.id} value={tab.id}>
@@ -149,6 +201,46 @@ function eventFocus(section?: string) {
   };
 }
 
+function TabBar({
+  tabs,
+  current,
+  onChange,
+  label,
+}: {
+  tabs: { id: string; label: string }[];
+  current: string;
+  onChange: (id: string) => void;
+  label: string;
+}) {
+  return (
+    <div
+      role="tablist"
+      aria-label={label}
+      className="flex w-full min-w-0 shrink-0 gap-x-5 overflow-x-auto border-b border-ink/10 bg-porcelain [-ms-overflow-style:none] [scrollbar-width:none] md:flex-wrap md:overflow-visible [&::-webkit-scrollbar]:hidden"
+    >
+      {tabs.map((tab) => {
+        const on = tab.id === current;
+        return (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            aria-selected={on}
+            className={
+              on
+                ? "whitespace-nowrap border-b-2 border-gilt px-1 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ink"
+                : "whitespace-nowrap border-b-2 border-transparent px-1 py-3 text-[0.68rem] uppercase tracking-[0.16em] text-ash hover:text-ink"
+            }
+            onClick={() => onChange(tab.id)}
+          >
+            {tab.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function EventFilters({
   labels,
   section,
@@ -159,6 +251,7 @@ function EventFilters({
   makeupProducts,
   hairProducts,
   trialComments,
+  bars = false,
 }: {
   labels: EventLabels;
   section?: string;
@@ -169,6 +262,7 @@ function EventFilters({
   makeupProducts: ReactNode;
   hairProducts: ReactNode;
   trialComments: ReactNode;
+  bars?: boolean;
 }) {
   const start = eventFocus(section);
   const [area, setArea] = useState(start.area);
@@ -185,7 +279,7 @@ function EventFilters({
   ];
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
-      <div className="flex shrink-0 flex-wrap gap-2">
+      <div className={bars ? "flex shrink-0 flex-wrap gap-2 md:hidden" : "flex shrink-0 flex-wrap gap-2"}>
         <select className="field min-w-0 flex-1" aria-label="Sección" value={area} onChange={(event) => setArea(event.target.value)}>
           <option value="datos">{labels.data}</option>
           <option value="inspiraciones">{labels.inspirations}</option>
@@ -211,6 +305,54 @@ function EventFilters({
           </select>
         ) : null}
       </div>
+      {bars ? (
+        <div className="hidden shrink-0 flex-col md:flex">
+          <TabBar
+            label={labels.data}
+            current={area}
+            onChange={setArea}
+            tabs={[
+              { id: "datos", label: labels.data },
+              { id: "inspiraciones", label: labels.inspirations },
+              { id: "prueba", label: labels.trial },
+            ]}
+          />
+          {area === "inspiraciones" ? (
+            <TabBar
+              label={labels.inspirations}
+              current={look}
+              onChange={setLook}
+              tabs={[
+                { id: "maquillaje", label: labels.makeup },
+                { id: "peinado", label: labels.hair },
+              ]}
+            />
+          ) : null}
+          {area === "prueba" ? (
+            <TabBar
+              label={labels.trial}
+              current={trial}
+              onChange={setTrial}
+              tabs={[
+                { id: "fotos", label: labels.photos },
+                { id: "productos", label: labels.products },
+                { id: "comentarios", label: labels.comments },
+              ]}
+            />
+          ) : null}
+          {area === "prueba" && trial === "productos" ? (
+            <TabBar
+              label={labels.products}
+              current={look}
+              onChange={setLook}
+              tabs={[
+                { id: "maquillaje", label: labels.makeup },
+                { id: "peinado", label: labels.hair },
+              ]}
+            />
+          ) : null}
+        </div>
+      ) : null}
       <div className="relative min-h-0 flex-1">
         {panels.map((panel) => (
           <div
@@ -248,11 +390,12 @@ export function EventSections({
   makeupProducts: ReactNode;
   hairProducts: ReactNode;
   trialComments: ReactNode;
-  variant?: "tabs" | "filters";
+  variant?: "tabs" | "filters" | "responsive";
 }) {
-  if (variant === "filters") {
+  if (variant === "filters" || variant === "responsive") {
     return (
       <EventFilters
+        bars={variant === "responsive"}
         labels={labels}
         section={section}
         details={details}

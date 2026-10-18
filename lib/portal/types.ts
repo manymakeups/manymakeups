@@ -233,6 +233,7 @@ export type HistoryEntry = {
   paid: boolean;
   seenByClient?: boolean;
   appointmentId?: string;
+  assignee?: string;
 };
 
 export type EventDetails = {
@@ -514,6 +515,7 @@ function asHistory(value: unknown): HistoryEntry | null {
     paid: row.kind === "servicio" ? row.paid !== false : true,
     seenByClient: row.seenByClient !== false,
     appointmentId: typeof row.appointmentId === "string" && row.appointmentId ? row.appointmentId : undefined,
+    assignee: typeof row.assignee === "string" && /^(contractor|g:\d+)$/.test(row.assignee) ? row.assignee : undefined,
   };
 }
 

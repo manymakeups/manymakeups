@@ -73,6 +73,7 @@ export async function POST(request: Request) {
         paid: false,
         seenByClient: true,
         appointmentId,
+        assignee: "contractor",
       });
     }
   }

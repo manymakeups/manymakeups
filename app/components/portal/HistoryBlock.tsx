@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { PaymentsForm, PaymentsView } from "@/app/components/portal/PaymentsBlock";
 import { SubTabs } from "@/app/components/portal/SubTabs";
-import { dateLocale, portalEs, type PortalCopy } from "@/lib/i18n/portal-messages";
+import { dateLocale, interpolate, portalEs, type PortalCopy } from "@/lib/i18n/portal-messages";
 import type { Locale } from "@/lib/i18n/config";
-import { clientBudget } from "@/lib/portal/budget";
+import { companionHeading } from "@/lib/portal/names";
 import {
   canonicalService,
   CONTACT_TITLES,
@@ -12,9 +13,10 @@ import {
   historyBudget,
   SERVICE_TITLES,
   serviceNeedsName,
-  type EventDetails,
+  type Attendee,
   type HistoryEntry,
   type HistoryKind,
+  type PaymentSlice,
   type Payments,
   type StudioNotice,
 } from "@/lib/portal/types";
@@ -56,37 +58,71 @@ function isCareService(title: string) {
   return !EVENT_SERVICES.has(canonicalService(title));
 }
 
-function sumServices(entries: HistoryEntry[]) {
-  const total = entries.reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0);
-  const pending = entries.reduce((sum, entry) => sum + (entry.paid ? 0 : Number(entry.amount) || 0), 0);
-  return { total, pending, paid: Math.max(0, total - pending) };
+type Pocket = "all" | "paid" | "pending";
+
+function entryPerson(entry: HistoryEntry, guestCount: number) {
+  if (entry.assignee && /^g:\d+$/.test(entry.assignee)) {
+    const index = Number(entry.assignee.slice(2));
+    if (index >= 0 && index < guestCount) return entry.assignee;
+  }
+  return "contractor";
 }
+
+function sliceAmount(slice: PaymentSlice) {
+  return Math.max(0, Number(slice.amount) || 0);
+}
+
+type LedgerRow = {
+  id: string;
+  kind: "slice" | "service";
+  kicker: string;
+  title: string;
+  date?: string;
+  amount: number;
+  paid: boolean;
+};
 
 function MoneyBoxes({
   total,
   paid,
   pending,
   copy,
+  pocket,
+  onPocket,
 }: {
   total: number;
   paid: number;
   pending: number;
   copy: PortalCopy;
+  pocket: Pocket;
+  onPocket: (next: Pocket) => void;
 }) {
+  const boxes: { id: Pocket; label: string; amount: number }[] = [
+    { id: "all", label: copy.budgetTotal, amount: total },
+    { id: "paid", label: copy.budgetPaid, amount: paid },
+    { id: "pending", label: copy.budgetPending, amount: pending },
+  ];
   return (
     <div className="grid grid-cols-3 gap-2 sm:gap-4">
-      <article className="border border-ink/10 bg-linen/40 px-2 py-3 sm:p-5">
-        <p className="text-[0.58rem] uppercase tracking-[0.1em] text-gilt sm:text-[0.68rem] sm:tracking-[0.18em]">{copy.budgetTotal}</p>
-        <p className="mt-2 font-serif text-lg leading-none sm:mt-3 sm:text-3xl">{euros(total)}</p>
-      </article>
-      <article className="border border-ink/10 bg-linen/40 px-2 py-3 sm:p-5">
-        <p className="text-[0.58rem] uppercase tracking-[0.1em] text-gilt sm:text-[0.68rem] sm:tracking-[0.18em]">{copy.budgetPaid}</p>
-        <p className="mt-2 font-serif text-lg leading-none sm:mt-3 sm:text-3xl">{euros(paid)}</p>
-      </article>
-      <article className="border border-ink/10 bg-linen/40 px-2 py-3 sm:p-5">
-        <p className="text-[0.58rem] uppercase tracking-[0.1em] text-gilt sm:text-[0.68rem] sm:tracking-[0.18em]">{copy.budgetPending}</p>
-        <p className="mt-2 font-serif text-lg leading-none sm:mt-3 sm:text-3xl">{euros(pending)}</p>
-      </article>
+      {boxes.map((box) => {
+        const on = pocket === box.id;
+        return (
+          <button
+            key={box.id}
+            type="button"
+            aria-pressed={on}
+            onClick={() => onPocket(box.id)}
+            className={
+              on
+                ? "border border-gilt bg-linen/70 px-2 py-3 text-left sm:p-5"
+                : "border border-ink/10 bg-linen/40 px-2 py-3 text-left hover:border-gilt/50 sm:p-5"
+            }
+          >
+            <p className="text-[0.58rem] uppercase tracking-[0.1em] text-gilt sm:text-[0.68rem] sm:tracking-[0.18em]">{box.label}</p>
+            <p className="mt-2 font-serif text-lg leading-none sm:mt-3 sm:text-3xl">{euros(box.amount)}</p>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -96,11 +132,13 @@ function ServiceLines({
   copy,
   locale = "es",
   showDate = false,
+  whoOf,
 }: {
   entries: HistoryEntry[];
   copy: PortalCopy;
   locale?: Locale;
   showDate?: boolean;
+  whoOf?: (entry: HistoryEntry) => string;
 }) {
   if (!entries.length) return null;
   return (
@@ -109,11 +147,13 @@ function ServiceLines({
         const known = CATALOG.has(canonicalService(entry.title));
         const category = known ? labelFor(entry.title, copy) : "";
         const specific = entry.name.trim() || (known ? "" : entry.title);
+        const who = whoOf?.(entry);
         return (
           <li key={entry.id} className="px-4 py-4">
             <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">
               {copy.historyKinds.servicio}
               {category ? ` · ${category}` : ""}
+              {who ? ` · ${who}` : ""}
             </p>
             {specific ? <p className="mt-1 font-serif text-2xl">{specific}</p> : null}
             {showDate && entry.date ? (
@@ -130,73 +170,194 @@ function ServiceLines({
   );
 }
 
+function LedgerList({
+  rows,
+  copy,
+  locale,
+}: {
+  rows: LedgerRow[];
+  copy: PortalCopy;
+  locale: Locale;
+}) {
+  if (!rows.length) return <p className="mt-6 text-sm text-ash">{copy.budgetFilterEmpty}</p>;
+  return (
+    <ul className="mt-6 divide-y divide-ink/10 border border-ink/10">
+      {rows.map((row) => (
+        <li key={row.id} className="px-4 py-4">
+          <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">{row.kicker}</p>
+          {row.title ? <p className="mt-1 font-serif text-2xl">{row.title}</p> : null}
+          {row.date ? <p className="mt-1 text-sm capitalize text-ash">{formatWhen(row.date, locale, copy)}</p> : null}
+          <p className="mt-2 text-sm">
+            {euros(row.amount)}
+            {` · ${row.paid ? copy.paid : copy.unpaid}`}
+          </p>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function BudgetView({
   entries,
-  event,
   payments,
+  people = [],
   copy = portalEs,
-  billing,
+  clientId,
   expense,
   expenseLabel = "Nuevo gasto",
   locale = "es",
+  contractorLabel,
 }: {
   entries: HistoryEntry[];
-  event?: EventDetails;
   payments?: Payments;
+  people?: Attendee[];
   copy?: PortalCopy;
-  billing?: ReactNode;
+  clientId?: string;
   expense?: ReactNode;
   expenseLabel?: string;
   locale?: Locale;
+  contractorLabel?: string;
 }) {
-  const booked = event && payments ? clientBudget({ history: entries, event, payments }) : null;
-  const history = booked?.history ?? historyBudget(entries);
-  const budget = booked ?? { ...history, groups: [], total: history.total, pending: history.pending, paid: history.paid };
-  const eventServices = history.services.filter((entry) => !isCareService(entry.title));
-  const careServices = history.services.filter((entry) => isCareService(entry.title));
-  const care = sumServices(careServices);
+  const [person, setPerson] = useState("all");
+  const [pocket, setPocket] = useState<Pocket>("all");
+  const bride = contractorLabel || copy.budgetService;
+  const names = new Map<string, string>([["contractor", bride]]);
+  people.forEach((guest, index) => {
+    names.set(
+      `g:${index}`,
+      companionHeading(guest, copy.whoOptions, interpolate(copy.guestN, { n: index + 1 })),
+    );
+  });
+  const choices = [
+    { id: "all", label: copy.budgetEveryone },
+    { id: "contractor", label: bride },
+    ...people.map((_, index) => ({ id: `g:${index}`, label: names.get(`g:${index}`) || interpolate(copy.guestN, { n: index + 1 }) })),
+  ];
+  const selected = choices.some((choice) => choice.id === person) ? person : "all";
+  const history = historyBudget(entries);
+  const scoped = history.services.filter(
+    (entry) => selected === "all" || entryPerson(entry, people.length) === selected,
+  );
+  const whoOf =
+    selected === "all"
+      ? (entry: HistoryEntry) => names.get(entryPerson(entry, people.length)) || ""
+      : undefined;
+  const eventServices = scoped.filter((entry) => !isCareService(entry.title));
+  const careServices = scoped.filter((entry) => isCareService(entry.title));
+
+  const rows: LedgerRow[] = [];
+  function pushSlice(id: string, label: string, who: string | undefined, slice: PaymentSlice) {
+    const amount = sliceAmount(slice);
+    if (!amount) return;
+    rows.push({
+      id,
+      kind: "slice",
+      kicker: who ? `${label} · ${who}` : label,
+      title: "",
+      amount,
+      paid: Boolean(slice.paid),
+    });
+  }
+  function pushPerson(id: string, pay: Payments["contractor"] | undefined, showName: boolean) {
+    if (!pay) return;
+    const who = showName ? names.get(id) : undefined;
+    pushSlice(`${id}-deposit`, copy.deposit, who, pay.deposit);
+    pushSlice(`${id}-trial`, copy.trialDay, who, pay.trial);
+    pushSlice(`${id}-event`, copy.eventDay, who, pay.event);
+  }
+  if (payments) {
+    if (selected === "all" || selected === "contractor") pushPerson("contractor", payments.contractor, selected === "all");
+    people.forEach((_, index) => {
+      const id = `g:${index}`;
+      if (selected === "all" || selected === id) pushPerson(id, payments.guests[index], selected === "all");
+    });
+  }
+  [...scoped]
+    .sort((a, b) => `${b.date}${b.title}`.localeCompare(`${a.date}${a.title}`))
+    .forEach((entry) => {
+      const known = CATALOG.has(canonicalService(entry.title));
+      const category = known ? labelFor(entry.title, copy) : "";
+      const who = whoOf?.(entry);
+      rows.push({
+        id: entry.id,
+        kind: "service",
+        kicker: `${copy.historyKinds.servicio}${category ? ` · ${category}` : ""}${who ? ` · ${who}` : ""}`,
+        title: entry.name.trim() || (known ? "" : entry.title),
+        date: entry.date,
+        amount: Math.max(0, Number(entry.amount) || 0),
+        paid: entry.paid,
+      });
+    });
+  const total = rows.reduce((sum, row) => sum + row.amount, 0);
+  const pending = rows.reduce((sum, row) => sum + (row.paid ? 0 : row.amount), 0);
+  const paid = Math.max(0, total - pending);
+  const listed = rows.filter((row) => row.amount > 0 && (pocket === "paid" ? row.paid : !row.paid));
+  const sliceRows = rows.filter((row) => row.kind === "slice");
+
   return (
     <div>
-      <MoneyBoxes total={budget.total} paid={budget.paid} pending={budget.pending} copy={copy} />
-      <div className="mt-6">
-        <SubTabs
-          tabs={[
-            {
-              id: "evento",
-              label: copy.budgetEvent,
-              body: (
-                <>
-                  <ServiceLines entries={eventServices} copy={copy} />
-                  {billing ? <div className={eventServices.length ? "mt-10" : undefined}>{billing}</div> : null}
-                </>
-              ),
-            },
-            {
-              id: "otros",
-              label: copy.budgetCare,
-              body: (
-                <>
-                  <MoneyBoxes total={care.total} paid={care.paid} pending={care.pending} copy={copy} />
-                  {careServices.length ? (
-                    <ServiceLines entries={careServices} copy={copy} locale={locale} showDate />
-                  ) : (
-                    <p className="text-sm text-ash">{copy.budgetCareEmpty}</p>
-                  )}
-                </>
-              ),
-            },
-            ...(expense
-              ? [
-                  {
-                    id: "gasto",
-                    label: expenseLabel,
-                    body: expense,
-                  },
-                ]
-              : []),
-          ]}
-        />
-      </div>
+      <MoneyBoxes total={total} paid={paid} pending={pending} copy={copy} pocket={pocket} onPocket={setPocket} />
+      <label className="field-label mt-6 max-w-md">
+        {copy.budgetPerson}
+        <select className="field" value={selected} onChange={(event) => setPerson(event.target.value)}>
+          {choices.map((choice) => (
+            <option key={choice.id} value={choice.id}>
+              {choice.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      {pocket === "all" ? (
+        <div className="mt-6">
+          <SubTabs
+            tabs={[
+              {
+                id: "evento",
+                label: copy.budgetEvent,
+                body: (
+                  <>
+                    <ServiceLines entries={eventServices} copy={copy} whoOf={whoOf} />
+                    {selected === "all" && sliceRows.length ? (
+                      <div className={eventServices.length ? "mt-8" : undefined}>
+                        <LedgerList rows={sliceRows} copy={copy} locale={locale} />
+                      </div>
+                    ) : null}
+                    {selected !== "all" && payments ? (
+                      <div className={eventServices.length ? "mt-10" : undefined}>
+                        {clientId ? (
+                          <PaymentsForm clientId={clientId} payments={payments} people={people} who={selected} />
+                        ) : (
+                          <PaymentsView payments={payments} people={people} who={selected} />
+                        )}
+                      </div>
+                    ) : null}
+                  </>
+                ),
+              },
+              {
+                id: "otros",
+                label: copy.budgetCare,
+                body: careServices.length ? (
+                  <ServiceLines entries={careServices} copy={copy} locale={locale} showDate whoOf={whoOf} />
+                ) : (
+                  <p className="text-sm text-ash">{copy.budgetCareEmpty}</p>
+                ),
+              },
+              ...(expense
+                ? [
+                    {
+                      id: "gasto",
+                      label: expenseLabel,
+                      body: expense,
+                    },
+                  ]
+                : []),
+            ]}
+          />
+        </div>
+      ) : (
+        <LedgerList rows={listed} copy={copy} locale={locale} />
+      )}
     </div>
   );
 }
@@ -433,7 +594,15 @@ export function HistoryForm({
   );
 }
 
-export function HistoryComposer({ clientId, returnTab }: { clientId: string; returnTab?: string }) {
+export function HistoryComposer({
+  clientId,
+  returnTab,
+  people = [],
+}: {
+  clientId: string;
+  returnTab?: string;
+  people?: { id: string; label: string }[];
+}) {
   const [kind, setKind] = useState<HistoryKind>("servicio");
   const [title, setTitle] = useState<string>(SERVICE_TITLES[0]);
   const titles = kind === "servicio" ? SERVICE_TITLES : CONTACT_TITLES;
@@ -468,6 +637,18 @@ export function HistoryComposer({ clientId, returnTab }: { clientId: string; ret
           <label className="field-label">
             {nameLabel(title)}
             <input className="field" name="customTitle" required />
+          </label>
+        ) : null}
+        {people.length ? (
+          <label className="field-label">
+            Persona
+            <select className="field" name="assignee" defaultValue={people[0]?.id || "contractor"}>
+              {people.map((person) => (
+                <option key={person.id} value={person.id}>
+                  {person.label}
+                </option>
+              ))}
+            </select>
           </label>
         ) : null}
         <label className="field-label">
