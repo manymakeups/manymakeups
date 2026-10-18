@@ -55,6 +55,11 @@ export default async function StudioClientsPage({
       </div>
       <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
       <MailSetupNotice />
+      <form action="/api/admin/mail-samples" method="post" className="mb-4">
+        <button className="text-[0.68rem] uppercase tracking-[0.16em] text-ash hover:text-ink" type="submit">
+          Enviarme las muestras de correo
+        </button>
+      </form>
       {!portalStorageReady() ? (
         <PortalNotice>
           En producción hace falta un almacén Vercel Blob (BLOB_READ_WRITE_TOKEN) para que fotos y
