@@ -30,12 +30,12 @@ function formatEventDate(value: string) {
 export default async function StudioClientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; ok?: string; por?: string; q?: string; partida?: string; invite?: string; client?: string }>;
+  searchParams: Promise<{ error?: string; ok?: string; por?: string; q?: string; partida?: string; invite?: string; client?: string; sent?: string }>;
 }) {
   const admin = await requireAdmin();
   if (!admin) redirect("/privado");
   const clients = await listClients();
-  const { error, ok, por, q, partida, invite, client: inviteClient } = await searchParams;
+  const { error, ok, por, q, partida, invite, client: inviteClient, sent } = await searchParams;
   const mode = clientSearchMode(por);
   const query = q ?? "";
   const service = partida ?? "";
@@ -64,6 +64,9 @@ export default async function StudioClientsPage({
       {error === "datos" ? <PortalNotice>Nombre y correo válidos, por favor.</PortalNotice> : null}
       {error === "existe" ? <PortalNotice>Ese correo ya tiene cuenta.</PortalNotice> : null}
       {ok === "eliminada" ? <PortalNotice>Clienta eliminada.</PortalNotice> : null}
+      {ok === "muestras" ? (
+        <PortalNotice>Muestras enviadas a tu correo ({sent || "0"}).</PortalNotice>
+      ) : null}
       {ok === "recordatorio" && error !== "correo" ? (
         <PortalNotice>Recordatorio de activación enviado.</PortalNotice>
       ) : null}
