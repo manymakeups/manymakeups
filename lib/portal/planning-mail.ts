@@ -4,7 +4,7 @@ import { clientLocale, clientPanelUrl } from "./client-mail";
 import { brandedClientEmail } from "./mail-html";
 import { companionHeading, fullName, mailName } from "./names";
 import { notifyEmail } from "./notify";
-import { planningTimeline } from "./planning-timeline";
+import { planningTimeline, sidePlanningRows } from "./planning-timeline";
 import type { ClientRecord } from "./types";
 
 function slotLabel(client: ClientRecord, id: string) {
@@ -52,6 +52,17 @@ function planningRows(client: ClientRecord) {
   for (const row of planningTimeline(planning, people, t)) {
     const value = [row.when, row.note].filter(Boolean).join("\n");
     if (value) rows.push({ label: row.label, value });
+  }
+  for (const block of [
+    { title: t.glitterBar, plan: planning.glitter },
+    { title: t.beautyCorner, plan: planning.beauty },
+  ]) {
+    const lines = sidePlanningRows(block.plan, block.title, t);
+    if (!lines.length) continue;
+    rows.push({
+      label: block.title,
+      value: lines.map((line) => [line.when, line.label, line.note].filter(Boolean).join(" · ")).join("\n"),
+    });
   }
   if (planning.notes) rows.push({ label: t.planningNotes, value: planning.notes });
   return rows;

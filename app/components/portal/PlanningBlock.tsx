@@ -1,7 +1,7 @@
 import { PlanningExtras } from "@/app/components/portal/PlanningExtras";
 import { contractedServiceNames, serviceAmountDue } from "@/lib/portal/budget";
 import { companionHeading, fullName } from "@/lib/portal/names";
-import { planningTimeline } from "@/lib/portal/planning-timeline";
+import { planningTimeline, sidePlanningRows } from "@/lib/portal/planning-timeline";
 import type { Locale } from "@/lib/i18n/config";
 import { dateLocale, interpolate, portalEs, type PortalCopy } from "@/lib/i18n/portal-messages";
 import type { Attendee, ClientRecord, EventDetails, EventPlanning } from "@/lib/portal/types";
@@ -39,6 +39,8 @@ export function PlanningView({
   client?: Pick<ClientRecord, "history" | "payments"> | null;
 }) {
   const timeline = planningTimeline(planning, peopleOf(eventName, event, people, copy), copy);
+  const glitterRows = sidePlanningRows(planning.glitter, copy.glitterBar, copy);
+  const beautyRows = sidePlanningRows(planning.beauty, copy.beautyCorner, copy);
   const due = client ? serviceAmountDue(client) : 0;
   const amount =
     due > 0
@@ -51,7 +53,9 @@ export function PlanningView({
         year: "numeric",
       })
     : "";
-  const filled = Boolean(planning.location || planning.notes || timeline.length || amount || eventDate);
+  const filled = Boolean(
+    planning.location || planning.notes || timeline.length || glitterRows.length || beautyRows.length || amount || eventDate,
+  );
   return (
     <div className="flex max-w-2xl flex-col gap-6 text-sm">
       <div className="flex justify-center">
@@ -79,6 +83,8 @@ export function PlanningView({
           ))}
         </ul>
       ) : null}
+      <SideSchedule title={copy.glitterBar} rows={glitterRows} />
+      <SideSchedule title={copy.beautyCorner} rows={beautyRows} />
       {planning.notes ? (
         <div>
           <p className="text-ash">{copy.planningNotes}</p>
@@ -86,6 +92,26 @@ export function PlanningView({
         </div>
       ) : null}
     </div>
+  );
+}
+
+function SideSchedule({ title, rows }: { title: string; rows: { id: string; label: string; when: string; note: string }[] }) {
+  if (!rows.length) return null;
+  return (
+    <section className="flex flex-col gap-3">
+      <h3 className="font-serif text-2xl text-ink">{title}</h3>
+      <ul className="divide-y divide-ink/10 border border-ink/10">
+        {rows.map((row) => (
+          <li key={row.id} className="grid gap-1 px-4 py-3 sm:grid-cols-[9rem_1fr] sm:items-baseline sm:gap-4">
+            <p className="text-[0.72rem] uppercase tracking-[0.14em] text-gilt">{row.when}</p>
+            <div>
+              <p className="font-serif text-xl">{row.label}</p>
+              {row.note ? <p className="mt-1 whitespace-pre-wrap text-ash">{row.note}</p> : null}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -154,7 +180,13 @@ export function PlanningForm({
           );
         })}
       </div>
-      <PlanningExtras extras={planning.extras} />
+      <PlanningExtras
+        extras={planning.extras}
+        glitter={planning.glitter}
+        beauty={planning.beauty}
+        glitterOn={event.glitterBar}
+        beautyOn={event.beautyCorner}
+      />
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="field-label">
           Descanso desde

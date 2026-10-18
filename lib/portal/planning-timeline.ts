@@ -1,5 +1,10 @@
 import { interpolate, type PortalCopy } from "@/lib/i18n/portal-messages";
-import type { EventPlanning } from "./types";
+import type { EventPlanning, SidePlanning } from "./types";
+
+const FIXED_EXTRA_LABEL = {
+  colocacionvelo: "planningVeil",
+  retoquepost: "planningTouch",
+} as const;
 
 export type TimelineRow = {
   id: string;
@@ -81,9 +86,10 @@ export function planningTimeline(
   }
   for (const extra of planning.extras) {
     if (!extra.label && !extra.time && !extra.endTime && !extra.note) continue;
+    const fixed = extra.id === "colocacionvelo" || extra.id === "retoquepost" ? extra.id : "";
     rows.push({
       id: extra.id,
-      label: extra.label || copy.planningExtra,
+      label: fixed ? copy[FIXED_EXTRA_LABEL[fixed]] : extra.label || copy.planningExtra,
       when: span(extra.time, extra.endTime, copy),
       note: extra.note,
       minutes: minutesOf(extra.time || extra.endTime),
@@ -108,4 +114,28 @@ export function planningTimeline(
       return a.index - b.index;
     })
     .map((item) => item.row);
+}
+
+export function sidePlanningRows(plan: SidePlanning, title: string, copy: PortalCopy): TimelineRow[] {
+  if (!plan.on) return [];
+  const rows: TimelineRow[] = [];
+  if (plan.arrivalTime || plan.arrivalEnd) {
+    rows.push({
+      id: "arrival",
+      label: copy.planningSideArrival,
+      when: span(plan.arrivalTime, plan.arrivalEnd, copy),
+      note: "",
+      minutes: minutesOf(plan.arrivalTime || plan.arrivalEnd),
+    });
+  }
+  if (plan.start || plan.end || plan.note) {
+    rows.push({
+      id: "service",
+      label: title,
+      when: span(plan.start, plan.end, copy),
+      note: plan.note,
+      minutes: minutesOf(plan.start || plan.end),
+    });
+  }
+  return rows;
 }

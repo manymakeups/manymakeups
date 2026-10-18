@@ -67,6 +67,9 @@ export type PortalCopy = {
   planningPack: string;
   planningNotes: string;
   planningExtra: string;
+  planningVeil: string;
+  planningTouch: string;
+  planningSideArrival: string;
   planningEmpty: string;
   planningMailSubject: string;
   planningMailHello: string;
@@ -365,6 +368,9 @@ export const portalEs: PortalCopy = {
   planningPack: "Fin de servicio",
   planningNotes: "Notas",
   planningExtra: "Extra",
+  planningVeil: "Colocación de velo",
+  planningTouch: "Retoque post ceremonia",
+  planningSideArrival: "Llegada y montaje",
   planningEmpty: "Todavía no hay planning del día.",
   planningMailSubject: "Planning de tu evento",
   planningMailHello: "Hola {name},",
@@ -744,6 +750,9 @@ export const portalEn: PortalCopy = {
   planningPack: "End of service",
   planningNotes: "Notes",
   planningExtra: "Extra",
+  planningVeil: "Veil placement",
+  planningTouch: "Touch-up after the ceremony",
+  planningSideArrival: "Arrival and setup",
   planningEmpty: "The event-day plan is not ready yet.",
   planningMailSubject: "Your event plan",
   planningMailHello: "Hello {name},",
@@ -1120,6 +1129,9 @@ export const portalFr: PortalCopy = {
   planningPack: "Fin du service",
   planningNotes: "Notes",
   planningExtra: "Extra",
+  planningVeil: "Pose du voile",
+  planningTouch: "Retouche après la cérémonie",
+  planningSideArrival: "Arrivée et installation",
   planningEmpty: "Le planning du jour n’est pas encore prêt.",
   planningMailSubject: "Le planning de ton événement",
   planningMailHello: "Bonjour {name},",

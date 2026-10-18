@@ -190,6 +190,15 @@ export type PlanningExtra = {
   note: string;
 };
 
+export type SidePlanning = {
+  on: boolean;
+  arrivalTime: string;
+  arrivalEnd: string;
+  start: string;
+  end: string;
+  note: string;
+};
+
 export type EventPlanning = {
   location: string;
   arrivalTime: string;
@@ -205,6 +214,8 @@ export type EventPlanning = {
   notes: string;
   slots: PlanningSlot[];
   extras: PlanningExtra[];
+  glitter: SidePlanning;
+  beauty: SidePlanning;
 };
 
 export const HISTORY_KINDS = ["contacto", "servicio"] as const;
@@ -441,6 +452,10 @@ function clock(value: unknown) {
   return match ? match[1] : "";
 }
 
+export function emptySidePlanning(): SidePlanning {
+  return { on: false, arrivalTime: "", arrivalEnd: "", start: "", end: "", note: "" };
+}
+
 export function emptyPlanning(): EventPlanning {
   return {
     location: "",
@@ -457,6 +472,20 @@ export function emptyPlanning(): EventPlanning {
     notes: "",
     slots: [],
     extras: [],
+    glitter: emptySidePlanning(),
+    beauty: emptySidePlanning(),
+  };
+}
+
+function asSidePlanning(value: unknown): SidePlanning {
+  const row = value && typeof value === "object" ? (value as SidePlanning) : emptySidePlanning();
+  return {
+    on: Boolean(row.on),
+    arrivalTime: clock(row.arrivalTime),
+    arrivalEnd: clock(row.arrivalEnd),
+    start: clock(row.start),
+    end: clock(row.end),
+    note: String(row.note ?? "").trim().slice(0, 240),
   };
 }
 
@@ -502,6 +531,8 @@ export function asPlanning(value: unknown): EventPlanning {
     notes: String(row.notes ?? "").trim().slice(0, 4000),
     slots,
     extras,
+    glitter: asSidePlanning(row.glitter),
+    beauty: asSidePlanning(row.beauty),
   };
 }
 
