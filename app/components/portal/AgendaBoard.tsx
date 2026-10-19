@@ -96,6 +96,7 @@ export function AgendaBoard({
   clients,
   appointments,
   hiddenIds,
+  googleConnected = false,
 }: {
   events: RemoteEvent[];
   today: string;
@@ -105,12 +106,14 @@ export function AgendaBoard({
   clients: ClientOption[];
   appointments: StudioAppointment[];
   hiddenIds: string[];
+  googleConnected?: boolean;
 }) {
   const [year, setYear] = useState(initialYear);
   const [month, setMonth] = useState(initialMonth);
   const [selected, setSelected] = useState(initialDay);
   const [assigning, setAssigning] = useState<RemoteEvent | null>(null);
   const [removing, setRemoving] = useState<StudioAppointment | null>(null);
+  const [removingFeed, setRemovingFeed] = useState<RemoteEvent | null>(null);
   const [clientId, setClientId] = useState("");
   const [query, setQuery] = useState("");
   const hidden = useMemo(() => new Set(hiddenIds), [hiddenIds]);
@@ -159,15 +162,16 @@ export function AgendaBoard({
   }
 
   useEffect(() => {
-    if (!assigning && !removing) return;
+    if (!assigning && !removing && !removingFeed) return;
     function onKey(event: KeyboardEvent) {
       if (event.key !== "Escape") return;
       setAssigning(null);
       setRemoving(null);
+      setRemovingFeed(null);
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [assigning, removing]);
+  }, [assigning, removing, removingFeed]);
 
   function openAssign(event: RemoteEvent) {
     setAssigning(event);
@@ -294,13 +298,19 @@ export function AgendaBoard({
                   <button type="button" className="btn-atelier" onClick={() => openAssign(event)}>
                     Asignar cita a clienta
                   </button>
-                  <form action="/api/admin/calendar" method="post">
-                    <input type="hidden" name="id" value={event.id} />
-                    <input type="hidden" name="next" value={back} />
-                    <button className="btn-atelier" type="submit">
+                  {googleConnected ? (
+                    <button className="btn-atelier" type="button" onClick={() => setRemovingFeed(event)}>
                       Quitar del calendario
                     </button>
-                  </form>
+                  ) : (
+                    <form action="/api/admin/calendar" method="post">
+                      <input type="hidden" name="id" value={event.id} />
+                      <input type="hidden" name="next" value={back} />
+                      <button className="btn-atelier" type="submit">
+                        Quitar del calendario
+                      </button>
+                    </form>
+                  )}
                 </div>
               </li>
             ))}
@@ -367,6 +377,35 @@ export function AgendaBoard({
           </div>
         </div>
       ) : null}
+      {removingFeed ? (
+        <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-ink/40 p-3 sm:items-center sm:p-6" onClick={() => setRemovingFeed(null)}>
+          <div
+            className="w-full max-w-md bg-porcelain p-6 shadow-[0_20px_60px_rgba(26,22,19,0.16)]"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="remove-feed-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">{removingFeed.time || "Todo el día"}</p>
+            <h2 id="remove-feed-title" className="mt-2 font-serif text-3xl">
+              {removingFeed.title}
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-ash">
+              Se borra en Google y en el iPhone, y desaparece de esta agenda.
+            </p>
+            <form action="/api/admin/calendar" method="post" className="mt-6 flex flex-wrap gap-3">
+              <input type="hidden" name="id" value={removingFeed.id} />
+              <input type="hidden" name="next" value={back} />
+              <button className="btn-atelier-solid btn-atelier" type="submit">
+                Quitar del calendario
+              </button>
+              <button className="btn-atelier" type="button" onClick={() => setRemovingFeed(null)}>
+                Cancelar
+              </button>
+            </form>
+          </div>
+        </div>
+      ) : null}
       {removing ? (
         <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-ink/40 p-3 sm:items-center sm:p-6" onClick={() => setRemoving(null)}>
           <div
@@ -383,7 +422,12 @@ export function AgendaBoard({
               Quitar esta cita
             </h2>
             <p className="mt-3 font-serif text-2xl capitalize">{whenLabel(removing.date, removing.time)}</p>
-            <p className="mt-2 text-sm leading-relaxed text-ash">Se quita de la agenda de {removing.clientName}.</p>
+            <p className="mt-2 text-sm leading-relaxed text-ash">
+              Se quita de la agenda de {removing.clientName}.
+              {googleConnected && removing.externalId?.startsWith("cal:")
+                ? " También se borra en Google y en el iPhone."
+                : ""}
+            </p>
             <form action="/api/admin/appointments" method="post" className="mt-6 flex flex-wrap gap-3">
               <input type="hidden" name="clientId" value={removing.clientId} />
               <input type="hidden" name="deleteId" value={removing.id} />

@@ -2,9 +2,10 @@ import { AgendaBoard } from "@/app/components/portal/AgendaBoard";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { StudioAside } from "@/app/components/portal/StudioAside";
 import { fetchCalendarEvents, monthCells, parseMonth, madridToday } from "@/lib/portal/calendar";
+import { googleCalendarConfigured } from "@/lib/portal/google-calendar";
 import { fullName } from "@/lib/portal/names";
 import { requireAdmin } from "@/lib/portal/session";
-import { getStudioCalendars, listClients, listHiddenCalendarIds } from "@/lib/portal/store";
+import { getGoogleCalendarLink, getStudioCalendars, listClients, listHiddenCalendarIds } from "@/lib/portal/store";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
@@ -25,6 +26,9 @@ export default async function StudioCalendarPage({
   const { mes, dia, error, ok } = await searchParams;
   const clients = await listClients();
   const hiddenIds = await listHiddenCalendarIds();
+  const googleLink = await getGoogleCalendarLink();
+  const googleConfigured = googleCalendarConfigured();
+  const googleConnected = googleConfigured && Boolean(googleLink.refreshToken);
   const { primary, google, extra } = await getStudioCalendars();
   const feeds = [
     { url: primary, source: "iPhone" },
@@ -82,6 +86,28 @@ export default async function StudioCalendarPage({
       {ok === "asignada" ? (
         <PortalNotice>Cita asignada. La clienta la ve en su agenda como planificada.</PortalNotice>
       ) : null}
+      {ok === "google" ? (
+        <PortalNotice>
+          Google conectado{googleLink.email ? ` con ${googleLink.email}` : ""}. Al quitar una cita también se borra en
+          Google y en el iPhone.
+        </PortalNotice>
+      ) : null}
+      {ok === "google-borrada" ? (
+        <PortalNotice>Cita borrada en Google. El iPhone la quita al refrescar, normalmente en menos de un minuto.</PortalNotice>
+      ) : null}
+      {ok === "google-off" ? <PortalNotice>Google desconectado. Quitar una cita solo la oculta en esta web.</PortalNotice> : null}
+      {error === "google-conexion" ? (
+        <PortalNotice>Esa cita sigue en Google y en el iPhone. Conecta el calendario para poder borrarla también allí.</PortalNotice>
+      ) : null}
+      {error === "google-config" ? (
+        <PortalNotice>Falta el acceso de Google en el servidor. Sin eso, la web solo puede ocultar la cita aquí.</PortalNotice>
+      ) : null}
+      {error === "google-token" ? (
+        <PortalNotice>Google no ha dejado guardar el permiso para borrar. Vuelve a conectar la cuenta del calendario.</PortalNotice>
+      ) : null}
+      {error === "google" ? (
+        <PortalNotice>No he podido borrarla en Google. Sigue en el calendario y en el iPhone.</PortalNotice>
+      ) : null}
       {error === "descarga" || loaded.error ? (
         <PortalNotice>
           No he podido leer {loaded.error ? loaded.error : "el calendario"}. Comprueba que el calendario público sigue
@@ -89,9 +115,38 @@ export default async function StudioCalendarPage({
         </PortalNotice>
       ) : null}
 
+      {googleConnected ? (
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+          <p className="text-sm text-ash">
+            Google conectado{googleLink.email ? ` con ${googleLink.email}` : ""}. Quitar una cita la borra también en el
+            iPhone.
+          </p>
+          <form action="/api/admin/google-calendar" method="post">
+            <button className="text-[0.68rem] uppercase tracking-[0.16em] text-ash hover:text-ink" type="submit">
+              Desconectar
+            </button>
+          </form>
+        </div>
+      ) : googleConfigured ? (
+        <div className="mb-8">
+          <p className="text-sm text-ash">
+            Conecta la cuenta del calendario para que, al quitar una cita, desaparezca también de Google y del iPhone.
+          </p>
+          <a className="btn-atelier mt-4 inline-block" href="/api/admin/google-calendar">
+            Conectar Google Calendar
+          </a>
+        </div>
+      ) : (
+        <p className="mb-8 text-sm text-ash">
+          Para borrar también en el móvil falta el acceso de Google en el servidor. Mientras tanto, quitar una cita solo
+          la oculta en esta web.
+        </p>
+      )}
+
       {ready ? (
         <AgendaBoard
           events={events}
+          googleConnected={googleConnected}
           today={today}
           initialYear={year}
           initialMonth={month}

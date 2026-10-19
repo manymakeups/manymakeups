@@ -10,6 +10,8 @@ export type RemoteEvent = {
   place: string;
   notes: string;
   source?: string;
+  /** Original calendar UID, before the day is added to the displayed id. */
+  uid?: string;
   /** Minutes the event occupies from its start. All-day events use whole days. */
   durationMin?: number;
 };
@@ -404,6 +406,7 @@ export function parseIcsEvents(source: string): RemoteEvent[] {
       if (exdates.has(date)) continue;
       events.push({
         id: `${uid}-${date}${start.time ? `-${start.time}` : ""}`,
+        uid,
         date,
         time: start.time,
         title,

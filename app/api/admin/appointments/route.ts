@@ -1,7 +1,8 @@
 import { newId } from "@/lib/portal/crypto";
+import { googleRemovalQuery, removeStudioGoogleEvent } from "@/lib/portal/google-calendar";
 import { go } from "@/lib/portal/http";
 import { requireAdmin } from "@/lib/portal/session";
-import { getClient, listClients, saveClient } from "@/lib/portal/store";
+import { getClient, hideCalendarEvents, listClients, saveClient } from "@/lib/portal/store";
 import { APPOINTMENT_STATUSES, APPOINTMENT_TITLES, type Appointment, type AppointmentStatus, type ClientRecord } from "@/lib/portal/types";
 
 function text(value: FormDataEntryValue | null) {
@@ -39,12 +40,21 @@ export async function POST(request: Request) {
   const intent = text(form.get("intent"));
   const editId = text(form.get("editId"));
   if (deleteId) {
+    const removed = client.appointments.find((item) => item.id === deleteId);
     client.appointments = client.appointments.filter((item) => item.id !== deleteId);
     client.history = client.history.filter((entry) => entry.appointmentId !== deleteId);
     await saveClient(client);
+    const fromCalendar = removed?.externalId?.startsWith("cal:") ? removed.externalId.slice(4) : "";
+    const google = fromCalendar ? await removeStudioGoogleEvent(fromCalendar) : null;
+    if (google) await hideCalendarEvents(google.hideIds);
     const next = text(form.get("next"));
-    if (next.startsWith("/privado/calendario")) return go(request, next);
-    return go(request, `/privado/novias/${client.id}?tab=agenda&ok=agenda`);
+    const back = next.startsWith("/privado/calendario") ? next : `/privado/novias/${client.id}?tab=agenda&ok=agenda`;
+    const flag = google ? googleRemovalQuery(google.status) : "";
+    if (!flag) return go(request, back);
+    const url = new URL(back, "https://www.manymakeups.com");
+    const [key, value] = flag.split("=");
+    if (key && value) url.searchParams.set(key, value);
+    return go(request, `${url.pathname}${url.search}`);
   } else if (intent === "cancel" && editId) {
     const appointment = client.appointments.find((item) => item.id === editId);
     if (appointment) appointment.status = "anulada";

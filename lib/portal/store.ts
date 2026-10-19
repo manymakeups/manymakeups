@@ -21,6 +21,14 @@ function hiddenCalendarIds(value: unknown) {
   return value.filter((item): item is string => typeof item === "string" && item.length > 0).slice(-400);
 }
 
+function googleLink(parsed: Partial<PortalDb>) {
+  return {
+    googleCalendarRefresh: typeof parsed.googleCalendarRefresh === "string" ? parsed.googleCalendarRefresh : "",
+    googleCalendarEmail:
+      typeof parsed.googleCalendarEmail === "string" ? parsed.googleCalendarEmail.trim().slice(0, 180) : "",
+  };
+}
+
 function useBlob() {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 }
@@ -43,6 +51,7 @@ async function readDb(): Promise<PortalDb> {
       studioCalendarGoogle: typeof parsed.studioCalendarGoogle === "string" ? parsed.studioCalendarGoogle : "",
       studioCalendarExtra: typeof parsed.studioCalendarExtra === "string" ? parsed.studioCalendarExtra : "",
       hiddenCalendarIds: hiddenCalendarIds(parsed.hiddenCalendarIds),
+      ...googleLink(parsed),
     };
   }
   try {
@@ -55,6 +64,7 @@ async function readDb(): Promise<PortalDb> {
       studioCalendarGoogle: typeof parsed.studioCalendarGoogle === "string" ? parsed.studioCalendarGoogle : "",
       studioCalendarExtra: typeof parsed.studioCalendarExtra === "string" ? parsed.studioCalendarExtra : "",
       hiddenCalendarIds: hiddenCalendarIds(parsed.hiddenCalendarIds),
+      ...googleLink(parsed),
     };
   } catch {
     return emptyDb();
@@ -90,11 +100,34 @@ export async function listHiddenCalendarIds() {
   return db.hiddenCalendarIds;
 }
 
-export async function hideCalendarEvent(id: string) {
-  const clean = id.trim().slice(0, 240);
-  if (!clean) return;
+export async function hideCalendarEvents(ids: string[]) {
+  const clean = [...new Set(ids.map((id) => id.trim().slice(0, 240)).filter(Boolean))];
+  if (!clean.length) return;
   const db = await readDb();
-  db.hiddenCalendarIds = [...new Set([...db.hiddenCalendarIds, clean])].slice(-400);
+  db.hiddenCalendarIds = [...new Set([...db.hiddenCalendarIds, ...clean])].slice(-400);
+  await writeDb(db);
+}
+
+export async function hideCalendarEvent(id: string) {
+  await hideCalendarEvents([id]);
+}
+
+export async function getGoogleCalendarLink() {
+  const db = await readDb();
+  return { refreshToken: db.googleCalendarRefresh, email: db.googleCalendarEmail };
+}
+
+export async function setGoogleCalendarLink(refreshToken: string, email: string) {
+  const db = await readDb();
+  db.googleCalendarRefresh = refreshToken.trim();
+  db.googleCalendarEmail = email.trim().slice(0, 180);
+  await writeDb(db);
+}
+
+export async function clearGoogleCalendarLink() {
+  const db = await readDb();
+  db.googleCalendarRefresh = "";
+  db.googleCalendarEmail = "";
   await writeDb(db);
 }
 

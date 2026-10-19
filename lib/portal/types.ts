@@ -418,6 +418,8 @@ export type PortalDb = {
   studioCalendarGoogle: string;
   studioCalendarExtra: string;
   hiddenCalendarIds: string[];
+  googleCalendarRefresh: string;
+  googleCalendarEmail: string;
 };
 
 export function emptyAttendee(who = ""): Attendee {
@@ -602,7 +604,16 @@ export function asPlanning(value: unknown): EventPlanning {
 }
 
 export function emptyDb(): PortalDb {
-  return { clients: [], notices: [], studioCalendarUrl: "", studioCalendarGoogle: "", studioCalendarExtra: "", hiddenCalendarIds: [] };
+  return {
+    clients: [],
+    notices: [],
+    studioCalendarUrl: "",
+    studioCalendarGoogle: "",
+    studioCalendarExtra: "",
+    hiddenCalendarIds: [],
+    googleCalendarRefresh: "",
+    googleCalendarEmail: "",
+  };
 }
 
 function noticeLinks(value: unknown): StudioNoticeLink[] | undefined {
