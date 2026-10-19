@@ -110,6 +110,7 @@ export function AgendaBoard({
   const [month, setMonth] = useState(initialMonth);
   const [selected, setSelected] = useState(initialDay);
   const [assigning, setAssigning] = useState<RemoteEvent | null>(null);
+  const [removing, setRemoving] = useState<StudioAppointment | null>(null);
   const [clientId, setClientId] = useState("");
   const [query, setQuery] = useState("");
   const hidden = useMemo(() => new Set(hiddenIds), [hiddenIds]);
@@ -158,13 +159,15 @@ export function AgendaBoard({
   }
 
   useEffect(() => {
-    if (!assigning) return;
+    if (!assigning && !removing) return;
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setAssigning(null);
+      if (event.key !== "Escape") return;
+      setAssigning(null);
+      setRemoving(null);
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [assigning]);
+  }, [assigning, removing]);
 
   function openAssign(event: RemoteEvent) {
     setAssigning(event);
@@ -274,20 +277,9 @@ export function AgendaBoard({
                   {item.amount > 0 ? <p className="mt-1 text-sm">{euros(item.amount)}</p> : null}
                   {item.notes ? <p className="mt-2 whitespace-pre-wrap text-sm">{item.notes}</p> : null}
                 </div>
-                <form
-                  action="/api/admin/appointments"
-                  method="post"
-                  onSubmit={(event) => {
-                    if (!confirm("¿Quitar esta cita de la clienta?")) event.preventDefault();
-                  }}
-                >
-                  <input type="hidden" name="clientId" value={item.clientId} />
-                  <input type="hidden" name="deleteId" value={item.id} />
-                  <input type="hidden" name="next" value={back} />
-                  <button className="btn-atelier" type="submit">
-                    Quitar
-                  </button>
-                </form>
+                <button className="btn-atelier" type="button" onClick={() => setRemoving(item)}>
+                  Quitar
+                </button>
               </li>
             ))}
             {dayIncoming.map((event) => (
@@ -372,6 +364,37 @@ export function AgendaBoard({
             >
               Cerrar
             </button>
+          </div>
+        </div>
+      ) : null}
+      {removing ? (
+        <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-ink/40 p-3 sm:items-center sm:p-6" onClick={() => setRemoving(null)}>
+          <div
+            className="w-full max-w-md bg-porcelain p-6 shadow-[0_20px_60px_rgba(26,22,19,0.16)]"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="remove-appointment-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">
+              {removing.title} · {statusLabel[removing.status]}
+            </p>
+            <h2 id="remove-appointment-title" className="mt-2 font-serif text-3xl">
+              Quitar esta cita
+            </h2>
+            <p className="mt-3 font-serif text-2xl capitalize">{whenLabel(removing.date, removing.time)}</p>
+            <p className="mt-2 text-sm leading-relaxed text-ash">Se quita de la agenda de {removing.clientName}.</p>
+            <form action="/api/admin/appointments" method="post" className="mt-6 flex flex-wrap gap-3">
+              <input type="hidden" name="clientId" value={removing.clientId} />
+              <input type="hidden" name="deleteId" value={removing.id} />
+              <input type="hidden" name="next" value={back} />
+              <button className="btn-atelier-solid btn-atelier" type="submit">
+                Quitar cita
+              </button>
+              <button className="btn-atelier" type="button" onClick={() => setRemoving(null)}>
+                Cancelar
+              </button>
+            </form>
           </div>
         </div>
       ) : null}

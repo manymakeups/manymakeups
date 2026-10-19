@@ -14,7 +14,9 @@ function money(value: string) {
   return Math.round(amount * 100) / 100;
 }
 
-function budgetLine(title: string) {
+function budgetLine(title: string, calendar = false) {
+  if (calendar && title === "Maquillaje") return { title: "Maquillaje", name: "Maquillaje" };
+  if (calendar && title === "Peinado") return { title: "Peinado", name: "Peinado" };
   if (title === "Maquillaje") return { title: "Sólo Maquillaje", name: "" };
   if (title === "Peinado") return { title: "Sólo peinado", name: "" };
   if (title === "Maquillaje y peinado") return { title: "Maquillaje y Peinado", name: "" };
@@ -161,12 +163,15 @@ function readAppointment(form: FormData) {
 
 function syncCharge(client: ClientRecord, appointment: Appointment) {
   const existing = client.history.find((entry) => entry.appointmentId === appointment.id);
-  if (appointment.amount > 0) {
-    const line = budgetLine(appointment.title);
+  const calendar = Boolean(appointment.externalId?.startsWith("cal:"));
+  const visit = calendar && (appointment.title === "Maquillaje" || appointment.title === "Peinado");
+  if (appointment.amount > 0 || visit) {
+    const line = budgetLine(appointment.title, calendar);
     if (existing) {
       existing.title = line.title;
       existing.name = line.name;
       existing.date = appointment.date;
+      existing.notes = appointment.notes;
       existing.amount = appointment.amount;
     } else {
       client.history.push({
@@ -175,7 +180,7 @@ function syncCharge(client: ClientRecord, appointment: Appointment) {
         title: line.title,
         name: line.name,
         date: appointment.date,
-        notes: "",
+        notes: appointment.notes,
         amount: appointment.amount,
         paid: false,
         seenByClient: true,

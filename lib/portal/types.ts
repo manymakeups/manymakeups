@@ -801,6 +801,7 @@ export function normalizeClient(client: ClientRecord): ClientRecord {
       budgetNumber: row.budgetNumber ?? "",
     };
   });
+  const appointments = (client.appointments ?? []).map(asAppointment).filter(Boolean) as Appointment[];
   return {
     ...client,
     event: {
@@ -831,7 +832,46 @@ export function normalizeClient(client: ClientRecord): ClientRecord {
     inspiration: client.inspiration ?? [],
     documents: client.documents ?? [],
     workPhotos: client.workPhotos ?? [],
-    appointments: (client.appointments ?? []).map(asAppointment).filter(Boolean) as Appointment[],
-    history: (client.history ?? []).map(asHistory).filter(Boolean) as HistoryEntry[],
+    appointments,
+    history: placeCalendarVisits(
+      (client.history ?? []).map(asHistory).filter(Boolean) as HistoryEntry[],
+      appointments,
+    ),
   };
+}
+
+function placeCalendarVisits(entries: HistoryEntry[], appointments: Appointment[]) {
+  const byId = new Map(appointments.map((item) => [item.id, item]));
+  const next = entries.map((entry) => {
+    if (!entry.appointmentId) return entry;
+    const appointment = byId.get(entry.appointmentId);
+    if (!appointment?.externalId?.startsWith("cal:")) return entry;
+    if (appointment.title !== "Maquillaje" && appointment.title !== "Peinado") return entry;
+    return {
+      ...entry,
+      title: appointment.title,
+      name: appointment.title,
+      date: entry.date || appointment.date,
+    };
+  });
+  const linked = new Set(next.map((entry) => entry.appointmentId).filter(Boolean));
+  for (const appointment of appointments) {
+    if (!appointment.externalId?.startsWith("cal:")) continue;
+    if (appointment.title !== "Maquillaje" && appointment.title !== "Peinado") continue;
+    if (appointment.status === "anulada" || linked.has(appointment.id)) continue;
+    next.push({
+      id: `cal-visit-${appointment.id}`.slice(0, 80),
+      kind: "servicio",
+      title: appointment.title,
+      name: appointment.title,
+      date: appointment.date,
+      notes: appointment.notes,
+      amount: appointment.amount,
+      paid: false,
+      seenByClient: true,
+      appointmentId: appointment.id,
+      assignee: "contractor",
+    });
+  }
+  return next;
 }

@@ -54,8 +54,29 @@ const EVENT_SERVICES = new Set([
   "Beauty Corner",
 ]);
 
-function isCareService(title: string) {
-  return !EVENT_SERVICES.has(canonicalService(title));
+function calendarVisit(entry: HistoryEntry) {
+  if (!entry.appointmentId) return "";
+  if (entry.title === "Maquillaje" || entry.title === "Peinado") return entry.title;
+  return "";
+}
+
+function isCareService(entry: HistoryEntry) {
+  if (calendarVisit(entry)) return true;
+  return !EVENT_SERVICES.has(canonicalService(entry.title));
+}
+
+function serviceFields(entry: HistoryEntry, copy: PortalCopy) {
+  const visit = calendarVisit(entry);
+  if (visit) {
+    const label = copy.historyTitles[visit] || visit;
+    const name = entry.name.trim();
+    return { category: label, specific: name && name !== visit && name !== label ? name : label };
+  }
+  const known = CATALOG.has(canonicalService(entry.title));
+  return {
+    category: known ? labelFor(entry.title, copy) : "",
+    specific: entry.name.trim() || (known ? "" : entry.title),
+  };
 }
 
 type Pocket = "all" | "paid" | "pending";
@@ -144,9 +165,7 @@ function ServiceLines({
   return (
     <ul className="mt-8 divide-y divide-ink/10 border border-ink/10">
       {entries.map((entry) => {
-        const known = CATALOG.has(canonicalService(entry.title));
-        const category = known ? labelFor(entry.title, copy) : "";
-        const specific = entry.name.trim() || (known ? "" : entry.title);
+        const { category, specific } = serviceFields(entry, copy);
         const who = whoOf?.(entry);
         return (
           <li key={entry.id} className="px-4 py-4">
@@ -244,8 +263,8 @@ export function BudgetView({
     selected === "all"
       ? (entry: HistoryEntry) => names.get(entryPerson(entry, people.length)) || ""
       : undefined;
-  const eventServices = scoped.filter((entry) => !isCareService(entry.title));
-  const careServices = scoped.filter((entry) => isCareService(entry.title));
+  const eventServices = scoped.filter((entry) => !isCareService(entry));
+  const careServices = scoped.filter((entry) => isCareService(entry));
 
   const rows: LedgerRow[] = [];
   function pushSlice(id: string, label: string, who: string | undefined, slice: PaymentSlice) {
@@ -277,14 +296,13 @@ export function BudgetView({
   [...scoped]
     .sort((a, b) => `${b.date}${b.title}`.localeCompare(`${a.date}${a.title}`))
     .forEach((entry) => {
-      const known = CATALOG.has(canonicalService(entry.title));
-      const category = known ? labelFor(entry.title, copy) : "";
+      const { category, specific } = serviceFields(entry, copy);
       const who = whoOf?.(entry);
       rows.push({
         id: entry.id,
         kind: "service",
         kicker: `${copy.historyKinds.servicio}${category ? ` · ${category}` : ""}${who ? ` · ${who}` : ""}`,
-        title: entry.name.trim() || (known ? "" : entry.title),
+        title: specific,
         date: entry.date,
         amount: Math.max(0, Number(entry.amount) || 0),
         paid: entry.paid,
