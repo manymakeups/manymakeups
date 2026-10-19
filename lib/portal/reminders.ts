@@ -160,21 +160,24 @@ async function sendAppointment(client: ClientRecord, appointment: Appointment, t
   const dated = when ? when.charAt(0).toLocaleUpperCase(dateLocale(locale)) + when.slice(1) : "—";
   const hour = appointment.time ? interpolate(t.appointmentHour, { time: appointment.time }) : "—";
   const amount = appointment.amount > 0 ? euros(appointment.amount) : "—";
-  const details = [
-    soon ? t.appointmentReminderSoonDetails : t.appointmentReminderDetails,
-    `${t.mailService}: ${appointment.title}`,
-    `${t.mailDate}: ${dated}`,
-    `${t.mailTime}: ${hour}`,
-    `${t.mailPlace}: ${appointment.place || "—"}`,
-    `${soon ? t.appointmentAmountDue : t.mailAmount}: ${amount}`,
-  ].join("\n");
   const confirm = `${site.url}${localePath(locale, "/area-novia/confirmar-cita")}?cliente=${encodeURIComponent(client.id)}&cita=${encodeURIComponent(appointment.id)}&token=${encodeURIComponent(token)}`;
   const mail = brandedClientEmail({
     lang: locale,
     blocks: [
       { text: interpolate(t.mailHi, { name }) },
       { text: soon ? t.appointmentReminderSoonIntro : t.appointmentReminderIntro },
-      { text: details },
+      {
+        details: {
+          title: soon ? t.appointmentReminderSoonDetails : t.appointmentReminderDetails,
+          rows: [
+            { icon: "service", label: t.mailService, value: appointment.title },
+            { icon: "date", label: t.mailDate, value: dated },
+            { icon: "time", label: t.mailTime, value: hour },
+            { icon: "place", label: t.mailPlace, value: appointment.place || "—" },
+            { icon: "amount", label: soon ? t.appointmentAmountDue : t.mailAmount, value: amount },
+          ],
+        },
+      },
       { href: confirm, label: t.appointmentReminderConfirm },
       { text: soon ? t.appointmentReminderSoonClose : t.appointmentReminderClose, muted: true },
     ],

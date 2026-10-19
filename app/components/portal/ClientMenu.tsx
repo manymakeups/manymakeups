@@ -33,9 +33,19 @@ export function ClientMenu({
 
   return (
     <>
-      <details className="relative z-20">
+      <details
+        data-client-menu=""
+        className="relative"
+        onToggle={(event) => {
+          const current = event.currentTarget;
+          if (!current.open) return;
+          document.querySelectorAll<HTMLDetailsElement>("details[data-client-menu]").forEach((menu) => {
+            if (menu !== current) menu.open = false;
+          });
+        }}
+      >
         <summary
-          className="inline-flex size-11 cursor-pointer list-none items-center justify-center border border-ink/15 text-ink hover:border-ink [&::-webkit-details-marker]:hidden"
+          className="relative z-40 inline-flex size-11 cursor-pointer list-none items-center justify-center border border-ink/15 text-ink hover:border-ink [&::-webkit-details-marker]:hidden"
           aria-label={`Opciones de ${name}`}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
@@ -44,7 +54,7 @@ export function ClientMenu({
             <circle cx="8" cy="13" r="1.3" fill="currentColor" />
           </svg>
         </summary>
-        <div className="absolute right-0 top-12 z-20 w-64 max-w-[calc(100vw-2rem)] border border-ink/15 bg-porcelain py-1 shadow-sm">
+        <div className="absolute right-0 top-12 z-30 w-64 max-w-[calc(100vw-2rem)] border border-ink/15 bg-porcelain py-1 shadow-sm">
           {call ? (
             <a className="block px-4 py-3 text-[0.72rem] uppercase tracking-[0.14em] hover:bg-ink/5" href={call}>
               Llamar

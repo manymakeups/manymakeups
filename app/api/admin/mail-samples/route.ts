@@ -13,22 +13,26 @@ export async function POST(request: Request) {
   const link = "https://www.manymakeups.com/area-novia";
   const signoff = [t.recoverMailSignoff];
   const footer = { href: link, label: t.unsubRemindersFooter };
-  const weekDetails = [
-    t.appointmentReminderDetails,
-    `${t.mailService}: Prueba`,
-    `${t.mailDate}: Sábado, 24 de octubre de 2026`,
-    `${t.mailTime}: 12:30 h`,
-    `${t.mailPlace}: Estudio`,
-    `${t.mailAmount}: 80,00 €`,
-  ].join("\n");
-  const soonDetails = [
-    t.appointmentReminderSoonDetails,
-    `${t.mailService}: Prueba`,
-    `${t.mailDate}: Sábado, 24 de octubre de 2026`,
-    `${t.mailTime}: 12:30 h`,
-    `${t.mailPlace}: Estudio`,
-    `${t.appointmentAmountDue}: 80,00 €`,
-  ].join("\n");
+  const weekDetails = {
+    title: t.appointmentReminderDetails,
+    rows: [
+      { icon: "service" as const, label: t.mailService, value: "Prueba" },
+      { icon: "date" as const, label: t.mailDate, value: "Sábado, 24 de octubre de 2026" },
+      { icon: "time" as const, label: t.mailTime, value: "12:30 h" },
+      { icon: "place" as const, label: t.mailPlace, value: "Estudio" },
+      { icon: "amount" as const, label: t.mailAmount, value: "80,00 €" },
+    ],
+  };
+  const soonDetails = {
+    title: t.appointmentReminderSoonDetails,
+    rows: [
+      { icon: "service" as const, label: t.mailService, value: "Prueba" },
+      { icon: "date" as const, label: t.mailDate, value: "Sábado, 24 de octubre de 2026" },
+      { icon: "time" as const, label: t.mailTime, value: "12:30 h" },
+      { icon: "place" as const, label: t.mailPlace, value: "Estudio" },
+      { icon: "amount" as const, label: t.appointmentAmountDue, value: "80,00 €" },
+    ],
+  };
   const samples = [
     {
       subject: interpolate(t.inviteMailSubject, { name: "Ana" }),
@@ -76,7 +80,7 @@ export async function POST(request: Request) {
       blocks: [
         { text: interpolate(t.mailHi, { name: "Ana" }) },
         { text: t.appointmentReminderIntro },
-        { text: weekDetails },
+        { details: weekDetails },
         { href: link, label: t.appointmentReminderConfirm },
         { text: t.appointmentReminderClose, muted: true as const },
       ],
@@ -87,7 +91,7 @@ export async function POST(request: Request) {
       blocks: [
         { text: interpolate(t.mailHi, { name: "Ana" }) },
         { text: t.appointmentReminderSoonIntro },
-        { text: soonDetails },
+        { details: soonDetails },
         { href: link, label: t.appointmentReminderConfirm },
         { text: t.appointmentReminderSoonClose, muted: true as const },
       ],
