@@ -23,27 +23,11 @@ export async function POST(request: Request) {
   const samples = [
     {
       subject: t.activationReminderSubject,
+      signoff: [t.activationReminderSignoff],
       blocks: [
-        { text: "Hola Ana," },
+        { text: interpolate(t.activationReminderGreeting, { name: "Ana" }) },
         { text: t.activationReminderBody },
-        { href: link, label: t.activationReminderLink },
-        { text: t.activationReminderClose, muted: true as const },
-      ],
-    },
-    {
-      subject: t.activationReminderWeekSubject,
-      blocks: [
-        { text: "Hola Ana," },
-        { text: t.activationReminderWeekBody },
-        { href: link, label: t.activationReminderLink },
-        { text: t.activationReminderClose, muted: true as const },
-      ],
-    },
-    {
-      subject: t.activationReminderUrgentSubject,
-      blocks: [
-        { text: "Hola Ana," },
-        { text: interpolate(t.activationReminderUrgentBody, { date: "8 de noviembre de 2026" }) },
+        { text: t.activationReminderCta },
         { href: link, label: t.activationReminderLink },
         { text: t.activationReminderClose, muted: true as const },
       ],
@@ -93,7 +77,12 @@ export async function POST(request: Request) {
   ];
   let sent = 0;
   for (const sample of samples) {
-    const mail = brandedClientEmail({ lang: "es", blocks: sample.blocks, signoff, footer });
+    const mail = brandedClientEmail({
+      lang: "es",
+      blocks: sample.blocks,
+      signoff: "signoff" in sample && sample.signoff ? sample.signoff : signoff,
+      footer,
+    });
     if (await notifyEmail(TO, sample.subject, mail.text, mail.html)) sent += 1;
   }
   return go(request, `/privado/novias?ok=muestras&sent=${sent}`);

@@ -62,45 +62,25 @@ function activationStage(client: ClientRecord): (typeof MILESTONES)[number] {
   return 3;
 }
 
-function activationMail(client: ClientRecord, stage: (typeof MILESTONES)[number] = 3) {
+function activationMail(client: ClientRecord, _stage: (typeof MILESTONES)[number] = 3) {
   if (!client.inviteToken || client.passwordHash) return Promise.resolve(false);
   const locale = clientLocale(client);
   const t = getPortalCopy(locale);
   const name = mailName(client.event, client.name);
   const link = `${site.url}/area-novia/activar?token=${encodeURIComponent(client.inviteToken)}`;
-  const subject = stage === 14 ? t.activationReminderUrgentSubject : stage === 7 ? t.activationReminderWeekSubject : t.activationReminderSubject;
-  const expires = client.inviteExpiresAt
-    ? new Date(client.inviteExpiresAt)
-    : client.inviteIssuedAt
-      ? new Date(new Date(client.inviteIssuedAt).getTime() + 21 * 24 * 60 * 60 * 1000)
-      : null;
-  const expiry =
-    expires && !Number.isNaN(expires.getTime())
-      ? expires.toLocaleDateString(dateLocale(locale), {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-          timeZone: "Europe/Madrid",
-        })
-      : "";
-  const body =
-    stage === 14
-      ? interpolate(t.activationReminderUrgentBody, { date: expiry })
-      : stage === 7
-        ? t.activationReminderWeekBody
-        : t.activationReminderBody;
   const mail = brandedClientEmail({
     lang: locale,
     blocks: [
-      { text: interpolate(t.activationReminderHello, { name }) },
-      { text: body },
+      { text: interpolate(t.activationReminderGreeting, { name }) },
+      { text: t.activationReminderBody },
+      { text: t.activationReminderCta },
       { href: link, label: t.activationReminderLink },
       { text: t.activationReminderClose, muted: true },
     ],
-    signoff: [t.recoverMailSignoff],
+    signoff: [t.activationReminderSignoff],
     footer: footer(client, "recordatorios", t.unsubRemindersFooter),
   });
-  return notifyEmail(client.email, subject, mail.text, mail.html);
+  return notifyEmail(client.email, t.activationReminderSubject, mail.text, mail.html);
 }
 
 export async function deliverActivationReminder(client: ClientRecord) {
