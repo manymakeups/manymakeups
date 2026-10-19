@@ -57,6 +57,9 @@ export function PlanningView({
   );
   return (
     <div className="flex max-w-2xl flex-col gap-6 text-sm">
+      <a className="btn-atelier self-start" href="/api/portal/planning-pdf?plan=evento">
+        {copy.planningDownload}
+      </a>
       <div className="flex justify-center">
         <img src="/brand/logo.jpg" alt="Many Makeups" width={168} height={168} className="size-40" />
       </div>
@@ -96,14 +99,19 @@ function SidePlanningView({
   title,
   plan,
   copy,
+  download,
 }: {
   title: string;
   plan: SidePlanning;
   copy: PortalCopy;
+  download: "glitter" | "beauty";
 }) {
   const rows = sidePlanningRows({ ...plan, on: true }, title, copy);
   return (
     <div className="flex max-w-2xl flex-col gap-6 text-sm">
+      <a className="btn-atelier self-start" href={`/api/portal/planning-pdf?plan=${download}`}>
+        {copy.planningDownload}
+      </a>
       <div className="flex flex-col gap-3 leading-6 text-ink">
         <p className="font-serif text-xl">{copy.premiumMailTimesTitle}</p>
         <p>{copy.premiumMailTimes}</p>
@@ -143,7 +151,14 @@ export function ClientPlanning(props: {
         ...extras.map((item) => ({
           id: item.id,
           label: item.label,
-          body: <SidePlanningView title={item.label} plan={item.plan} copy={copy} />,
+          body: (
+            <SidePlanningView
+              title={item.label}
+              plan={item.plan}
+              copy={copy}
+              download={item.id === "beauty" ? "beauty" : "glitter"}
+            />
+          ),
         })),
       ]}
     />
