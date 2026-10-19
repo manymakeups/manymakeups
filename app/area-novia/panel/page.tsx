@@ -25,6 +25,7 @@ import {
   CONTRACTOR_TRIAL_PHOTOS,
   contractorInspirationKey,
   filesFor,
+  PORTAL_TABS,
   portalTab,
   productsFor,
 } from "@/lib/portal/types";
@@ -58,6 +59,7 @@ export default async function BridePanelPage({
   if (planner && !client.planners.some((item) => item.id === planner.sub)) redirect("/wp?error=enlace");
   const consult = Boolean(planner);
   const { ok, error, tab: tabRaw, mes, com, sec, agenda, plan: planRaw } = await searchParams;
+  if (consult && tabRaw === "historico") redirect(localePath(locale, "/area-novia/panel"));
   const plan = planRaw === "glitter" || planRaw === "beauty" ? planRaw : undefined;
   const tab = portalTab(tabRaw);
   const requests = (await listNotices()).filter((notice) => notice.clientId === client.id && notice.kind === "cambio");
@@ -103,8 +105,9 @@ export default async function BridePanelPage({
           basePath={localePath(locale, "/area-novia/panel")}
           active={tab}
           labels={t.tabs}
-          badges={{ historico: tab === "historico" ? 0 : unreadComms }}
+          badges={consult ? undefined : { historico: tab === "historico" ? 0 : unreadComms }}
           menuLabel={t.menu}
+          tabs={consult ? PORTAL_TABS.filter((item) => item.id !== "historico") : PORTAL_TABS}
         />
       </div>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
