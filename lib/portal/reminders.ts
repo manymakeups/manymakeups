@@ -62,25 +62,60 @@ function activationStage(client: ClientRecord): (typeof MILESTONES)[number] {
   return 3;
 }
 
-function activationMail(client: ClientRecord, _stage: (typeof MILESTONES)[number] = 3) {
+function activationMail(client: ClientRecord, stage: (typeof MILESTONES)[number] = 3) {
   if (!client.inviteToken || client.passwordHash) return Promise.resolve(false);
   const locale = clientLocale(client);
   const t = getPortalCopy(locale);
   const name = mailName(client.event, client.name);
   const link = `${site.url}/area-novia/activar?token=${encodeURIComponent(client.inviteToken)}`;
+  const expires = client.inviteExpiresAt
+    ? new Date(client.inviteExpiresAt)
+    : client.inviteIssuedAt
+      ? new Date(new Date(client.inviteIssuedAt).getTime() + 21 * 24 * 60 * 60 * 1000)
+      : null;
+  const expiry =
+    expires && !Number.isNaN(expires.getTime())
+      ? expires.toLocaleDateString(dateLocale(locale), {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+          timeZone: "Europe/Madrid",
+        })
+      : "";
+  const urgent = stage === 14;
+  const week = stage === 7;
   const mail = brandedClientEmail({
     lang: locale,
     blocks: [
-      { text: interpolate(t.activationReminderGreeting, { name }) },
-      { text: t.activationReminderBody },
-      { text: t.activationReminderCta },
-      { href: link, label: t.activationReminderLink },
-      { text: t.activationReminderClose, muted: true },
+      {
+        text: interpolate(urgent || week ? t.mailHi : t.activationReminderGreeting, { name }),
+      },
+      { text: urgent ? t.activationReminderUrgentBody : week ? t.activationReminderWeekBody : t.activationReminderBody },
+      {
+        text: urgent
+          ? interpolate(t.activationReminderUrgentCta, { date: expiry })
+          : week
+            ? t.activationReminderWeekCta
+            : t.activationReminderCta,
+      },
+      {
+        href: link,
+        label: urgent ? t.activationReminderUrgentLink : t.activationReminderLink,
+      },
+      {
+        text: urgent ? t.activationReminderUrgentClose : week ? t.activationReminderWeekClose : t.activationReminderClose,
+        muted: true,
+      },
     ],
-    signoff: [t.activationReminderSignoff],
+    signoff: [week || urgent ? t.recoverMailSignoff : t.activationReminderSignoff],
     footer: footer(client, "recordatorios", t.unsubRemindersFooter),
   });
-  return notifyEmail(client.email, t.activationReminderSubject, mail.text, mail.html);
+  const subject = urgent
+    ? interpolate(t.activationReminderUrgentSubject, { name })
+    : week
+      ? interpolate(t.activationReminderWeekSubject, { name })
+      : t.activationReminderSubject;
+  return notifyEmail(client.email, subject, mail.text, mail.html);
 }
 
 export async function deliverActivationReminder(client: ClientRecord) {
@@ -122,28 +157,31 @@ async function sendAppointment(client: ClientRecord, appointment: Appointment, t
   const t = getPortalCopy(locale);
   const name = mailName(client.event, client.name);
   const when = formatWhen(appointment.date, locale);
+  const dated = when ? when.charAt(0).toLocaleUpperCase(dateLocale(locale)) + when.slice(1) : "—";
+  const hour = appointment.time ? interpolate(t.appointmentHour, { time: appointment.time }) : "—";
+  const amount = appointment.amount > 0 ? euros(appointment.amount) : "—";
+  const details = [
+    soon ? t.appointmentReminderSoonDetails : t.appointmentReminderDetails,
+    `${t.mailService}: ${appointment.title}`,
+    `${t.mailDate}: ${dated}`,
+    `${t.mailTime}: ${hour}`,
+    `${t.mailPlace}: ${appointment.place || "—"}`,
+    `${soon ? t.appointmentAmountDue : t.mailAmount}: ${amount}`,
+  ].join("\n");
   const confirm = `${site.url}${localePath(locale, "/area-novia/confirmar-cita")}?cliente=${encodeURIComponent(client.id)}&cita=${encodeURIComponent(appointment.id)}&token=${encodeURIComponent(token)}`;
   const mail = brandedClientEmail({
     lang: locale,
     blocks: [
-      { text: interpolate(t.appointmentReminderHello, { name }) },
+      { text: interpolate(t.mailHi, { name }) },
       { text: soon ? t.appointmentReminderSoonIntro : t.appointmentReminderIntro },
-      {
-        rows: [
-          { label: t.mailService, value: appointment.title },
-          { label: t.mailDate, value: when },
-          { label: t.mailTime, value: appointment.time || "—" },
-          { label: t.mailPlace, value: appointment.place || "—" },
-          { label: t.mailAmount, value: appointment.amount > 0 ? euros(appointment.amount) : "—" },
-        ],
-      },
+      { text: details },
       { href: confirm, label: t.appointmentReminderConfirm },
-      { text: t.appointmentReminderClose, muted: true },
+      { text: soon ? t.appointmentReminderSoonClose : t.appointmentReminderClose, muted: true },
     ],
-    signoff: [t.recoverMailSignoff],
+    signoff: [soon ? t.appointmentReminderSoonSignoff : t.recoverMailSignoff],
     footer: footer(client, "recordatorios", t.unsubRemindersFooter),
   });
-  const subject = soon ? t.appointmentReminderSoonSubject : t.appointmentReminderSubject;
+  const subject = soon ? t.appointmentReminderSoonSubject : interpolate(t.appointmentReminderSubject, { name });
   return notifyEmail(client.email, subject, mail.text, mail.html);
 }
 

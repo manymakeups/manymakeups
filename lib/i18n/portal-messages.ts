@@ -81,21 +81,35 @@ export type PortalCopy = {
   activationReminderCta: string;
   activationReminderWeekSubject: string;
   activationReminderWeekBody: string;
+  activationReminderWeekCta: string;
+  activationReminderWeekClose: string;
   activationReminderUrgentSubject: string;
   activationReminderUrgentBody: string;
+  activationReminderUrgentCta: string;
+  activationReminderUrgentClose: string;
+  activationReminderUrgentLink: string;
   activationReminderLink: string;
   activationReminderClose: string;
   activationReminderSignoff: string;
   inviteMailSubject: string;
   inviteMailBody: string;
+  inviteMailCta: string;
+  inviteMailLink: string;
   inviteMailExpiry: string;
+  mailHi: string;
   appointmentReminderSubject: string;
   appointmentReminderHello: string;
   appointmentReminderIntro: string;
+  appointmentReminderDetails: string;
   appointmentReminderSoonSubject: string;
   appointmentReminderSoonIntro: string;
+  appointmentReminderSoonDetails: string;
+  appointmentReminderSoonClose: string;
+  appointmentReminderSoonSignoff: string;
   appointmentReminderConfirm: string;
   appointmentReminderClose: string;
+  appointmentAmountDue: string;
+  appointmentHour: string;
   mailService: string;
   mailDate: string;
   mailTime: string;
@@ -387,26 +401,45 @@ export const portalEs: PortalCopy = {
   activationReminderBody:
     "Veo que aún no has completado la activación de tu área de cliente. Quiero asegurarme de que tengas acceso a todas tus ventajas y gestiones de forma rápida y sencilla.",
   activationReminderCta: "Para activarla, solo debes hacer clic en el siguiente enlace y elegir tu contraseña:",
-  activationReminderWeekSubject: "Tu área de Many Makeups sigue esperándote",
+  activationReminderWeekSubject: "{name}, tu área de cliente te está esperando",
   activationReminderWeekBody:
-    "Han pasado unos días y tu área sigue sin activar. Entra con este enlace y elige tu contraseña.",
-  activationReminderUrgentSubject: "Tu enlace de acceso caduca pronto",
+    "Te escribo porque he visto que han pasado unos días y tu área de cliente todavía sigue sin activar.",
+  activationReminderWeekCta:
+    "Quiero asegurarme de que puedas entrar sin problemas y tenerlo todo a mano. Solo te llevará un minuto: haz clic en el enlace y elige tu contraseña.",
+  activationReminderWeekClose: "(Si ya la has activado en estas últimas horas, por favor ignora este mensaje).",
+  activationReminderUrgentSubject: "{name}, Tu área sigue pendiente de activación (caduca pronto)",
   activationReminderUrgentBody:
-    "Tu área sigue sin activar. Actívala cuanto antes, porque el enlace caducará el {date}.",
+    "Te escribo para recordarte que tu área de cliente aún no está activa. Me gustaría que pudieras entrar para revisar todo tu espacio con tranquilidad.",
+  activationReminderUrgentCta:
+    "Ten en cuenta que el enlace caducará el {date}. Puedes completarlo ahora mismo en solo un minuto:",
+  activationReminderUrgentClose: "(Si ya realizaste este paso recientemente, no te preocupes, ignora este mensaje).",
+  activationReminderUrgentLink: "Activar mi área ahora",
   activationReminderLink: "Activar mi área de cliente",
   activationReminderClose: "(Si ya has completado este paso recientemente, por favor ignora este mensaje).",
   activationReminderSignoff: "Un saludo,",
-  inviteMailSubject: "Tu área de clienta en Many Makeups",
+  inviteMailSubject: "¡Ya está lista tu área de cliente, {name}!",
   inviteMailBody:
-    "Ya tienes tu área de clienta. Entra con este enlace, elige una contraseña y desde ahí verás tu ficha, las fotos y el planning.",
-  inviteMailExpiry: "El enlace caduca en 21 días y solo sirve una vez.",
-  appointmentReminderSubject: "Recordatorio de tu cita",
-  appointmentReminderHello: "Hola {name},",
-  appointmentReminderIntro: "Queda una semana para tu cita. Confírmame que te viene bien.",
-  appointmentReminderSoonSubject: "Tu cita es dentro de 48 horas",
-  appointmentReminderSoonIntro: "Tu cita es dentro de 48 horas. Confírmame que seguimos adelante.",
-  appointmentReminderConfirm: "Confirmar la cita",
-  appointmentReminderClose: "Si necesitas cambiarla, respóndeme a este correo.",
+    "Te confirmo que tu área de cliente ya está completamente lista. A través de ella podrás consultar tu ficha, revisar tus fotos y ver todos los detalles de tu servicio.",
+  inviteMailCta: "Para acceder por primera vez, solo haz clic en el siguiente enlace y crea tu contraseña:",
+  inviteMailLink: "Activar mi área y ver fotos",
+  inviteMailExpiry: "📌 Nota: Por seguridad, este enlace es de uso único y caducará en 21 días.",
+  mailHi: "¡Hola, {name}!",
+  appointmentReminderSubject: "¡Falta una semana para nuestra cita, {name}!",
+  appointmentReminderHello: "¡Hola, {name}!",
+  appointmentReminderIntro:
+    "Te escribo para recordarte que queda justo una semana para nuestra sesión. Para poder organizarme y tenerlo todo a punto, por favor confírmame que la fecha te sigue viniendo bien.",
+  appointmentReminderDetails: "Detalles de tu cita:",
+  appointmentReminderSoonSubject: "Recordatorio: Recordatorio de cita",
+  appointmentReminderSoonIntro:
+    "Te escribo para recordarte que falta muy poco para nuestra sesión. Por favor, ayúdame confirmando tu asistencia para mantenerlo todo preparado.",
+  appointmentReminderSoonDetails: "Detalles de tu reserva:",
+  appointmentReminderSoonClose:
+    "(Si necesitas reprogramar o cancelar, simplemente responde a este correo y lo gestiono).",
+  appointmentReminderSoonSignoff: "¡Un abrazo!",
+  appointmentReminderConfirm: "Confirmar mi cita",
+  appointmentReminderClose: "(Si necesitas cambiar el día o la hora, simplemente responde a este correo y lo vemos).",
+  appointmentAmountDue: "Importe pendiente",
+  appointmentHour: "{time} h",
   mailService: "Servicio",
   mailDate: "Fecha",
   mailTime: "Hora",
@@ -776,26 +809,43 @@ export const portalEn: PortalCopy = {
   activationReminderBody:
     "I see you have not finished activating your client area yet. I want to make sure you can reach everything that is yours, and manage it quickly and easily.",
   activationReminderCta: "To activate it, just click the link below and choose your password:",
-  activationReminderWeekSubject: "Your Many Makeups area is still waiting",
+  activationReminderWeekSubject: "{name}, your client area is waiting for you",
   activationReminderWeekBody:
-    "A few days have passed and your area is still not active. Use this link and choose your password.",
-  activationReminderUrgentSubject: "Your access link expires soon",
+    "I am writing because a few days have passed and your client area is still not active.",
+  activationReminderWeekCta:
+    "I want to make sure you can get in without trouble and have everything to hand. It only takes a minute: click the link and choose your password.",
+  activationReminderWeekClose: "(If you have activated it in the last few hours, please ignore this message).",
+  activationReminderUrgentSubject: "{name}, your client area is still waiting to be activated (it expires soon)",
   activationReminderUrgentBody:
-    "Your area is still not active. Please activate it as soon as you can, because the link will expire on {date}.",
+    "I am writing to remind you that your client area is not active yet. I would like you to be able to look through your space in your own time.",
+  activationReminderUrgentCta: "Please note that the link will expire on {date}. You can finish it right now, in just a minute:",
+  activationReminderUrgentClose: "(If you have already done this recently, do not worry, ignore this message).",
+  activationReminderUrgentLink: "Activate my area now",
   activationReminderLink: "Activate my client area",
   activationReminderClose: "(If you have already completed this step recently, please ignore this message).",
   activationReminderSignoff: "Kind regards,",
-  inviteMailSubject: "Your client area at Many Makeups",
+  inviteMailSubject: "Your client area is ready, {name}!",
   inviteMailBody:
-    "Your client area is ready. Open this link, choose a password, and from there you will see your file, the photos and the plan.",
-  inviteMailExpiry: "The link expires in 21 days and works only once.",
-  appointmentReminderSubject: "A reminder of your appointment",
-  appointmentReminderHello: "Hello {name},",
-  appointmentReminderIntro: "Your appointment is one week away. Please confirm that it still suits you.",
-  appointmentReminderSoonSubject: "Your appointment is in 48 hours",
-  appointmentReminderSoonIntro: "Your appointment is in 48 hours. Please confirm that we are still on.",
-  appointmentReminderConfirm: "Confirm the appointment",
-  appointmentReminderClose: "If you need to change it, reply to this email.",
+    "Your client area is completely ready. From there you can look at your file, review your photos and see every detail of your service.",
+  inviteMailCta: "To sign in for the first time, just click the link below and create your password:",
+  inviteMailLink: "Activate my area and see the photos",
+  inviteMailExpiry: "Note: for security, this link works only once and will expire in 21 days.",
+  mailHi: "Hello, {name}!",
+  appointmentReminderSubject: "Our appointment is one week away, {name}!",
+  appointmentReminderHello: "Hello, {name}!",
+  appointmentReminderIntro:
+    "I am writing to remind you that our session is exactly one week away. So I can get everything ready, please confirm that the date still suits you.",
+  appointmentReminderDetails: "Your appointment:",
+  appointmentReminderSoonSubject: "Reminder: appointment reminder",
+  appointmentReminderSoonIntro:
+    "I am writing to remind you that our session is very soon. Please confirm that you are coming, so I can have everything ready.",
+  appointmentReminderSoonDetails: "Your booking:",
+  appointmentReminderSoonClose: "(If you need to reschedule or cancel, just reply to this email and I will take care of it).",
+  appointmentReminderSoonSignoff: "A hug!",
+  appointmentReminderConfirm: "Confirm my appointment",
+  appointmentReminderClose: "(If you need to change the day or the time, just reply to this email and we will sort it out).",
+  appointmentAmountDue: "Amount outstanding",
+  appointmentHour: "{time}",
   mailService: "Service",
   mailDate: "Date",
   mailTime: "Time",
@@ -1162,26 +1212,43 @@ export const portalFr: PortalCopy = {
   activationReminderBody:
     "Je vois que tu n’as pas encore terminé l’activation de ton espace cliente. Je veux m’assurer que tu puisses accéder à tous tes avantages et gérer tes démarches simplement et rapidement.",
   activationReminderCta: "Pour l’activer, il te suffit de cliquer sur le lien ci-dessous et de choisir ton mot de passe :",
-  activationReminderWeekSubject: "Ton espace Many Makeups t’attend encore",
+  activationReminderWeekSubject: "{name}, ton espace cliente t’attend",
   activationReminderWeekBody:
-    "Quelques jours ont passé et ton espace n’est toujours pas activé. Utilise ce lien et choisis ton mot de passe.",
-  activationReminderUrgentSubject: "Ton lien d’accès expire bientôt",
+    "Je t’écris parce que quelques jours ont passé et ton espace cliente n’est toujours pas activé.",
+  activationReminderWeekCta:
+    "Je veux m’assurer que tu puisses entrer sans souci et tout avoir sous la main. Cela ne prend qu’une minute : clique sur le lien et choisis ton mot de passe.",
+  activationReminderWeekClose: "(Si tu l’as activé ces dernières heures, ignore ce message).",
+  activationReminderUrgentSubject: "{name}, ton espace est encore en attente d’activation (il expire bientôt)",
   activationReminderUrgentBody:
-    "Ton espace n’est toujours pas activé. Active-le dès que possible, parce que le lien expirera le {date}.",
+    "Je t’écris pour te rappeler que ton espace cliente n’est pas encore actif. J’aimerais que tu puisses le parcourir tranquillement.",
+  activationReminderUrgentCta: "Le lien expirera le {date}. Tu peux le terminer maintenant, en une minute :",
+  activationReminderUrgentClose: "(Si tu l’as déjà fait récemment, ne t’inquiète pas, ignore ce message).",
+  activationReminderUrgentLink: "Activer mon espace maintenant",
   activationReminderLink: "Activer mon espace cliente",
   activationReminderClose: "(Si tu as déjà fait cette étape récemment, ignore ce message).",
   activationReminderSignoff: "Bien à toi,",
-  inviteMailSubject: "Ton espace cliente chez Many Makeups",
+  inviteMailSubject: "Ton espace cliente est prêt, {name} !",
   inviteMailBody:
-    "Ton espace cliente est prêt. Ouvre ce lien, choisis un mot de passe, et tu y trouveras ta fiche, les photos et le planning.",
-  inviteMailExpiry: "Le lien expire dans 21 jours et ne sert qu’une fois.",
-  appointmentReminderSubject: "Rappel de ton rendez-vous",
-  appointmentReminderHello: "Bonjour {name},",
-  appointmentReminderIntro: "Ton rendez-vous est dans une semaine. Confirme-moi qu’il te convient.",
-  appointmentReminderSoonSubject: "Ton rendez-vous est dans 48 heures",
-  appointmentReminderSoonIntro: "Ton rendez-vous est dans 48 heures. Confirme-moi que nous maintenons.",
-  appointmentReminderConfirm: "Confirmer le rendez-vous",
-  appointmentReminderClose: "S’il faut le changer, réponds à ce message.",
+    "Ton espace cliente est complètement prêt. Tu pourras y consulter ta fiche, revoir tes photos et voir tous les détails de ta prestation.",
+  inviteMailCta: "Pour y entrer la première fois, clique sur le lien ci-dessous et crée ton mot de passe :",
+  inviteMailLink: "Activer mon espace et voir les photos",
+  inviteMailExpiry: "Note : par sécurité, ce lien ne sert qu’une fois et expirera dans 21 jours.",
+  mailHi: "Bonjour, {name} !",
+  appointmentReminderSubject: "Notre rendez-vous est dans une semaine, {name} !",
+  appointmentReminderHello: "Bonjour, {name} !",
+  appointmentReminderIntro:
+    "Je t’écris pour te rappeler que notre séance est dans exactement une semaine. Pour tout préparer, confirme-moi que la date te convient toujours.",
+  appointmentReminderDetails: "Ton rendez-vous :",
+  appointmentReminderSoonSubject: "Rappel : rappel de rendez-vous",
+  appointmentReminderSoonIntro:
+    "Je t’écris pour te rappeler que notre séance est très bientôt. Confirme-moi ta présence, pour que je puisse tout préparer.",
+  appointmentReminderSoonDetails: "Ta réservation :",
+  appointmentReminderSoonClose: "(S’il faut déplacer ou annuler, réponds à ce message et je m’en occupe).",
+  appointmentReminderSoonSignoff: "Je t’embrasse !",
+  appointmentReminderConfirm: "Confirmer mon rendez-vous",
+  appointmentReminderClose: "(S’il faut changer le jour ou l’heure, réponds à ce message et on s’arrange).",
+  appointmentAmountDue: "Montant restant",
+  appointmentHour: "{time} h",
   mailService: "Prestation",
   mailDate: "Date",
   mailTime: "Heure",

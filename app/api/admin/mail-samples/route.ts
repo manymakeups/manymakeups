@@ -13,14 +13,33 @@ export async function POST(request: Request) {
   const link = "https://www.manymakeups.com/area-novia";
   const signoff = [t.recoverMailSignoff];
   const footer = { href: link, label: t.unsubRemindersFooter };
-  const appointmentRows = [
-    { label: t.mailService, value: "Prueba" },
-    { label: t.mailDate, value: "sábado, 24 de octubre de 2026" },
-    { label: t.mailTime, value: "12:30" },
-    { label: t.mailPlace, value: "Estudio" },
-    { label: t.mailAmount, value: "80,00 €" },
-  ];
+  const weekDetails = [
+    t.appointmentReminderDetails,
+    `${t.mailService}: Prueba`,
+    `${t.mailDate}: Sábado, 24 de octubre de 2026`,
+    `${t.mailTime}: 12:30 h`,
+    `${t.mailPlace}: Estudio`,
+    `${t.mailAmount}: 80,00 €`,
+  ].join("\n");
+  const soonDetails = [
+    t.appointmentReminderSoonDetails,
+    `${t.mailService}: Prueba`,
+    `${t.mailDate}: Sábado, 24 de octubre de 2026`,
+    `${t.mailTime}: 12:30 h`,
+    `${t.mailPlace}: Estudio`,
+    `${t.appointmentAmountDue}: 80,00 €`,
+  ].join("\n");
   const samples = [
+    {
+      subject: interpolate(t.inviteMailSubject, { name: "Ana" }),
+      blocks: [
+        { text: interpolate(t.mailHi, { name: "Ana" }) },
+        { text: t.inviteMailBody },
+        { text: t.inviteMailCta },
+        { href: link, label: t.inviteMailLink },
+        { text: t.inviteMailExpiry, muted: true as const },
+      ],
+    },
     {
       subject: t.activationReminderSubject,
       signoff: [t.activationReminderSignoff],
@@ -33,23 +52,44 @@ export async function POST(request: Request) {
       ],
     },
     {
-      subject: t.appointmentReminderSubject,
+      subject: interpolate(t.activationReminderWeekSubject, { name: "Ana" }),
       blocks: [
-        { text: "Hola Ana," },
+        { text: interpolate(t.mailHi, { name: "Ana" }) },
+        { text: t.activationReminderWeekBody },
+        { text: t.activationReminderWeekCta },
+        { href: link, label: t.activationReminderLink },
+        { text: t.activationReminderWeekClose, muted: true as const },
+      ],
+    },
+    {
+      subject: interpolate(t.activationReminderUrgentSubject, { name: "Ana" }),
+      blocks: [
+        { text: interpolate(t.mailHi, { name: "Ana" }) },
+        { text: t.activationReminderUrgentBody },
+        { text: interpolate(t.activationReminderUrgentCta, { date: "8 de noviembre de 2026" }) },
+        { href: link, label: t.activationReminderUrgentLink },
+        { text: t.activationReminderUrgentClose, muted: true as const },
+      ],
+    },
+    {
+      subject: interpolate(t.appointmentReminderSubject, { name: "Ana" }),
+      blocks: [
+        { text: interpolate(t.mailHi, { name: "Ana" }) },
         { text: t.appointmentReminderIntro },
-        { rows: appointmentRows },
+        { text: weekDetails },
         { href: link, label: t.appointmentReminderConfirm },
         { text: t.appointmentReminderClose, muted: true as const },
       ],
     },
     {
       subject: t.appointmentReminderSoonSubject,
+      signoff: [t.appointmentReminderSoonSignoff],
       blocks: [
-        { text: "Hola Ana," },
+        { text: interpolate(t.mailHi, { name: "Ana" }) },
         { text: t.appointmentReminderSoonIntro },
-        { rows: appointmentRows },
+        { text: soonDetails },
         { href: link, label: t.appointmentReminderConfirm },
-        { text: t.appointmentReminderClose, muted: true as const },
+        { text: t.appointmentReminderSoonClose, muted: true as const },
       ],
     },
     {

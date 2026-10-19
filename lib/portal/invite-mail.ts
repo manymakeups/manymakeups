@@ -15,12 +15,13 @@ export function mailInvite(client: ClientRecord) {
   const mail = brandedClientEmail({
     lang: locale,
     blocks: [
-      { text: interpolate(t.activationReminderHello, { name }) },
+      { text: interpolate(t.mailHi, { name }) },
       { text: t.inviteMailBody },
-      { href: link, label: t.activationReminderLink },
+      { text: t.inviteMailCta },
+      { href: link, label: t.inviteMailLink },
       { text: t.inviteMailExpiry, muted: true },
     ],
     signoff: [t.recoverMailSignoff],
   });
-  return notifyEmail(client.email, t.inviteMailSubject, mail.text, mail.html);
+  return notifyEmail(client.email, interpolate(t.inviteMailSubject, { name }), mail.text, mail.html);
 }
