@@ -14,6 +14,7 @@ import { PremiumServices } from "@/app/components/portal/PremiumServices";
 import { LookNotesForm, WorkForm } from "@/app/components/portal/WorkBlock";
 import { portalEs } from "@/lib/i18n/portal-messages";
 import { companionHeading, fullName } from "@/lib/portal/names";
+import { FilePreview } from "@/app/components/portal/FilePreview";
 import { portalFileHref } from "@/lib/portal/files";
 import {
   CONTRACTOR_TRIAL_PHOTOS,
@@ -417,9 +418,11 @@ export default async function StudioClientPage({
                     <p>{file.name}</p>
                   </div>
                   <div className="flex gap-4">
-                    <a className="btn-atelier" href={portalFileHref(client.id, file.id, true)}>
-                      Ver
-                    </a>
+                    <FilePreview
+                      href={portalFileHref(client.id, file.id)}
+                      label={file.name}
+                      className="btn-atelier"
+                    />
                     <DeleteFileButton
                       id={file.id}
                       clientId={client.id}

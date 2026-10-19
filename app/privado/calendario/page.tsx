@@ -2,8 +2,9 @@ import { AgendaBoard } from "@/app/components/portal/AgendaBoard";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { StudioAside } from "@/app/components/portal/StudioAside";
 import { fetchCalendarEvents, monthCells, parseMonth, madridToday } from "@/lib/portal/calendar";
+import { fullName } from "@/lib/portal/names";
 import { requireAdmin } from "@/lib/portal/session";
-import { getStudioCalendars } from "@/lib/portal/store";
+import { getStudioCalendars, listClients } from "@/lib/portal/store";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
@@ -17,11 +18,12 @@ export const metadata: Metadata = {
 export default async function StudioCalendarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ mes?: string; dia?: string; error?: string }>;
+  searchParams: Promise<{ mes?: string; dia?: string; error?: string; ok?: string }>;
 }) {
   const admin = await requireAdmin();
   if (!admin) redirect("/privado");
-  const { mes, dia, error } = await searchParams;
+  const { mes, dia, error, ok } = await searchParams;
+  const clients = await listClients();
   const { primary, google, extra } = await getStudioCalendars();
   const feeds = [
     { url: primary, source: "iPhone" },
@@ -75,6 +77,10 @@ export default async function StudioCalendarPage({
       aside={<StudioAside />}
     >
       <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
+      {error === "datos" ? <PortalNotice>Elige una clienta para asignar la cita.</PortalNotice> : null}
+      {ok === "asignada" ? (
+        <PortalNotice>Cita asignada. La clienta la ve en su agenda como planificada.</PortalNotice>
+      ) : null}
       {error === "descarga" || loaded.error ? (
         <PortalNotice>
           No he podido leer {loaded.error ? loaded.error : "el calendario"}. Comprueba que el calendario público sigue
@@ -83,7 +89,30 @@ export default async function StudioCalendarPage({
       ) : null}
 
       {ready ? (
-        <AgendaBoard events={events} today={today} initialYear={year} initialMonth={month} initialDay={selected} />
+        <AgendaBoard
+          events={events}
+          today={today}
+          initialYear={year}
+          initialMonth={month}
+          initialDay={selected}
+          clients={clients.map((client) => ({
+            id: client.id,
+            name: fullName(client.event, client.name),
+            email: client.email,
+          }))}
+          assignments={clients.flatMap((client) =>
+            client.appointments.flatMap((item) => {
+              if (!item.externalId?.startsWith("cal:")) return [];
+              return [
+                {
+                  eventId: item.externalId,
+                  clientId: client.id,
+                  clientName: fullName(client.event, client.name),
+                },
+              ];
+            }),
+          )}
+        />
       ) : null}
       </div>
     </PortalFrame>

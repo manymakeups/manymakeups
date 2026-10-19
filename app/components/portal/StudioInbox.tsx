@@ -1,5 +1,6 @@
 "use client";
 
+import { FilePreview } from "@/app/components/portal/FilePreview";
 import { portalFileHref } from "@/lib/portal/files";
 import { noticeTitle } from "@/lib/portal/notice-text";
 import type { StudioNotice, StudioNoticeLink } from "@/lib/portal/types";
@@ -209,9 +210,7 @@ export function StudioInbox({
                 <ul className="mt-3 flex flex-col gap-2">
                   {links.map((link) => (
                     <li key={link.href}>
-                      <a className="text-sm underline decoration-gilt/60 underline-offset-4 hover:text-gilt" href={link.href} target="_blank" rel="noreferrer">
-                        Ver {link.label}
-                      </a>
+                      <FilePreview href={link.href} label={link.label} />
                     </li>
                   ))}
                 </ul>

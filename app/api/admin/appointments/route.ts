@@ -1,7 +1,7 @@
 import { newId } from "@/lib/portal/crypto";
 import { go } from "@/lib/portal/http";
 import { requireAdmin } from "@/lib/portal/session";
-import { getClient, saveClient } from "@/lib/portal/store";
+import { getClient, listClients, saveClient } from "@/lib/portal/store";
 import { APPOINTMENT_STATUSES, APPOINTMENT_TITLES, type Appointment, type AppointmentStatus, type ClientRecord } from "@/lib/portal/types";
 
 function text(value: FormDataEntryValue | null) {
@@ -29,6 +29,7 @@ export async function POST(request: Request) {
   const admin = await requireAdmin();
   if (!admin) return go(request, "/privado");
   const form = await request.formData();
+  if (text(form.get("intent")) === "assign") return assignFromCalendar(request, form);
   const id = String(form.get("clientId") ?? "");
   const client = await getClient(id);
   if (!client) return go(request, "/privado/novias?error=datos");
@@ -81,6 +82,57 @@ export async function POST(request: Request) {
   }
   await saveClient(client);
   return go(request, `/privado/novias/${client.id}?tab=agenda&ok=agenda`);
+}
+
+async function assignFromCalendar(request: Request, form: FormData) {
+  const externalId = text(form.get("externalId")).slice(0, 240);
+  const nextUrl = text(form.get("next"));
+  const back = nextUrl.startsWith("/privado/calendario") ? nextUrl : "/privado/calendario";
+  const join = back.includes("?") ? "&" : "?";
+  const fail = () => go(request, `${back}${join}error=datos`);
+  if (!externalId.startsWith("cal:")) return fail();
+  const targetId = text(form.get("clientId"));
+  const target = await getClient(targetId);
+  if (!target) return fail();
+  const next = readAppointment(form);
+  if (!next.date) return fail();
+  const owner = (await listClients()).find((item) => item.appointments.some((entry) => entry.externalId === externalId));
+  const existing = owner?.appointments.find((entry) => entry.externalId === externalId);
+  if (owner && owner.id !== target.id && existing) {
+    const previous = await getClient(owner.id);
+    if (previous) {
+      previous.appointments = previous.appointments.filter((entry) => entry.id !== existing.id);
+      previous.history = previous.history.filter((entry) => entry.appointmentId !== existing.id);
+      await saveClient(previous);
+    }
+  }
+  const current = await getClient(target.id);
+  if (!current) return fail();
+  const slot = current.appointments.find((entry) => entry.externalId === externalId);
+  if (slot) {
+    slot.title = next.title;
+    slot.date = next.date;
+    slot.time = next.time;
+    slot.place = next.place;
+    slot.notes = next.notes;
+    if (slot.status === "anulada") slot.status = "planificada";
+  } else {
+    const appointment: Appointment = {
+      id: existing && owner?.id !== target.id ? existing.id : newId(),
+      title: next.title,
+      date: next.date,
+      time: next.time,
+      place: next.place,
+      notes: next.notes,
+      amount: existing?.amount ?? 0,
+      status: existing && existing.status !== "anulada" ? existing.status : "planificada",
+      externalId,
+    };
+    current.appointments.push(appointment);
+    if (appointment.amount > 0) syncCharge(current, appointment);
+  }
+  await saveClient(current);
+  return go(request, `${back}${join}ok=asignada`);
 }
 
 function readAppointment(form: FormData) {

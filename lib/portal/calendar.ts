@@ -1,3 +1,7 @@
+export function calendarAssignmentId(eventId: string) {
+  return `cal:${eventId}`.slice(0, 240);
+}
+
 export type RemoteEvent = {
   id: string;
   date: string;

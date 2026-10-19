@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+  calendarAssignmentId,
   dayLabel,
   monthCells,
   monthLabel,
@@ -9,6 +10,27 @@ import {
   weekdayLabels,
   type RemoteEvent,
 } from "@/lib/portal/calendar";
+import { APPOINTMENT_TITLES } from "@/lib/portal/types";
+
+type ClientOption = { id: string; name: string; email: string };
+type Assignment = { eventId: string; clientId: string; clientName: string };
+
+function fold(value: string) {
+  return value.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+}
+
+function guessTitle(title: string) {
+  const value = fold(title);
+  if (value.includes("entrevista")) return "Entrevista";
+  if (value.includes("curso")) return "Curso";
+  if (value.includes("ojo")) return "Tratamientos de ojos";
+  if (value.includes("facial") || value.includes("tratamiento")) return "Tratamiento facial";
+  if (value.includes("maquillaje") && value.includes("peinado")) return "Maquillaje y peinado";
+  if (value.includes("peinado")) return "Peinado";
+  if (value.includes("maquillaje")) return "Maquillaje";
+  if (value.includes("prueba")) return "Prueba";
+  return "Prueba";
+}
 
 function pickDay(cells: Array<string | null>, today: string, events: RemoteEvent[]) {
   if (cells.includes(today)) return today;
@@ -21,16 +43,33 @@ export function AgendaBoard({
   initialYear,
   initialMonth,
   initialDay,
+  clients,
+  assignments,
 }: {
   events: RemoteEvent[];
   today: string;
   initialYear: number;
   initialMonth: number;
   initialDay: string;
+  clients: ClientOption[];
+  assignments: Assignment[];
 }) {
   const [year, setYear] = useState(initialYear);
   const [month, setMonth] = useState(initialMonth);
   const [selected, setSelected] = useState(initialDay);
+  const [assigning, setAssigning] = useState<RemoteEvent | null>(null);
+  const [clientId, setClientId] = useState("");
+  const [query, setQuery] = useState("");
+  const assignedTo = useMemo(() => {
+    const map = new Map<string, Assignment>();
+    for (const item of assignments) map.set(item.eventId, item);
+    return map;
+  }, [assignments]);
+  const matches = useMemo(() => {
+    const needle = fold(query.trim());
+    if (!needle) return clients;
+    return clients.filter((client) => fold(`${client.name} ${client.email}`).includes(needle));
+  }, [clients, query]);
   const cells = monthCells(year, month);
   const prefix = `${year}-${String(month).padStart(2, "0")}`;
   const inMonth = useMemo(() => events.filter((event) => event.date.startsWith(prefix)), [events, prefix]);
@@ -53,6 +92,21 @@ export function AgendaBoard({
     setSelected(nextDay);
     const stamp = `${nextYear}-${String(nextMonth).padStart(2, "0")}`;
     window.history.replaceState(null, "", `/privado/calendario?mes=${stamp}&dia=${nextDay}`);
+  }
+
+  useEffect(() => {
+    if (!assigning) return;
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setAssigning(null);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [assigning]);
+
+  function openAssign(event: RemoteEvent) {
+    setAssigning(event);
+    setClientId(assignedTo.get(calendarAssignmentId(event.id))?.clientId ?? "");
+    setQuery("");
   }
 
   function showDay(date: string) {
@@ -131,20 +185,118 @@ export function AgendaBoard({
         <h3 className="font-serif text-3xl">{dayLabel(selected)}</h3>
         {dayEvents.length ? (
           <ul className="mt-4 divide-y divide-ink/10 border border-ink/10">
-            {dayEvents.map((event) => (
-              <li key={event.id} className="px-4 py-4">
-                <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">{event.time || "Todo el día"}</p>
-                <p className="mt-1 font-serif text-2xl">{event.title}</p>
-                {event.source ? <p className="mt-1 text-[0.68rem] uppercase tracking-[0.16em] text-ash">{event.source}</p> : null}
-                {event.place ? <p className="mt-1 text-sm text-ash">{event.place}</p> : null}
-                {event.notes ? <p className="mt-2 whitespace-pre-wrap text-sm text-ash">{event.notes}</p> : null}
+            {dayEvents.map((event) => {
+              const assigned = assignedTo.get(calendarAssignmentId(event.id));
+              return (
+              <li key={event.id} className="flex flex-wrap items-start justify-between gap-4 px-4 py-4">
+                <div className="min-w-0">
+                  <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">{event.time || "Todo el día"}</p>
+                  <p className="mt-1 font-serif text-2xl">{event.title}</p>
+                  {event.source ? <p className="mt-1 text-[0.68rem] uppercase tracking-[0.16em] text-ash">{event.source}</p> : null}
+                  {event.place ? <p className="mt-1 text-sm text-ash">{event.place}</p> : null}
+                  {event.notes ? <p className="mt-2 whitespace-pre-wrap text-sm text-ash">{event.notes}</p> : null}
+                  {assigned ? (
+                    <a className="mt-2 inline-block text-sm text-gilt underline decoration-gilt/40 underline-offset-4" href={`/privado/novias/${assigned.clientId}?tab=agenda`}>
+                      Asignada a {assigned.clientName}
+                    </a>
+                  ) : null}
+                </div>
+                <button type="button" className="btn-atelier shrink-0" onClick={() => openAssign(event)}>
+                  {assigned ? "Cambiar clienta" : "Asignar cita a clienta"}
+                </button>
               </li>
-            ))}
+              );
+            })}
           </ul>
         ) : (
           <p className="mt-4 text-sm text-ash">Este día no hay citas.</p>
         )}
       </section>
+      {assigning ? (
+        <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-ink/40 p-3 sm:items-center sm:p-6" onClick={() => setAssigning(null)}>
+          <div
+            className="max-h-[92dvh] w-full max-w-lg overflow-y-auto bg-porcelain p-6 shadow-[0_20px_60px_rgba(26,22,19,0.16)]"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Asignar cita a clienta"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 className="font-serif text-3xl">Asignar cita a clienta</h2>
+            <p className="mt-2 text-sm text-ash">{assigning.title}</p>
+            <form key={assigning.id} action="/api/admin/appointments" method="post" className="mt-6 grid gap-4">
+              <input type="hidden" name="intent" value="assign" />
+              <input type="hidden" name="externalId" value={calendarAssignmentId(assigning.id)} />
+              <input type="hidden" name="clientId" value={clientId} />
+              <input type="hidden" name="next" value={`/privado/calendario?mes=${prefix}&dia=${assigning.date}`} />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="field-label">
+                  Fecha
+                  <input className="field" name="date" type="date" required defaultValue={assigning.date} />
+                </label>
+                <label className="field-label">
+                  Hora
+                  <input className="field" name="time" type="time" defaultValue={assigning.time} />
+                </label>
+              </div>
+              <label className="field-label">
+                Tipo de cita
+                <select className="field" name="title" defaultValue={guessTitle(assigning.title)}>
+                  {APPOINTMENT_TITLES.map((title) => (
+                    <option key={title} value={title}>
+                      {title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field-label">
+                Lugar
+                <input className="field" name="place" defaultValue={assigning.place} />
+              </label>
+              <label className="field-label">
+                Notas
+                <textarea className="field min-h-20" name="notes" defaultValue={assigning.notes} />
+              </label>
+              <label className="field-label">
+                Clienta
+                <input
+                  className="field"
+                  value={query}
+                  placeholder="Buscar por nombre o email"
+                  onChange={(event) => setQuery(event.target.value)}
+                />
+              </label>
+              <ul className="max-h-48 overflow-y-auto border border-ink/10">
+                {matches.length ? (
+                  matches.map((client) => (
+                    <li key={client.id}>
+                      <button
+                        type="button"
+                        className={`block w-full px-4 py-3 text-left hover:bg-linen/70 ${clientId === client.id ? "bg-linen" : ""}`}
+                        onClick={() => setClientId(client.id)}
+                      >
+                        <span className="block text-sm">{client.name}</span>
+                        <span className="block text-xs text-ash">{client.email}</span>
+                      </button>
+                    </li>
+                  ))
+                ) : (
+                  <li className="px-4 py-3 text-sm text-ash">Nadie coincide con esa búsqueda.</li>
+                )}
+              </ul>
+              <button className="btn-atelier-solid btn-atelier self-start" type="submit" disabled={!clientId}>
+                Asignar
+              </button>
+            </form>
+            <button
+              type="button"
+              className="mt-4 text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink"
+              onClick={() => setAssigning(null)}
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }
