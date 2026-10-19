@@ -34,6 +34,7 @@ function planningRows(client: ClientRecord) {
   ];
   const rows: { label: string; value: string }[] = [];
   if (planning.location) rows.push({ label: t.planningLocation, value: planning.location });
+  if (planning.address) rows.push({ label: t.planningAddress, value: planning.address });
   if (client.event.eventDate) {
     rows.push({
       label: t.mailDate,
@@ -97,6 +98,7 @@ export async function mailPremiumPlanning(client: ClientRecord, service: "glitte
   const title = service === "glitter" ? t.glitterBar : t.beautyCorner;
   const rows: { label: string; value: string }[] = [];
   if (plan.location) rows.push({ label: t.premiumLocation, value: plan.location });
+  if (plan.address) rows.push({ label: t.planningAddress, value: plan.address });
   if (client.event.eventDate) {
     rows.push({
       label: t.mailDate,

@@ -1,6 +1,9 @@
 import { goPortal } from "@/lib/portal/http";
+import { fullName } from "@/lib/portal/names";
+import { notifyEmail } from "@/lib/portal/notify";
 import { getClient, saveClient } from "@/lib/portal/store";
 import { unsubscribeMatches } from "@/lib/portal/unsubscribe";
+import { site } from "@/lib/site";
 
 export async function POST(request: Request) {
   const form = await request.formData();
@@ -14,5 +17,13 @@ export async function POST(request: Request) {
   if (kind === "recordatorios") client.remindersOptOut = true;
   if (kind === "comercial") client.commercialOptOut = true;
   await saveClient(client);
+  if (kind === "comercial") {
+    const name = fullName(client.event, client.name);
+    await notifyEmail(
+      site.email,
+      `Baja de difusión · ${name}`,
+      `${name} (${client.email}) se ha dado de baja de las comunicaciones comerciales. Comprueba en Difusión que el check de no enviar está marcado.`,
+    );
+  }
   return goPortal(request, `${back}&ok=1`);
 }

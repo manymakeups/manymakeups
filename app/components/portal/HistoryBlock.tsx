@@ -205,6 +205,7 @@ export function BudgetView({
   clientId,
   expense,
   expenseLabel = "Nuevo gasto",
+  composer,
   locale = "es",
   contractorLabel,
 }: {
@@ -215,6 +216,7 @@ export function BudgetView({
   clientId?: string;
   expense?: ReactNode;
   expenseLabel?: string;
+  composer?: { clientId: string; returnTab?: string };
   locale?: Locale;
   contractorLabel?: string;
 }) {
@@ -343,12 +345,16 @@ export function BudgetView({
                   <p className="text-sm text-ash">{copy.budgetCareEmpty}</p>
                 ),
               },
-              ...(expense
+              ...(expense || composer
                 ? [
                     {
                       id: "gasto",
                       label: expenseLabel,
-                      body: expense,
+                      body: composer ? (
+                        <HistoryComposer clientId={composer.clientId} returnTab={composer.returnTab} assignee={selected} />
+                      ) : (
+                        expense
+                      ),
                     },
                   ]
                 : []),
@@ -598,10 +604,12 @@ export function HistoryComposer({
   clientId,
   returnTab,
   people = [],
+  assignee,
 }: {
   clientId: string;
   returnTab?: string;
   people?: { id: string; label: string }[];
+  assignee?: string;
 }) {
   const [kind, setKind] = useState<HistoryKind>("servicio");
   const [title, setTitle] = useState<string>(SERVICE_TITLES[0]);
@@ -639,7 +647,9 @@ export function HistoryComposer({
             <input className="field" name="customTitle" required />
           </label>
         ) : null}
-        {people.length ? (
+        {assignee ? (
+          <input type="hidden" name="assignee" value={assignee === "all" ? "contractor" : assignee} />
+        ) : people.length ? (
           <label className="field-label">
             Persona
             <select className="field" name="assignee" defaultValue={people[0]?.id || "contractor"}>

@@ -1,6 +1,7 @@
+import { NextResponse } from "next/server";
+import { newId } from "@/lib/portal/crypto";
 import { goPortal } from "@/lib/portal/http";
 import { valueChange, valueChanges } from "@/lib/portal/notice-text";
-import { clientLabel, notifyStudio } from "@/lib/portal/notify";
 import { requireClient } from "@/lib/portal/session";
 import { getClient, saveClient } from "@/lib/portal/store";
 
@@ -14,6 +15,31 @@ export async function POST(request: Request) {
   const client = await getClient(session.sub);
   if (!client) return goPortal(request, "/area-novia");
   const form = await request.formData();
+  if (text(form.get("intent")) === "book") {
+    const date = text(form.get("date"));
+    const externalId = text(form.get("externalId")).slice(0, 240);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return NextResponse.json({ ok: false }, { status: 400 });
+    if (externalId && client.appointments.some((entry) => entry.externalId === externalId)) {
+      return NextResponse.json({ ok: true });
+    }
+    client.appointments.push({
+      id: newId(),
+      title: "Cita",
+      date,
+      time: "",
+      place: "",
+      notes: "",
+      amount: 0,
+      status: "planificada",
+      externalId: externalId || undefined,
+    });
+    await saveClient(client, {
+      kind: "agenda",
+      scope: "contratante",
+      message: `Cita planificada · ${date}`,
+    });
+    return NextResponse.json({ ok: true });
+  }
   const id = text(form.get("id"));
   const item = client.appointments.find((entry) => entry.id === id);
   const back = "/area-novia/panel?tab=agenda&agenda=historico";
@@ -31,7 +57,6 @@ export async function POST(request: Request) {
     const when = [previous.date, previous.time, previous.place].filter(Boolean).join(" · ");
     const message = valueChange(`Agenda · ${previous.title} · Estado`, when || "Planificada", "Anulada");
     await saveClient(client, { kind: "agenda", scope: "contratante", message });
-    await notifyStudio(`Cita anulada · ${clientLabel(client)}`, message.split("\n"));
     return goPortal(request, `${back}&ok=agenda`);
   }
   const date = text(form.get("date"));
@@ -52,6 +77,5 @@ export async function POST(request: Request) {
     scope: "contratante",
     message,
   });
-  await notifyStudio(`Cita modificada · ${clientLabel(client)}`, message.split("\n"));
   return goPortal(request, `${back}&ok=agenda`);
 }

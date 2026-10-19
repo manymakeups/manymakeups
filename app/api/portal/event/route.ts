@@ -1,7 +1,6 @@
 import { contractorFromForm } from "@/lib/portal/event-parse";
 import { goPortal } from "@/lib/portal/http";
 import { eventChangeMessage } from "@/lib/portal/notice-text";
-import { clientLabel, notifyStudio } from "@/lib/portal/notify";
 import { requireClient } from "@/lib/portal/session";
 import { getClient, saveClient } from "@/lib/portal/store";
 
@@ -23,7 +22,6 @@ export async function POST(request: Request) {
       scope: "contratante",
       message,
     });
-    await notifyStudio(`Ficha de evento · ${clientLabel(client)}`, message.split("\n"));
     return goPortal(request, "/area-novia/panel?tab=contratante&sec=comentarios&ok=evento");
   }
   if (client.event.contractorLocked) {
@@ -35,12 +33,16 @@ export async function POST(request: Request) {
     contractorLocked: true,
   };
   client.event = event;
+  if (form.get("commercialAsked") === "1") {
+    const consent = form.get("commercialConsent") === "1";
+    client.commercialConsent = consent;
+    client.commercialOptOut = !consent;
+  }
   const message = eventChangeMessage(previous, event);
   await saveClient(client, {
     kind: "ficha",
     scope: "contratante",
     message,
   });
-  await notifyStudio(`Ficha de evento · ${clientLabel(client)}`, message.split("\n"));
   return goPortal(request, "/area-novia/panel?tab=contratante&ok=evento");
 }

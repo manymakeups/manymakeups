@@ -16,6 +16,7 @@ function sideFromForm(form: FormData): SidePlanning {
   return {
     on: true,
     location: text(form.get("location")),
+    address: text(form.get("address")),
     arrivalTime: text(form.get("arrivalTime")),
     arrivalEnd: text(form.get("arrivalEnd")),
     start: text(form.get("start")),

@@ -1,5 +1,4 @@
 import { goPortal } from "@/lib/portal/http";
-import { clientLabel, notifyStudio } from "@/lib/portal/notify";
 import { requireClient } from "@/lib/portal/session";
 import { addStudioNotice, getClient } from "@/lib/portal/store";
 import { personTitle, valueChange } from "@/lib/portal/notice-text";
@@ -36,6 +35,5 @@ export async function POST(request: Request) {
     message: `${where}\n\n${message}`,
     detail,
   });
-  await notifyStudio(`Cambio solicitado · ${clientLabel(client)}`, detail.split("\n"));
   return goPortal(request, `${back}&ok=cambio`);
 }

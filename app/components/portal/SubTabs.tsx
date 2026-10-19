@@ -255,6 +255,7 @@ function EventFilters({
   trialComments,
   planning,
   bars = false,
+  showTrial = true,
 }: {
   labels: EventLabels;
   section?: string;
@@ -267,9 +268,10 @@ function EventFilters({
   trialComments: ReactNode;
   planning?: ReactNode;
   bars?: boolean;
+  showTrial?: boolean;
 }) {
   const start = eventFocus(section);
-  const [area, setArea] = useState(start.area);
+  const [area, setArea] = useState(!showTrial && start.area === "prueba" ? "datos" : start.area);
   const [look, setLook] = useState(start.look);
   const [trial, setTrial] = useState(start.trial);
   const panels = [
@@ -288,7 +290,7 @@ function EventFilters({
         <select className="field min-w-0 flex-1" aria-label="Sección" value={area} onChange={(event) => setArea(event.target.value)}>
           <option value="datos">{labels.data}</option>
           <option value="inspiraciones">{labels.inspirations}</option>
-          <option value="prueba">{labels.trial}</option>
+          {showTrial ? <option value="prueba">{labels.trial}</option> : null}
           {planning ? <option value="planning">{labels.planning || "Planning"}</option> : null}
         </select>
         {area === "inspiraciones" ? (
@@ -320,7 +322,7 @@ function EventFilters({
             tabs={[
               { id: "datos", label: labels.data },
               { id: "inspiraciones", label: labels.inspirations },
-              { id: "prueba", label: labels.trial },
+              ...(showTrial ? [{ id: "prueba", label: labels.trial }] : []),
               ...(planning ? [{ id: "planning", label: labels.planning || "Planning" }] : []),
             ]}
           />
@@ -388,6 +390,7 @@ export function EventSections({
   trialComments,
   planning,
   variant = "tabs",
+  showTrial = true,
 }: {
   labels: EventLabels;
   section?: string;
@@ -400,6 +403,7 @@ export function EventSections({
   trialComments: ReactNode;
   planning?: ReactNode;
   variant?: "tabs" | "filters" | "responsive";
+  showTrial?: boolean;
 }) {
   if (variant === "filters" || variant === "responsive") {
     return (
@@ -415,16 +419,16 @@ export function EventSections({
         hairProducts={hairProducts}
         trialComments={trialComments}
         planning={planning}
+        showTrial={showTrial}
       />
     );
   }
   const focus = eventFocus(section);
+  const initial = !showTrial && focus.area === "prueba" ? "datos" : focus.area === "prueba" || focus.area === "inspiraciones" || focus.area === "planning" ? focus.area : "datos";
   return (
     <SubTabs
       fill
-      initial={
-        focus.area === "prueba" || focus.area === "inspiraciones" || focus.area === "planning" ? focus.area : "datos"
-      }
+      initial={initial}
       tabs={[
         { id: "datos", label: labels.data, body: details },
         {
@@ -442,36 +446,40 @@ export function EventSections({
             />
           ),
         },
-        {
-          id: "prueba",
-          label: labels.trial,
-          nested: true,
-          body: (
-            <SubTabs
-              fill
-              initial={focus.trial}
-              tabs={[
-                { id: "fotos", label: labels.photos, body: photos },
-                {
-                  id: "productos",
-                  label: labels.products,
-                  nested: true,
-                  body: (
-                    <SubTabs
-                      fill
-                      initial={focus.look}
-                      tabs={[
-                        { id: "maquillaje", label: labels.makeup, body: makeupProducts },
-                        { id: "peinado", label: labels.hair, body: hairProducts },
-                      ]}
-                    />
-                  ),
-                },
-                { id: "comentarios", label: labels.comments, body: trialComments },
-              ]}
-            />
-          ),
-        },
+        ...(showTrial
+          ? [
+              {
+                id: "prueba",
+                label: labels.trial,
+                nested: true,
+                body: (
+                  <SubTabs
+                    fill
+                    initial={focus.trial}
+                    tabs={[
+                      { id: "fotos", label: labels.photos, body: photos },
+                      {
+                        id: "productos",
+                        label: labels.products,
+                        nested: true,
+                        body: (
+                          <SubTabs
+                            fill
+                            initial={focus.look}
+                            tabs={[
+                              { id: "maquillaje", label: labels.makeup, body: makeupProducts },
+                              { id: "peinado", label: labels.hair, body: hairProducts },
+                            ]}
+                          />
+                        ),
+                      },
+                      { id: "comentarios", label: labels.comments, body: trialComments },
+                    ]}
+                  />
+                ),
+              },
+            ]
+          : []),
         ...(planning
           ? [{ id: "planning", label: labels.planning || "Planning", body: planning }]
           : []),

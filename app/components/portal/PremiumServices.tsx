@@ -26,6 +26,10 @@ function SideForm({
         Ubicación
         <input className="field" name="location" defaultValue={plan.location} />
       </label>
+      <label className="field-label">
+        Dirección
+        <input className="field" name="address" defaultValue={plan.address} />
+      </label>
       <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">Llegada y montaje</p>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="field-label">

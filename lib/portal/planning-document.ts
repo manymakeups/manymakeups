@@ -253,6 +253,7 @@ export async function planningPdfFor(client: ClientRecord, kind: PlanningPdfKind
   const side = kind === "glitter" ? event.planning.glitter : kind === "beauty" ? event.planning.beauty : null;
   const title = kind === "glitter" ? copy.glitterBar : kind === "beauty" ? copy.beautyCorner : copy.planningTab;
   const location = side ? side.location : event.planning.location;
+  const address = side ? side.address : event.planning.address;
   const rows = side
     ? sidePlanningRows({ ...side, on: true }, title, copy)
     : planningTimeline(event.planning, peopleOf(client, copy), copy);
@@ -275,6 +276,7 @@ export async function planningPdfFor(client: ClientRecord, kind: PlanningPdfKind
   sheet.kicker(title);
   if (date) sheet.quiet(date);
   if (location.trim()) sheet.quiet(location);
+  if (address.trim()) sheet.quiet(address);
   sheet.y -= 6;
 
   if (premium) {

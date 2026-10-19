@@ -37,15 +37,8 @@ export default async function StudioInboxPage({
           ? `Tienes ${unread} aviso${unread === 1 ? "" : "s"} sin leer.`
           : "Cuando una clienta cambia algo, sube o quita fotos, o escribe, el aviso aparece aquí."
       }
-      aside={
-        <StudioAside
-          extra={
-            <a className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink" href="/privado/novias">
-              Clientas
-            </a>
-          }
-        />
-      }
+      studio
+      aside={<StudioAside />}
     >
       <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
       <MailSetupNotice />
@@ -66,6 +59,7 @@ export default async function StudioInboxPage({
             id: client.id,
             name: fullName(client.event, client.name),
             email: client.email,
+            files: [...client.inspiration, ...client.documents].map((file) => ({ id: file.id, name: file.name })),
           }))}
         />
       ) : (

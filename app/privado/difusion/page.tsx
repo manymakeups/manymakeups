@@ -32,19 +32,23 @@ export default async function BroadcastPage({
       kicker="Estudio"
       title="Difusión"
       lead="Información comercial para las clientas que ya han activado su área. Quien se da de baja no entra en el envío."
+      studio
       aside={<StudioAside />}
     >
       <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
         <MailSetupNotice />
         {error === "datos" ? <PortalNotice>Escribe un asunto y un mensaje.</PortalNotice> : null}
         {error === "vacio" ? <PortalNotice>No hay destinatarias para este envío.</PortalNotice> : null}
+        {error === "archivo" ? (
+          <PortalNotice>El archivo tiene que ser un PDF o una imagen, de menos de 4 MB.</PortalNotice>
+        ) : null}
         {ok === "enviado" ? (
           <PortalNotice>
             Enviado a {sent || "0"}.
             {failed && failed !== "0" ? ` No he podido entregar ${failed}.` : ""}
           </PortalNotice>
         ) : null}
-        <form action="/api/admin/broadcast" method="post" className="mt-6 grid max-w-xl gap-4">
+        <form action="/api/admin/broadcast" method="post" encType="multipart/form-data" className="mt-6 grid max-w-xl gap-4">
           <label className="field-label">
             Asunto
             <input className="field" name="subject" required maxLength={140} />
@@ -52,6 +56,14 @@ export default async function BroadcastPage({
           <label className="field-label">
             Mensaje
             <textarea className="field min-h-40" name="message" required minLength={2} />
+          </label>
+          <label className="field-label">
+            Adjuntar archivo
+            <input className="field" name="file" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" />
+          </label>
+          <label className="field-label">
+            Adjuntar enlace
+            <input className="field" name="link" type="url" placeholder="https://" />
           </label>
           <BroadcastAudience
             people={active.map((client) => ({

@@ -54,7 +54,7 @@ export function PlanningView({
       })
     : "";
   const filled = Boolean(
-    planning.location || planning.notes || timeline.length || amount || eventDate,
+    planning.location || planning.address || planning.notes || timeline.length || amount || eventDate,
   );
   return (
     <div className="flex max-w-2xl flex-col gap-6 text-sm">
@@ -66,6 +66,7 @@ export function PlanningView({
       </div>
       {!filled ? <p className="text-center text-sm text-ash">{copy.planningEmpty}</p> : null}
       {planning.location ? <p className="text-center uppercase tracking-[0.14em] text-ink">{planning.location}</p> : null}
+      {planning.address ? <p className="text-center text-ink">{planning.address}</p> : null}
       {eventDate ? <p className="text-center text-ink">{eventDate}</p> : null}
       {amount ? (
         <div className="border-y border-ink/10 py-4 text-center">
@@ -120,8 +121,9 @@ function SidePlanningView({
           <strong>{copy.premiumMailImportant}</strong> {copy.premiumMailImportantBody}
         </p>
       </div>
-      {!rows.length && !plan.location ? <p className="text-center text-ash">{copy.planningEmpty}</p> : null}
+      {!rows.length && !plan.location && !plan.address ? <p className="text-center text-ash">{copy.planningEmpty}</p> : null}
       {plan.location ? <p className="text-center uppercase tracking-[0.14em] text-ink">{plan.location}</p> : null}
+      {plan.address ? <p className="text-center text-ink">{plan.address}</p> : null}
       <SideSchedule title={title} rows={rows} />
     </div>
   );
@@ -206,6 +208,10 @@ export function PlanningForm({
       <label className="field-label">
         Localización
         <input className="field" name="location" defaultValue={planning.location} />
+      </label>
+      <label className="field-label">
+        Dirección
+        <input className="field" name="address" defaultValue={planning.address} />
       </label>
       <label className="field-label">
         Hora de llegada

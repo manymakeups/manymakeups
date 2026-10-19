@@ -124,6 +124,7 @@ export type NewStudioNotice = {
   scope: StudioNotice["scope"];
   message: string;
   detail?: string;
+  links?: StudioNotice["links"];
   personIndex?: number;
   fromStudio?: boolean;
 };
@@ -138,6 +139,7 @@ function pushNotice(db: PortalDb, clientId: string, notice: NewStudioNotice) {
     personIndex: notice.personIndex,
     message: notice.message,
     detail: notice.detail,
+    links: notice.links,
     read: false,
     fromStudio: Boolean(notice.fromStudio),
     replies: [],

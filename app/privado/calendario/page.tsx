@@ -71,15 +71,8 @@ export default async function StudioCalendarPage({
       kicker="Estudio"
       title="Agenda"
       lead="Las citas del iPhone, de Google y las reservas que Calendly escribe en ese Google."
-      aside={
-        <StudioAside
-          extra={
-            <a className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink" href="/privado/novias">
-              Clientas
-            </a>
-          }
-        />
-      }
+      studio
+      aside={<StudioAside />}
     >
       <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
       {error === "descarga" || loaded.error ? (

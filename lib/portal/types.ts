@@ -182,6 +182,7 @@ export type Appointment = {
   notes: string;
   amount: number;
   status: AppointmentStatus;
+  externalId?: string;
   reminder7For?: string;
   reminder48For?: string;
   confirmTokenHash?: string;
@@ -205,6 +206,7 @@ export type PlanningExtra = {
 export type SidePlanning = {
   on: boolean;
   location: string;
+  address: string;
   arrivalTime: string;
   arrivalEnd: string;
   start: string;
@@ -217,6 +219,7 @@ export type SidePlanning = {
 
 export type EventPlanning = {
   location: string;
+  address: string;
   arrivalTime: string;
   setPrep: string;
   setPrepStart: string;
@@ -307,6 +310,10 @@ export type EventDetails = {
   eventDate: string;
   venue: string;
   gettingReadyPlace: string;
+  serviceStreet: string;
+  servicePostal: string;
+  serviceCity: string;
+  serviceProvince: string;
   gettingReadyTime: string;
   ceremonyTime: string;
   stylist: string;
@@ -331,6 +338,11 @@ export type EventDetails = {
 export type StudioNoticeKind = "ficha" | "acompanantes" | "cambio" | "fotos" | "documento" | "agenda" | "respuesta";
 export type StudioNoticeScope = "contratante" | "acompanante";
 
+export type StudioNoticeLink = {
+  href: string;
+  label: string;
+};
+
 export type StudioNoticeReply = {
   id: string;
   createdAt: string;
@@ -347,6 +359,7 @@ export type StudioNotice = {
   personIndex?: number;
   message: string;
   detail?: string;
+  links?: StudioNoticeLink[];
   read: boolean;
   fromStudio?: boolean;
   replies: StudioNoticeReply[];
@@ -386,6 +399,7 @@ export type ClientRecord = {
   activationRemindersSent?: number[];
   remindersOptOut?: boolean;
   commercialOptOut?: boolean;
+  commercialConsent?: boolean;
   createdAt: string;
   locale?: "es" | "en" | "fr";
   event: EventDetails;
@@ -452,6 +466,10 @@ export function emptyEvent(name = ""): EventDetails {
     eventDate: "",
     venue: "",
     gettingReadyPlace: "",
+    serviceStreet: "",
+    servicePostal: "",
+    serviceCity: "",
+    serviceProvince: "",
     gettingReadyTime: "",
     ceremonyTime: "",
     stylist: "",
@@ -483,6 +501,7 @@ export function emptySidePlanning(): SidePlanning {
   return {
     on: false,
     location: "",
+    address: "",
     arrivalTime: "",
     arrivalEnd: "",
     start: "",
@@ -497,6 +516,7 @@ export function emptySidePlanning(): SidePlanning {
 export function emptyPlanning(): EventPlanning {
   return {
     location: "",
+    address: "",
     arrivalTime: "",
     setPrep: "",
     setPrepStart: "",
@@ -520,6 +540,7 @@ function asSidePlanning(value: unknown): SidePlanning {
   return {
     on: Boolean(row.on),
     location: String(row.location ?? "").trim().slice(0, 240),
+    address: String(row.address ?? "").trim().slice(0, 240),
     arrivalTime: clock(row.arrivalTime),
     arrivalEnd: clock(row.arrivalEnd),
     start: clock(row.start),
@@ -560,6 +581,7 @@ export function asPlanning(value: unknown): EventPlanning {
     : [];
   return {
     location: String(row.location ?? "").trim().slice(0, 240),
+    address: String(row.address ?? "").trim().slice(0, 240),
     arrivalTime: clock(row.arrivalTime),
     setPrep: String(row.setPrep ?? "").trim().slice(0, 240),
     setPrepStart: clock(row.setPrepStart),
@@ -582,6 +604,18 @@ export function emptyDb(): PortalDb {
   return { clients: [], notices: [], studioCalendarUrl: "", studioCalendarGoogle: "", studioCalendarExtra: "" };
 }
 
+function noticeLinks(value: unknown): StudioNoticeLink[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  const links = value.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const href = String((item as StudioNoticeLink).href ?? "").slice(0, 300);
+    const label = String((item as StudioNoticeLink).label ?? "").trim().slice(0, 120);
+    if (!href.startsWith("/api/portal/file?")) return [];
+    return [{ href, label: label || "Ver" }];
+  });
+  return links.length ? links.slice(0, 12) : undefined;
+}
+
 export function asStudioNotice(value: unknown): StudioNotice | null {
   if (!value || typeof value !== "object") return null;
   const row = value as StudioNotice;
@@ -598,6 +632,7 @@ export function asStudioNotice(value: unknown): StudioNotice | null {
     personIndex: Number.isFinite(row.personIndex) ? Number(row.personIndex) : undefined,
     message: row.message ?? "",
     detail: typeof row.detail === "string" && row.detail ? row.detail : undefined,
+    links: noticeLinks(row.links),
     read: Boolean(row.read),
     fromStudio: Boolean(row.fromStudio),
     replies: Array.isArray(row.replies)
@@ -680,6 +715,7 @@ function asAppointment(value: unknown): Appointment | null {
     notes: row.notes ?? "",
     amount: Math.max(0, Number(row.amount) || 0),
     status,
+    externalId: typeof row.externalId === "string" && row.externalId ? row.externalId.slice(0, 240) : undefined,
     reminder7For: typeof row.reminder7For === "string" && row.reminder7For ? row.reminder7For : undefined,
     reminder48For: typeof row.reminder48For === "string" && row.reminder48For ? row.reminder48For : undefined,
     confirmTokenHash: typeof row.confirmTokenHash === "string" && row.confirmTokenHash ? row.confirmTokenHash : undefined,
@@ -788,6 +824,7 @@ export function normalizeClient(client: ClientRecord): ClientRecord {
       : [],
     remindersOptOut: Boolean(client.remindersOptOut),
     commercialOptOut: Boolean(client.commercialOptOut),
+    commercialConsent: client.commercialConsent === true,
     planners: asPlanners(client.planners),
     payments: migratePayments(client.payments, count),
     inspiration: client.inspiration ?? [],

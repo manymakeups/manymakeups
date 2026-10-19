@@ -156,6 +156,9 @@ export default async function BridePanelPage({
                       action="/api/portal/event"
                       submitLabel={t.saveCard}
                       showInspiration={false}
+                      confirmSave
+                      askCommercial
+                      commercialConsent={client.commercialConsent === true}
                     />
                   )}
                 </div>
@@ -448,6 +451,7 @@ export default async function BridePanelPage({
                       previousLabel={t.agendaPrev}
                       nextLabel={t.agendaNext}
                       bookable={!consult}
+                      locale={locale}
                     />
                   ),
                 },

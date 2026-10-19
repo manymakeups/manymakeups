@@ -14,6 +14,27 @@ function flag(value: FormDataEntryValue | null) {
   return value === "on" || value === "true" || value === "1";
 }
 
+function serviceAddress(form: FormData, fallback: EventDetails) {
+  if (!form.has("serviceStreet") && !form.has("servicePostal") && !form.has("serviceCity") && !form.has("serviceProvince")) {
+    return {
+      gettingReadyPlace: text(form.get("gettingReadyPlace")) || fallback.gettingReadyPlace,
+      serviceStreet: fallback.serviceStreet,
+      servicePostal: fallback.servicePostal,
+      serviceCity: fallback.serviceCity,
+      serviceProvince: fallback.serviceProvince,
+    };
+  }
+  const serviceStreet = text(form.get("serviceStreet")).slice(0, 160);
+  const servicePostal = text(form.get("servicePostal")).slice(0, 12);
+  const serviceCity = text(form.get("serviceCity")).slice(0, 80);
+  const serviceProvince = text(form.get("serviceProvince")).slice(0, 80);
+  const gettingReadyPlace = [serviceStreet, [servicePostal, serviceCity].filter(Boolean).join(" "), serviceProvince]
+    .filter(Boolean)
+    .join(", ")
+    .slice(0, 240);
+  return { gettingReadyPlace, serviceStreet, servicePostal, serviceCity, serviceProvince };
+}
+
 function eventType(value: string): EventType {
   if (value === "evento" || value === "otro") return value;
   return "boda";
@@ -55,7 +76,7 @@ export function contractorFromForm(form: FormData, fallback: EventDetails): Even
     eventType: eventType(text(form.get("eventType"))),
     eventDate: text(form.get("eventDate")),
     venue: text(form.get("venue")),
-    gettingReadyPlace: text(form.get("gettingReadyPlace")),
+    ...serviceAddress(form, fallback),
     gettingReadyTime: text(form.get("gettingReadyTime")),
     ceremonyTime: text(form.get("ceremonyTime")),
     stylist: form.has("stylist") ? text(form.get("stylist")).slice(0, 120) : fallback.stylist,

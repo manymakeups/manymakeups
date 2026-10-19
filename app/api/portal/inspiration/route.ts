@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { newId } from "@/lib/portal/crypto";
-import { INSPIRATION_MAX, isImageUpload, maxBytes, safeFileName } from "@/lib/portal/files";
+import { INSPIRATION_MAX, isImageUpload, maxBytes, portalFileHref, safeFileName } from "@/lib/portal/files";
 import { goPortal } from "@/lib/portal/http";
 import { inspirationPlace, valueChange } from "@/lib/portal/notice-text";
-import { clientLabel, notifyStudio } from "@/lib/portal/notify";
 import { requireClient } from "@/lib/portal/session";
 import { deletePortalFile, getClient, putPortalFile, saveClient } from "@/lib/portal/store";
 import { CONTRACTOR_INSPIRATION, type PortalFile } from "@/lib/portal/types";
@@ -32,7 +31,7 @@ export async function POST(request: Request) {
   if (client.inspiration.length + uploads.length > INSPIRATION_MAX) {
     return goPortal(request, "/area-novia/panel?error=limite");
   }
-  const added: string[] = [];
+  const added: PortalFile[] = [];
   for (const upload of uploads) {
     if (!isImageUpload(upload) || upload.size > maxBytes("inspiration")) {
       return goPortal(request, "/area-novia/panel?error=archivo");
@@ -50,21 +49,24 @@ export async function POST(request: Request) {
     };
     await putPortalFile(record, Buffer.from(await upload.arrayBuffer()));
     client.inspiration.push(record);
-    added.push(record.name);
+    added.push(record);
   }
   const label = personLabel(form.get("person"));
   const where = inspirationPlace(label, client.event.people);
-  const message = valueChange(where, "", added.join(", "));
+  const message = valueChange(where, "", added.map((file) => file.name).join(", "));
   const place = inspirationScope(label);
   await saveClient(
     client,
     added.length
-      ? { kind: "fotos", scope: place.scope, personIndex: place.personIndex, message }
+      ? {
+          kind: "fotos",
+          scope: place.scope,
+          personIndex: place.personIndex,
+          message,
+          links: added.map((file) => ({ href: portalFileHref(client.id, file.id), label: file.name })),
+        }
       : undefined,
   );
-  if (added.length) {
-    await notifyStudio(`Inspiración nueva · ${clientLabel(client)}`, message.split("\n"));
-  }
   const tab = typeof form.get("tab") === "string" && form.get("tab") ? String(form.get("tab")) : "contratante";
   const sec = typeof form.get("sec") === "string" ? String(form.get("sec")) : "";
   const section = sec ? `&sec=${encodeURIComponent(sec)}` : "";
@@ -84,7 +86,6 @@ export async function DELETE(request: Request) {
   const place = inspirationScope(file.label);
   const message = valueChange(inspirationPlace(file.label, client.event.people), file.name, "");
   await saveClient(client, { kind: "fotos", scope: place.scope, personIndex: place.personIndex, message });
-  await notifyStudio(`Inspiración quitada · ${clientLabel(client)}`, message.split("\n"));
   return NextResponse.json({ ok: true });
 }
 

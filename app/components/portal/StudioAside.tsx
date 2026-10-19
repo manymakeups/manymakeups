@@ -5,7 +5,10 @@ import type { ReactNode } from "react";
 export async function StudioAside({ extra }: { extra?: ReactNode }) {
   const unread = (await listNotices()).filter((notice) => !notice.read).length;
   return (
-    <div className="contents md:flex md:items-center md:gap-4">
+    <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
+      <a className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink" href="/privado/novias">
+        Clientas
+      </a>
       {extra}
       <a className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink" href="/privado/calendario">
         Agenda

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { dateLocale } from "@/lib/i18n/portal-messages";
 import { portalEs, type PortalCopy } from "@/lib/i18n/portal-messages";
 import type { Locale } from "@/lib/i18n/config";
@@ -29,12 +29,36 @@ function formatWhen(item: Appointment, locale: Locale, copy: PortalCopy) {
   return item.time ? `${date} · ${item.time}` : date;
 }
 
+function DismissAppointmentMenus() {
+  useEffect(() => {
+    function closeOutside(target: EventTarget | null) {
+      document.querySelectorAll("details[data-appointment-menu][open]").forEach((menu) => {
+        if (target instanceof Node && menu.contains(target)) return;
+        menu.removeAttribute("open");
+      });
+    }
+    function onPointer(event: PointerEvent) {
+      closeOutside(event.target);
+    }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") closeOutside(null);
+    }
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, []);
+  return null;
+}
+
 function AppointmentMenu({ item, copy }: { item: Appointment; copy: PortalCopy }) {
   const [mode, setMode] = useState<"edit" | "cancel" | null>(null);
   if (item.status === "hecha" || item.status === "anulada") return null;
   return (
     <>
-      <details className="relative z-20 shrink-0">
+      <details data-appointment-menu className="relative z-20 shrink-0">
         <summary
           className="inline-flex size-9 cursor-pointer list-none items-center justify-center text-ink hover:text-gilt [&::-webkit-details-marker]:hidden"
           aria-label={copy.agendaOptions}
@@ -150,6 +174,8 @@ export function AgendaView({
   }
   const today = todayKey();
   return (
+    <>
+    <DismissAppointmentMenus />
     <ul className="divide-y divide-ink/10 border border-ink/10">
       {ordered.map((item) => (
         <li key={item.id} className="relative flex items-start justify-between gap-3 px-4 py-4 has-[details[open]]:z-30">
@@ -173,6 +199,7 @@ export function AgendaView({
         </li>
       ))}
     </ul>
+    </>
   );
 }
 
@@ -189,7 +216,7 @@ function StudioAppointmentMenu({ clientId, item }: { clientId: string; item: App
   const [mode, setMode] = useState<"edit" | "cancel" | null>(null);
   return (
     <>
-      <details className="relative z-20 shrink-0">
+      <details data-appointment-menu className="relative z-20 shrink-0">
         <summary
           className="inline-flex size-9 cursor-pointer list-none items-center justify-center text-ink hover:text-gilt [&::-webkit-details-marker]:hidden"
           aria-label="Opciones de la cita"

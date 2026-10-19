@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CalendlyEmbed } from "@/app/components/CalendlyEmbed";
 import { dayLabel, monthCells, monthLabel, shiftMonth, weekdayLabels } from "@/lib/portal/calendar";
 
@@ -14,6 +14,7 @@ export function ClientCalendar({
   previousLabel,
   nextLabel,
   bookable = true,
+  locale = "es",
 }: {
   busyDates: string[];
   today: string;
@@ -24,6 +25,7 @@ export function ClientCalendar({
   previousLabel: string;
   nextLabel: string;
   bookable?: boolean;
+  locale?: string;
 }) {
   const busy = useMemo(() => new Set(busyDates), [busyDates]);
   const [year, setYear] = useState(initialYear);
@@ -45,6 +47,22 @@ export function ClientCalendar({
     window.history.replaceState(null, "", `${url.pathname}${url.search}`);
   }
 
+  useEffect(() => {
+    function onMessage(event: MessageEvent) {
+      if (!/^https:\/\/([a-z0-9-]+\.)*calendly\.com$/.test(event.origin)) return;
+      const data = event.data as { event?: string; payload?: { invitee?: { uri?: string } } } | null;
+      if (!data || data.event !== "calendly.event_scheduled" || !booking) return;
+      const body = new FormData();
+      body.set("intent", "book");
+      body.set("date", booking);
+      const uri = data.payload?.invitee?.uri;
+      if (uri) body.set("externalId", uri);
+      void fetch("/api/portal/appointments", { method: "POST", body });
+    }
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [booking]);
+
   function openDay(date: string) {
     setSelected(date);
     setBooking(date);
@@ -57,7 +75,7 @@ export function ClientCalendar({
   return (
     <>
       <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <h3 className="font-serif text-3xl sm:text-4xl">{monthLabel(year, month)}</h3>
+        <h3 className="font-serif text-3xl sm:text-4xl">{monthLabel(year, month, locale)}</h3>
         <div className="flex gap-4 text-[0.68rem] uppercase tracking-[0.16em]">
           <button className="hover:text-gilt" type="button" onClick={() => showMonth(previous.year, previous.month)}>
             {previousLabel}
@@ -73,7 +91,7 @@ export function ClientCalendar({
         {freeLabel}
       </p>
       <div className="mt-4 grid grid-cols-7 border-l border-t border-ink/10 text-center text-[0.62rem] uppercase tracking-normal text-ash sm:mt-8 sm:tracking-[0.14em]">
-        {weekdayLabels().map((label) => (
+        {weekdayLabels(locale).map((label) => (
           <div key={label} className="border-b border-r border-ink/10 px-0.5 py-2">
             {label}
           </div>
@@ -119,7 +137,7 @@ export function ClientCalendar({
             );
           }
           return (
-            <button key={date} type="button" onClick={() => openDay(date)} aria-pressed={isSelected} aria-label={`${dayLabel(date)}. ${freeLabel}`} className={className}>
+            <button key={date} type="button" onClick={() => openDay(date)} aria-pressed={isSelected} aria-label={`${dayLabel(date, locale)}. ${freeLabel}`} className={className}>
               {inner}
             </button>
           );
@@ -131,12 +149,12 @@ export function ClientCalendar({
           <div
             role="dialog"
             aria-modal="true"
-            aria-label={dayLabel(booking)}
+            aria-label={dayLabel(booking, locale)}
             className="flex max-h-[92vh] w-full max-w-[1100px] flex-col bg-porcelain shadow-xl"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between gap-4 border-b border-ink/10 px-5 py-4">
-              <p className="font-serif text-2xl">{dayLabel(booking)}</p>
+              <p className="font-serif text-2xl">{dayLabel(booking, locale)}</p>
               <button className="text-[0.68rem] uppercase tracking-[0.16em] text-ash hover:text-ink" type="button" onClick={() => setBooking("")}>
                 {closeLabel}
               </button>

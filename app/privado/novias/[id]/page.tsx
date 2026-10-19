@@ -1,5 +1,5 @@
 import { AgendaLists, NewAppointmentModal } from "@/app/components/portal/AgendaBlock";
-import { BudgetView, HistoryComposer, HistoryForm } from "@/app/components/portal/HistoryBlock";
+import { BudgetView, HistoryForm } from "@/app/components/portal/HistoryBlock";
 import { AddCompanionModal, PersonDataForm, RemoveCompanionButton } from "@/app/components/portal/CompanionsForm";
 import { DeleteFileButton } from "@/app/components/portal/FileActions";
 import { EventForm } from "@/app/components/portal/EventForm";
@@ -43,7 +43,7 @@ export default async function StudioClientPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ ok?: string; error?: string; tab?: string; com?: string; sec?: string }>;
+  searchParams: Promise<{ ok?: string; error?: string; tab?: string; com?: string; sec?: string; aviso?: string }>;
 }) {
   const admin = await requireAdmin();
   if (!admin) redirect("/privado");
@@ -51,7 +51,7 @@ export default async function StudioClientPage({
   const client = await getClient(id);
   if (!client) notFound();
   const requests = (await listNotices()).filter((notice) => notice.clientId === client.id && notice.kind === "cambio");
-  const { ok, error, tab: tabRaw, com, sec } = await searchParams;
+  const { ok, error, tab: tabRaw, com, sec, aviso } = await searchParams;
   const event = client.event;
   const tab = studioTab(tabRaw);
 
@@ -61,21 +61,19 @@ export default async function StudioClientPage({
       dense
       kicker="Estudio"
       title={fullName(event, client.name)}
-      aside={
-        <StudioAside
-          extra={
-            <a className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink" href="/privado/novias">
-              Todas
-            </a>
-          }
-        />
-      }
+      studio
+      aside={<StudioAside />}
     >
       <div className="relative z-30 min-w-0 shrink-0">
         <StudioNav basePath={`/privado/novias/${client.id}`} active={tab} tabs={STUDIO_TABS} />
       </div>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden pb-4">
       <div className="shrink-0 pt-6">
+      {aviso ? (
+        <a className="btn-atelier mb-4 inline-flex" href={`/privado/avisos#aviso-${aviso}`}>
+          Volver a notificaciones
+        </a>
+      ) : null}
       {ok === "doc" ? <PortalNotice>Documento colgado.</PortalNotice> : null}
       {ok === "pagos" ? <PortalNotice>Pagos actualizados.</PortalNotice> : null}
       {ok === "agenda" ? <PortalNotice>Agenda actualizada.</PortalNotice> : null}
@@ -490,19 +488,7 @@ export default async function StudioClientPage({
               contractorLabel={fullName(event, client.name)}
               clientId={client.id}
               expenseLabel="Nuevo gasto"
-              expense={
-                <HistoryComposer
-                  clientId={client.id}
-                  returnTab="budget"
-                  people={[
-                    { id: "contractor", label: fullName(event, client.name) || "Contratante" },
-                    ...event.people.map((person, index) => ({
-                      id: `g:${index}`,
-                      label: companionHeading(person, portalEs.whoOptions, `Acompañante ${index + 1}`),
-                    })),
-                  ]}
-                />
-              }
+              composer={{ clientId: client.id, returnTab: "budget" }}
             />
           </div>
         </section>

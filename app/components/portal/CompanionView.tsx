@@ -48,6 +48,7 @@ export function CompanionView({
           variant={variant}
           labels={labels}
           section={section}
+          showTrial={person.wantsTrial}
           details={
             <dl className="space-y-3 text-sm">
               <div>

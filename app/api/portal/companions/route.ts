@@ -1,7 +1,6 @@
 import { companionsFromForm, peopleFields } from "@/lib/portal/event-parse";
 import { goPortal } from "@/lib/portal/http";
 import { companionsChangeMessage, newCompanionMessage } from "@/lib/portal/notice-text";
-import { clientLabel, notifyStudio } from "@/lib/portal/notify";
 import { requireClient, requirePlanner } from "@/lib/portal/session";
 import { getClient, saveClient } from "@/lib/portal/store";
 import { emptyAttendee } from "@/lib/portal/types";
@@ -32,7 +31,6 @@ export async function POST(request: Request) {
       personIndex: client.event.people.length - 1,
       message,
     });
-    await notifyStudio(`Acompañantes · ${clientLabel(client)}`, message.split("\n"));
     return goPortal(request, "/area-novia/panel?tab=acompanantes&ok=evento");
   }
   if (client.event.peopleLocked) {
@@ -50,6 +48,5 @@ export async function POST(request: Request) {
     scope: "acompanante",
     message,
   });
-  await notifyStudio(`Acompañantes · ${clientLabel(client)}`, message.split("\n"));
   return goPortal(request, "/area-novia/panel?tab=acompanantes&ok=evento");
 }

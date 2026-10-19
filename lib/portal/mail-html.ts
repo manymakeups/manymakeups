@@ -27,6 +27,8 @@ export type ClientEmail = {
   signoff: string[];
   lang?: string;
   footer?: { href: string; label: string };
+  legalHtml?: string;
+  legalText?: string;
 };
 
 function escapeHtml(value: string) {
@@ -52,6 +54,7 @@ export function brandedClientEmail(input: ClientEmail) {
   }
   textLines.push("", ...input.signoff);
   if (input.footer) textLines.push("", input.footer.label, input.footer.href);
+  if (input.legalText) textLines.push("", input.legalText);
   const text = textLines.join("\n").replace(/^\n/, "");
 
   const body = input.blocks
@@ -141,6 +144,7 @@ export function brandedClientEmail(input: ClientEmail) {
             <tr>
               <td align="left" style="padding:18px 8px 0;${sans}">
                 ${footer}
+                ${input.legalHtml ?? ""}
               </td>
             </tr>
           </table>
@@ -152,4 +156,29 @@ export function brandedClientEmail(input: ClientEmail) {
 </html>`;
 
   return { text, html };
+}
+
+export function broadcastLegal(unsubHref: string, privacyHref: string) {
+  const mail = "mailto:info@manymakeups.com";
+  const style = `${sans}font-size:10px;line-height:1.45;color:#8a8178;`;
+  const link = `style="color:#8a8178;text-decoration:underline;"`;
+  const html = `<p style="margin:14px 0 0;${style}"><strong>Información básica sobre protección de datos</strong><br>
+Responsable: Ana Belén Martínez Rodríguez | DNI: 51937797W<br>
+Finalidad: Gestión de la relación comercial, atención de consultas e información sobre servicios.<br>
+Legitimación: Ejecución de un contrato o el consentimiento expreso de la persona interesada.<br>
+Contacto: info@manymakeups.com<br>
+Derechos: Puedes acceder, rectificar, limitar y suprimir tus datos en cualquier momento enviando un correo electrónico <a href="${mail}" ${link}>aquí</a>.<br>
+Puedes consultar la información detallada sobre el tratamiento de tus datos en nuestra <a href="${escapeHtml(privacyHref)}" ${link}>Política de Privacidad</a>.<br>
+Si no deseas seguir recibiendo estas comunicaciones, puedes <a href="${escapeHtml(unsubHref)}" ${link}>Darte de baja aquí</a>.</p>`;
+  const text = [
+    "Información básica sobre protección de datos",
+    "Responsable: Ana Belén Martínez Rodríguez | DNI: 51937797W",
+    "Finalidad: Gestión de la relación comercial, atención de consultas e información sobre servicios.",
+    "Legitimación: Ejecución de un contrato o el consentimiento expreso de la persona interesada.",
+    "Contacto: info@manymakeups.com",
+    `Derechos: Puedes acceder, rectificar, limitar y suprimir tus datos en cualquier momento enviando un correo electrónico aquí (${mail}).`,
+    `Puedes consultar la información detallada sobre el tratamiento de tus datos en nuestra Política de Privacidad (${privacyHref}).`,
+    `Si no deseas seguir recibiendo estas comunicaciones, puedes darte de baja aquí: ${unsubHref}`,
+  ].join("\n");
+  return { html, text };
 }

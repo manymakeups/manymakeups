@@ -6,7 +6,9 @@ export function clientMailReady() {
   return Boolean(process.env.RESEND_API_KEY);
 }
 
-async function sendWithResend(to: string, subject: string, text: string, html?: string) {
+type MailAttachment = { filename: string; content: string };
+
+async function sendWithResend(to: string, subject: string, text: string, html?: string, attachments?: MailAttachment[]) {
   const key = process.env.RESEND_API_KEY;
   if (!key) return false;
   const from = process.env.MAIL_FROM || `Many Makeups <${site.email}>`;
@@ -23,6 +25,7 @@ async function sendWithResend(to: string, subject: string, text: string, html?: 
       subject,
       text,
       ...(html ? { html } : {}),
+      ...(attachments?.length ? { attachments } : {}),
     }),
   });
   return response.ok;
@@ -57,9 +60,15 @@ export async function notifyStudio(subject: string, lines: string[]) {
   }
 }
 
-export async function notifyEmail(to: string, subject: string, text: string, html?: string) {
+export async function notifyEmail(
+  to: string,
+  subject: string,
+  text: string,
+  html?: string,
+  attachments?: MailAttachment[],
+) {
   try {
-    if (await sendWithResend(to, subject, text, html)) return true;
+    if (await sendWithResend(to, subject, text, html, attachments)) return true;
     if (to.toLowerCase() === site.email.toLowerCase()) await sendWithFormSubmit(subject, text);
     return false;
   } catch {

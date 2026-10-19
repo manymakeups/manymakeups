@@ -1,7 +1,6 @@
 import { newId } from "@/lib/portal/crypto";
 import { goPortal } from "@/lib/portal/http";
 import { valueChange } from "@/lib/portal/notice-text";
-import { clientLabel, notifyStudio } from "@/lib/portal/notify";
 import { requireClient } from "@/lib/portal/session";
 import { addStudioNotice, getClient, mutateNotices } from "@/lib/portal/store";
 
@@ -43,6 +42,5 @@ export async function POST(request: Request) {
     personIndex,
     message: notice,
   });
-  await notifyStudio(`Respuesta · ${clientLabel(client)}`, notice.split("\n"));
   return goPortal(request, `${back}&ok=respuesta`);
 }

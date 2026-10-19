@@ -14,6 +14,7 @@ export async function PortalFrame({
   localize = false,
   pinned = false,
   dense = false,
+  studio = false,
 }: {
   kicker: string;
   title: string;
@@ -23,6 +24,7 @@ export async function PortalFrame({
   localize?: boolean;
   pinned?: boolean;
   dense?: boolean;
+  studio?: boolean;
 }) {
   const locale = localize ? await getLocale() : "es";
   const copy = getPortalCopy(locale);
@@ -32,7 +34,7 @@ export async function PortalFrame({
   const backLabel = localize ? copy.backToSite : "Volver a la web";
   const header = (
       <header className="shrink-0 border-b border-ink/5">
-        <div className="mx-auto flex max-w-[960px] items-center justify-between gap-3 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:px-10 md:py-4">
+        <div className={`mx-auto flex max-w-[960px] gap-3 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:px-10 md:py-4 ${studio ? "flex-col sm:flex-row sm:items-center sm:justify-between" : "items-center justify-between"}`}>
           <a
             href={backHref}
             className="flex min-w-0 items-center gap-3"
@@ -47,7 +49,14 @@ export async function PortalFrame({
                 <LanguageSwitch current={locale} path={path} enabled />
               </div>
             ) : null}
-            {aside ? (
+            {studio && aside ? (
+              <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
+                {aside}
+                <a className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink" href={backHref}>
+                  {backLabel}
+                </a>
+              </div>
+            ) : aside ? (
               <PortalMenu label={copy.menu} closeLabel={copy.agendaClose}>
                 {aside}
                 <a className="btn-atelier mt-6 md:mt-0" href={backHref}>

@@ -48,6 +48,7 @@ export async function POST(request: Request) {
   const current = client.event.planning;
   client.event.planning = asPlanning({
     location: text(form.get("location")),
+    address: text(form.get("address")),
     arrivalTime: text(form.get("arrivalTime")),
     setPrep: text(form.get("setPrep")),
     setPrepStart: text(form.get("setPrepStart")),

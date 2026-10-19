@@ -47,6 +47,7 @@ export default async function StudioClientsPage({
       kicker="Estudio"
       title="Área clientes"
       lead="Creas la cuenta con su correo, le envías el enlace y ella elige la contraseña. Luego ves la ficha, las fotos y cuelgas los papeles."
+      studio
       aside={<StudioAside />}
     >
       <div className="flex shrink-0 items-center justify-between gap-3 pb-3 md:block md:pb-6">

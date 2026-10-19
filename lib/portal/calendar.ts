@@ -13,8 +13,21 @@ export type RemoteEvent = {
 const WEEKDAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 const BYDAY = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
 
-export function weekdayLabels() {
-  return WEEKDAYS;
+function intlLocale(locale?: string) {
+  if (locale === "en") return "en-GB";
+  if (locale === "fr") return "fr-FR";
+  return "es-ES";
+}
+
+export function weekdayLabels(locale = "es") {
+  if (locale === "es") return WEEKDAYS;
+  const monday = new Date(Date.UTC(2024, 0, 1));
+  return Array.from({ length: 7 }, (_, index) => {
+    const label = new Intl.DateTimeFormat(intlLocale(locale), { weekday: "short", timeZone: "UTC" })
+      .format(new Date(monday.getTime() + index * 86400000))
+      .replace(".", "");
+    return label.charAt(0).toUpperCase() + label.slice(1);
+  });
 }
 
 export function madridToday() {
@@ -42,8 +55,8 @@ export function shiftMonth(year: number, month: number, delta: number) {
   return { year: date.getUTCFullYear(), month: date.getUTCMonth() + 1 };
 }
 
-export function monthLabel(year: number, month: number) {
-  const label = new Intl.DateTimeFormat("es-ES", {
+export function monthLabel(year: number, month: number, locale = "es") {
+  const label = new Intl.DateTimeFormat(intlLocale(locale), {
     month: "long",
     year: "numeric",
     timeZone: "UTC",
@@ -51,9 +64,9 @@ export function monthLabel(year: number, month: number) {
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
-export function dayLabel(date: string) {
+export function dayLabel(date: string, locale = "es") {
   const [year, month, day] = date.split("-").map(Number);
-  const label = new Intl.DateTimeFormat("es-ES", {
+  const label = new Intl.DateTimeFormat(intlLocale(locale), {
     weekday: "long",
     day: "numeric",
     month: "long",

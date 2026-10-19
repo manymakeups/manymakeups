@@ -55,6 +55,7 @@ export type PortalCopy = {
   planningTab: string;
   planningDownload: string;
   planningLocation: string;
+  planningAddress: string;
   planningArrival: string;
   planningArrivalShort: string;
   planningAt: string;
@@ -209,6 +210,17 @@ export type PortalCopy = {
   date: string;
   venue: string;
   gettingReadyPlace: string;
+  serviceStreet: string;
+  servicePostal: string;
+  serviceCity: string;
+  serviceProvince: string;
+  serviceSave: string;
+  confirmTitle: string;
+  confirmModify: string;
+  confirmKeep: string;
+  commercialConsent: string;
+  yes: string;
+  no: string;
   gettingReadyTime: string;
   ceremonyTime: string;
   assignedStylist: string;
@@ -385,6 +397,7 @@ export const portalEs: PortalCopy = {
   planningTab: "Planning",
   planningDownload: "Descargar planning",
   planningLocation: "Localización",
+  planningAddress: "Dirección",
   planningArrival: "Hora de llegada",
   planningArrivalShort: "Llegada",
   planningAt: "a las {time}",
@@ -578,7 +591,19 @@ export const portalEs: PortalCopy = {
   eventTypes: { boda: "Boda", evento: "Evento", otro: "Otro" },
   date: "Fecha",
   venue: "Lugar de la celebración",
-  gettingReadyPlace: "Dónde os preparáis",
+  gettingReadyPlace: "Dirección donde realizar el servicio",
+  serviceStreet: "Calle",
+  servicePostal: "Código postal",
+  serviceCity: "Población",
+  serviceProvince: "Provincia",
+  serviceSave: "Guardar dirección",
+  confirmTitle: "Revisa los datos antes de guardar",
+  confirmModify: "Modificar",
+  confirmKeep: "Guardar ficha",
+  commercialConsent:
+    "Autorizo que me enviéis información comercial. Son muy pocos envíos y puedo darme de baja en cualquier momento.",
+  yes: "Sí",
+  no: "No",
   gettingReadyTime: "Hora de prepararos",
   ceremonyTime: "Hora de ceremonia o inicio",
   assignedStylist: "Estilista asignado",
@@ -807,6 +832,7 @@ export const portalEn: PortalCopy = {
   planningTab: "Planning",
   planningDownload: "Download planning",
   planningLocation: "Location",
+  planningAddress: "Address",
   planningArrival: "Arrival time",
   planningArrivalShort: "Arrival",
   planningAt: "at {time}",
@@ -995,7 +1021,19 @@ export const portalEn: PortalCopy = {
   eventTypes: { boda: "Wedding", evento: "Event", otro: "Other" },
   date: "Date",
   venue: "Venue",
-  gettingReadyPlace: "Where you get ready",
+  gettingReadyPlace: "Address where the service takes place",
+  serviceStreet: "Street",
+  servicePostal: "Postcode",
+  serviceCity: "Town",
+  serviceProvince: "Province",
+  serviceSave: "Save address",
+  confirmTitle: "Check the details before saving",
+  confirmModify: "Edit",
+  confirmKeep: "Save details",
+  commercialConsent:
+    "I agree to receive commercial messages. There are very few, and I can unsubscribe at any time.",
+  yes: "Yes",
+  no: "No",
   gettingReadyTime: "Getting-ready time",
   ceremonyTime: "Ceremony or start time",
   assignedStylist: "Assigned stylist",
@@ -1222,6 +1260,7 @@ export const portalFr: PortalCopy = {
   planningTab: "Planning",
   planningDownload: "Télécharger le planning",
   planningLocation: "Lieu",
+  planningAddress: "Adresse",
   planningArrival: "Heure d’arrivée",
   planningArrivalShort: "Arrivée",
   planningAt: "à {time}",
@@ -1411,7 +1450,19 @@ export const portalFr: PortalCopy = {
   eventTypes: { boda: "Mariage", evento: "Événement", otro: "Autre" },
   date: "Date",
   venue: "Lieu de la célébration",
-  gettingReadyPlace: "Où vous vous préparez",
+  gettingReadyPlace: "Adresse où réaliser la prestation",
+  serviceStreet: "Rue",
+  servicePostal: "Code postal",
+  serviceCity: "Ville",
+  serviceProvince: "Province",
+  serviceSave: "Enregistrer l’adresse",
+  confirmTitle: "Vérifie les données avant d’enregistrer",
+  confirmModify: "Modifier",
+  confirmKeep: "Enregistrer la fiche",
+  commercialConsent:
+    "J’autorise l’envoi d’informations commerciales. Il y en a très peu et je peux me désinscrire à tout moment.",
+  yes: "Oui",
+  no: "Non",
   gettingReadyTime: "Heure de préparation",
   ceremonyTime: "Heure de la cérémonie ou du début",
   assignedStylist: "Styliste assigné",
