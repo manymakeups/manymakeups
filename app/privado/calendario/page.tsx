@@ -19,11 +19,17 @@ export const metadata: Metadata = {
 export default async function StudioCalendarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ mes?: string; dia?: string; error?: string; ok?: string }>;
+  searchParams: Promise<{ mes?: string; dia?: string; error?: string; ok?: string; motivo?: string }>;
 }) {
   const admin = await requireAdmin();
   if (!admin) redirect("/privado");
-  const { mes, dia, error, ok } = await searchParams;
+  const { mes, dia, error, ok, motivo } = await searchParams;
+  const googleMotivo: Record<string, string> = {
+    invalid_client: "El identificador o el secreto de Google no coinciden. Vuelve a pegarlos en Vercel, sin espacios.",
+    redirect_uri_mismatch: "La dirección de retorno no coincide con la que guardaste en Google.",
+    invalid_grant: "Ese permiso de Google ya no vale. Vuelve a conectar.",
+    missing_refresh: "Google ha entrado, pero no ha dado permiso permanente para borrar. Quita Many Makeups en la cuenta de Google y vuelve a conectar.",
+  };
   const clients = await listClients();
   const hiddenIds = await listHiddenCalendarIds();
   const googleLink = await getGoogleCalendarLink();
@@ -103,7 +109,10 @@ export default async function StudioCalendarPage({
         <PortalNotice>Falta el acceso de Google en el servidor. Sin eso, la web solo puede ocultar la cita aquí.</PortalNotice>
       ) : null}
       {error === "google-token" ? (
-        <PortalNotice>Google no ha dejado guardar el permiso para borrar. Vuelve a conectar la cuenta del calendario.</PortalNotice>
+        <PortalNotice>
+          {googleMotivo[motivo || ""] ||
+            "Google no ha dejado guardar el permiso para borrar. Vuelve a conectar la cuenta del calendario."}
+        </PortalNotice>
       ) : null}
       {error === "google" ? (
         <PortalNotice>No he podido borrarla en Google. Sigue en el calendario y en el iPhone.</PortalNotice>

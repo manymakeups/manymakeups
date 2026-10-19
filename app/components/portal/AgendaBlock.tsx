@@ -153,29 +153,67 @@ function AppointmentMenu({ item, copy }: { item: Appointment; copy: PortalCopy }
   );
 }
 
+const HISTORY_GROUPS = ["confirmada", "hecha", "planificada", "anulada"] as const;
+type HistoryFilter = "all" | "confirmada" | "planificada" | "anulada";
+
+function byProximity(today: string) {
+  return (a: Appointment, b: Appointment) => {
+    const stamp = (item: Appointment) => {
+      if (item.date >= today) return `0${item.date}${item.time}`;
+      const inverted = String(99999999 - Number(item.date.replaceAll("-", ""))).padStart(8, "0");
+      return `1${inverted}${item.time}`;
+    };
+    return stamp(a).localeCompare(stamp(b));
+  };
+}
+
 export function AgendaView({
   appointments,
   copy = portalEs,
   locale = "es",
   editable = false,
   studioClientId,
+  grouped = false,
 }: {
   appointments: Appointment[];
   copy?: PortalCopy;
   locale?: Locale;
   editable?: boolean;
   studioClientId?: string;
+  grouped?: boolean;
 }) {
-  const ordered = [...appointments].sort((a, b) =>
-    `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`),
-  );
-  if (!ordered.length) {
+  const [filter, setFilter] = useState<HistoryFilter>("all");
+  const today = todayKey();
+  const ordered = grouped
+    ? HISTORY_GROUPS.flatMap((status) =>
+        appointments.filter((item) => item.status === status).sort(byProximity(today)),
+      ).filter((item) => filter === "all" || item.status === filter)
+    : [...appointments].sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
+  if (!appointments.length) {
     return <p className="text-sm text-ash">{copy.agendaEmpty}</p>;
   }
-  const today = todayKey();
+  const filters: { id: HistoryFilter; label: string }[] = [
+    { id: "all", label: copy.agendaFilterAll },
+    { id: "confirmada", label: copy.agendaFilterConfirmed },
+    { id: "planificada", label: copy.agendaFilterPending },
+    { id: "anulada", label: copy.agendaFilterCancelled },
+  ];
   return (
     <>
+    {grouped ? (
+      <label className="field-label mb-6 max-w-xs">
+        {copy.agendaFilter}
+        <select className="field" value={filter} onChange={(event) => setFilter(event.target.value as HistoryFilter)}>
+          {filters.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    ) : null}
     <DismissAppointmentMenus />
+    {ordered.length ? (
     <ul className="divide-y divide-ink/10 border border-ink/10">
       {ordered.map((item) => (
         <li key={item.id} className="relative flex items-start justify-between gap-3 px-4 py-4 has-[details[open]]:z-30">
@@ -199,6 +237,9 @@ export function AgendaView({
         </li>
       ))}
     </ul>
+    ) : (
+      <p className="text-sm text-ash">{copy.agendaFilterEmpty}</p>
+    )}
     </>
   );
 }

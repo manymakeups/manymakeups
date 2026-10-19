@@ -263,6 +263,12 @@ export type PortalCopy = {
   removeConfirm: string;
   removePhoto: string;
   agendaEmpty: string;
+  agendaFilter: string;
+  agendaFilterAll: string;
+  agendaFilterConfirmed: string;
+  agendaFilterPending: string;
+  agendaFilterCancelled: string;
+  agendaFilterEmpty: string;
   agendaBook: string;
   agendaBookLead: string;
   agendaCalendar: string;
@@ -672,6 +678,12 @@ export const portalEs: PortalCopy = {
   removeConfirm: "¿Quitar este archivo?",
   removePhoto: "Quitar foto",
   agendaEmpty: "Todavía no hay citas en la agenda.",
+  agendaFilter: "Ver",
+  agendaFilterAll: "Todas",
+  agendaFilterConfirmed: "Confirmadas",
+  agendaFilterPending: "Pendientes de confirmar",
+  agendaFilterCancelled: "Anuladas",
+  agendaFilterEmpty: "No hay citas en este grupo.",
   agendaBook: "Pide una cita",
   agendaCalendar: "Calendario",
   agendaHistory: "Histórico de citas",
@@ -1102,6 +1114,12 @@ export const portalEn: PortalCopy = {
   removeConfirm: "Remove this file?",
   removePhoto: "Remove photo",
   agendaEmpty: "There are no appointments in the diary yet.",
+  agendaFilter: "Show",
+  agendaFilterAll: "All",
+  agendaFilterConfirmed: "Confirmed",
+  agendaFilterPending: "Pending confirmation",
+  agendaFilterCancelled: "Cancelled",
+  agendaFilterEmpty: "There are no appointments in this group.",
   agendaBook: "Book an appointment",
   agendaCalendar: "Calendar",
   agendaHistory: "Appointment history",
@@ -1531,6 +1549,12 @@ export const portalFr: PortalCopy = {
   removeConfirm: "Retirer ce fichier ?",
   removePhoto: "Retirer la photo",
   agendaEmpty: "Il n’y a pas encore de rendez-vous dans l’agenda.",
+  agendaFilter: "Voir",
+  agendaFilterAll: "Tous",
+  agendaFilterConfirmed: "Confirmés",
+  agendaFilterPending: "En attente de confirmation",
+  agendaFilterCancelled: "Annulés",
+  agendaFilterEmpty: "Il n’y a pas de rendez-vous dans ce groupe.",
   agendaBook: "Demande un rendez-vous",
   agendaCalendar: "Calendrier",
   agendaHistory: "Historique des rendez-vous",

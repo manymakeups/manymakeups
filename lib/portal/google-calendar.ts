@@ -18,8 +18,12 @@ type GoogleEvent = {
   status?: string;
 };
 
+function googleEnv(name: string) {
+  return (process.env[name] || "").trim().replace(/^["']|["']$/g, "");
+}
+
 export function googleCalendarConfigured() {
-  return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+  return Boolean(googleEnv("GOOGLE_CLIENT_ID") && googleEnv("GOOGLE_CLIENT_SECRET"));
 }
 
 export function googleRedirectUri(request: Request) {
@@ -67,7 +71,7 @@ export async function readGoogleState(token: string) {
 
 export function googleAuthUrl(redirectUri: string, state: string) {
   const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
-  url.searchParams.set("client_id", process.env.GOOGLE_CLIENT_ID || "");
+  url.searchParams.set("client_id", googleEnv("GOOGLE_CLIENT_ID"));
   url.searchParams.set("redirect_uri", redirectUri);
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", SCOPE);
@@ -89,34 +93,35 @@ async function tokenRequest(body: URLSearchParams) {
 }
 
 export async function connectGoogleCalendar(code: string, redirectUri: string) {
-  const clientId = process.env.GOOGLE_CLIENT_ID || "";
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET || "";
   const exchanged = await tokenRequest(
     new URLSearchParams({
       code,
-      client_id: clientId,
-      client_secret: clientSecret,
+      client_id: googleEnv("GOOGLE_CLIENT_ID"),
+      client_secret: googleEnv("GOOGLE_CLIENT_SECRET"),
       redirect_uri: redirectUri,
       grant_type: "authorization_code",
     }),
   );
   const refresh = exchanged.data.refresh_token || "";
   const access = exchanged.data.access_token || "";
-  if (!exchanged.ok || !refresh || !access) return false;
+  if (!exchanged.ok || !refresh || !access) {
+    const reason = exchanged.data.error || (access && !refresh ? "missing_refresh" : "token");
+    return reason.replace(/[^a-z0-9_]/gi, "").slice(0, 40) || "token";
+  }
   const info = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
     headers: { Authorization: `Bearer ${access}` },
     signal: AbortSignal.timeout(12000),
   });
   const profile = (await info.json().catch(() => ({}))) as { email?: string };
   await setGoogleCalendarLink(refresh, profile.email || "");
-  return true;
+  return "";
 }
 
 async function accessToken(refreshToken: string) {
   const exchanged = await tokenRequest(
     new URLSearchParams({
-      client_id: process.env.GOOGLE_CLIENT_ID || "",
-      client_secret: process.env.GOOGLE_CLIENT_SECRET || "",
+      client_id: googleEnv("GOOGLE_CLIENT_ID"),
+      client_secret: googleEnv("GOOGLE_CLIENT_SECRET"),
       refresh_token: refreshToken,
       grant_type: "refresh_token",
     }),

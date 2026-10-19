@@ -459,7 +459,7 @@ export default async function BridePanelPage({
                   id: "historico",
                   label: t.agendaHistory,
                   body: (
-                    <AgendaView appointments={client.appointments} copy={t} locale={locale} editable={!consult} />
+                    <AgendaView appointments={client.appointments} copy={t} locale={locale} editable={!consult} grouped />
                   ),
                 },
               ]}
