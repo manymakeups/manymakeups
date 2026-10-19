@@ -4,7 +4,7 @@ const logoUrl = `${site.url}/brand/mail/logo.png?v=5`;
 const signatureUrl = `${site.url}/brand/mail/firma.png?v=4`;
 const signatureWidth = 168;
 
-const sans = "font-family:Helvetica,'Helvetica Neue',Arial,sans-serif;";
+const sans = "font-family:Skia,'Skia-Regular',Palatino,'Palatino Linotype',serif;";
 
 const DETAIL_ICONS = {
   service: "icon-service.png",
@@ -123,7 +123,7 @@ export function brandedClientEmail(input: ClientEmail) {
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1ea;${sans}">
       <tr>
         <td align="center" style="padding:36px 16px;${sans}">
-          <font face="Helvetica, Helvetica Neue, Arial, sans-serif">
+          <font face="Skia, Palatino, serif">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;${sans}">
             <tr>
               <td align="center" style="padding:0 0 22px;${sans}">
