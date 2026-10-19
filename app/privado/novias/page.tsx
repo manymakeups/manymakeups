@@ -105,7 +105,13 @@ export default async function StudioClientsPage({
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                <InviteModal clientId={client.id} invite={inviteClient === client.id ? invite : undefined} />
+                <InviteModal
+                  clientId={client.id}
+                  invite={inviteClient === client.id ? invite : undefined}
+                  sent={
+                    inviteClient === client.id && ok === "invitacion" ? (error === "correo" ? "fail" : "ok") : undefined
+                  }
+                />
                 <a className="btn-atelier" href={`/privado/novias/${client.id}`}>
                   Abrir
                 </a>

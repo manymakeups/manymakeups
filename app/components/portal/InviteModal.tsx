@@ -3,7 +3,15 @@
 import { CopyInvite } from "@/app/components/portal/FileActions";
 import { useState } from "react";
 
-export function InviteModal({ clientId, invite }: { clientId: string; invite?: string }) {
+export function InviteModal({
+  clientId,
+  invite,
+  sent,
+}: {
+  clientId: string;
+  invite?: string;
+  sent?: "ok" | "fail";
+}) {
   const [open, setOpen] = useState(Boolean(invite));
   return (
     <>
@@ -31,13 +39,24 @@ export function InviteModal({ clientId, invite }: { clientId: string; invite?: s
               Crear enlace
             </h2>
             <p className="mt-3 text-sm text-ash">
-              El enlace dura 21 días y sirve una sola vez. Cuando lo generes, cópialo y envíaselo por WhatsApp o correo.
+              El enlace dura 21 días y sirve una sola vez. Cuando lo generes, cópialo o envíaselo ahora por correo.
             </p>
             {invite ? (
               <div className="mt-5">
                 <p className="break-all text-sm">{invite}</p>
-                <div className="mt-4">
+                {sent === "ok" ? <p className="mt-3 text-sm">Enviado a su correo.</p> : null}
+                {sent === "fail" ? (
+                  <p className="mt-3 text-sm text-ash">No he podido enviarlo. Copia el enlace y mándaselo tú.</p>
+                ) : null}
+                <div className="mt-4 flex flex-wrap gap-3">
                   <CopyInvite url={invite} />
+                  <form action="/api/admin/invite" method="post">
+                    <input type="hidden" name="id" value={clientId} />
+                    <input type="hidden" name="intent" value="send" />
+                    <button className="btn-atelier btn-atelier-solid" type="submit">
+                      Enviar a la clienta
+                    </button>
+                  </form>
                 </div>
               </div>
             ) : (

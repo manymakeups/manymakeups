@@ -83,6 +83,9 @@ export type PortalCopy = {
   activationReminderUrgentBody: string;
   activationReminderLink: string;
   activationReminderClose: string;
+  inviteMailSubject: string;
+  inviteMailBody: string;
+  inviteMailExpiry: string;
   appointmentReminderSubject: string;
   appointmentReminderHello: string;
   appointmentReminderIntro: string;
@@ -387,6 +390,10 @@ export const portalEs: PortalCopy = {
     "Tu área sigue sin activar. Actívala cuanto antes, porque el enlace caducará el {date}.",
   activationReminderLink: "Activar mi área",
   activationReminderClose: "Si ya lo has hecho, ignora este correo.",
+  inviteMailSubject: "Tu área de clienta en Many Makeups",
+  inviteMailBody:
+    "Ya tienes tu área de clienta. Entra con este enlace, elige una contraseña y desde ahí verás tu ficha, las fotos y el planning.",
+  inviteMailExpiry: "El enlace caduca en 21 días y solo sirve una vez.",
   appointmentReminderSubject: "Recordatorio de tu cita",
   appointmentReminderHello: "Hola {name},",
   appointmentReminderIntro: "Queda una semana para tu cita. Confírmame que te viene bien.",
@@ -769,6 +776,10 @@ export const portalEn: PortalCopy = {
     "Your area is still not active. Please activate it as soon as you can, because the link will expire on {date}.",
   activationReminderLink: "Activate my area",
   activationReminderClose: "If you have already done it, you can ignore this email.",
+  inviteMailSubject: "Your client area at Many Makeups",
+  inviteMailBody:
+    "Your client area is ready. Open this link, choose a password, and from there you will see your file, the photos and the plan.",
+  inviteMailExpiry: "The link expires in 21 days and works only once.",
   appointmentReminderSubject: "A reminder of your appointment",
   appointmentReminderHello: "Hello {name},",
   appointmentReminderIntro: "Your appointment is one week away. Please confirm that it still suits you.",
@@ -1147,6 +1158,10 @@ export const portalFr: PortalCopy = {
   activationReminderUrgentBody:
     "Ton espace n’est toujours pas activé. Active-le dès que possible, parce que le lien expirera le {date}.",
   activationReminderLink: "Activer mon espace",
+  inviteMailSubject: "Ton espace cliente chez Many Makeups",
+  inviteMailBody:
+    "Ton espace cliente est prêt. Ouvre ce lien, choisis un mot de passe, et tu y trouveras ta fiche, les photos et le planning.",
+  inviteMailExpiry: "Le lien expire dans 21 jours et ne sert qu’une fois.",
   activationReminderClose: "Si c’est déjà fait, ignore ce message.",
   appointmentReminderSubject: "Rappel de ton rendez-vous",
   appointmentReminderHello: "Bonjour {name},",
