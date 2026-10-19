@@ -1,3 +1,4 @@
+import { BrandLogo } from "@/app/components/BrandLogo";
 import { PlanningExtras } from "@/app/components/portal/PlanningExtras";
 import { SubTabs } from "@/app/components/portal/SubTabs";
 import { contractedServiceNames, serviceAmountDue } from "@/lib/portal/budget";
@@ -61,7 +62,7 @@ export function PlanningView({
         {copy.planningDownload}
       </a>
       <div className="flex justify-center">
-        <img src="/brand/logo.jpg" alt="Many Makeups" width={168} height={168} className="size-40" />
+        <BrandLogo size="block" className="size-40" />
       </div>
       {!filled ? <p className="text-center text-sm text-ash">{copy.planningEmpty}</p> : null}
       {planning.location ? <p className="text-center uppercase tracking-[0.14em] text-ink">{planning.location}</p> : null}

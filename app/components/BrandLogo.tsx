@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { site } from "@/lib/site";
 
 type Size = "header" | "footer" | "block";
 
@@ -20,11 +19,11 @@ export function BrandLogo({
 }) {
   return (
     <Image
-      src={size === "header" ? "/brand/logo-mark.png" : site.logo}
+      src="/brand/logo-mark.png"
       alt=""
       width={1024}
       height={1024}
-      className={className ?? frame[size]}
+      className={`brand-logo ${className ?? frame[size]}`}
       quality={100}
       unoptimized
       priority={priority ?? size === "header"}
