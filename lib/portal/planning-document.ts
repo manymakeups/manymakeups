@@ -57,13 +57,12 @@ class Sheet {
     private pdf: PDFDocument,
     private font: PDFFont,
     private logo: PDFImage,
-    private signature: PDFImage,
     private foot: string,
   ) {
     this.addPage();
   }
 
-  private addPage(cardHeight?: number) {
+  private addPage() {
     this.page = this.pdf.addPage([PAGE_W, PAGE_H]);
     this.pages.push(this.page);
     this.page.drawRectangle({ x: 0, y: 0, width: PAGE_W, height: PAGE_H, color: porcelain });
@@ -81,8 +80,7 @@ class Sheet {
       this.opening = false;
     }
     const footLines = this.foot ? linesOf(this.foot, this.font, 7.5, PAGE_W - OUTER * 2) : [];
-    const footReserve = OUTER + (footLines.length ? 18 + footLines.length * 10 : 16);
-    this.cardBottom = cardHeight ? Math.max(footReserve, top - cardHeight) : footReserve;
+    this.cardBottom = OUTER + (footLines.length ? 18 + footLines.length * 10 : 16);
     this.page.drawRectangle({
       x: OUTER,
       y: this.cardBottom,
@@ -125,23 +123,23 @@ class Sheet {
   }
 
   title(value: string) {
-    const size = 20;
+    const size = 16;
     this.need(size + 8);
     this.y -= size;
     this.text(value, this.contentLeft, this.y, size, ink);
-    this.y -= 10;
+    this.y -= 8;
   }
 
   kicker(value: string) {
-    const size = 8;
+    const size = 7.5;
     this.need(size + 8);
     this.y -= size;
-    this.tracked(value.toUpperCase(), this.contentLeft, this.y, size, gilt, 1.15);
-    this.y -= 12;
+    this.tracked(value.toUpperCase(), this.contentLeft, this.y, size, gilt, 1.05);
+    this.y -= 10;
   }
 
   quiet(value: string) {
-    const size = 11;
+    const size = 10;
     const lines = linesOf(value, this.font, size, this.contentRight - this.contentLeft);
     for (const line of lines) {
       this.need(size + 4);
@@ -153,7 +151,7 @@ class Sheet {
   }
 
   prose(value: string, color: typeof ink = ink) {
-    const size = 11;
+    const size = 10;
     const lines = linesOf(value, this.font, size, this.contentRight - this.contentLeft);
     for (const line of lines) {
       this.need(size + 4);
@@ -165,9 +163,9 @@ class Sheet {
   }
 
   field(label: string, value: string, note = "", marked = false) {
-    const labelSize = 8;
-    const valueSize = 12.5;
-    const noteSize = 10;
+    const labelSize = 7.5;
+    const valueSize = 11;
+    const noteSize = 9;
     const width = this.contentRight - this.contentLeft;
     const labels = linesOf(label.toUpperCase(), this.font, labelSize, width * 0.84, 1.05);
     const values = value.trim() ? linesOf(value, this.font, valueSize, width) : [];
@@ -205,21 +203,11 @@ class Sheet {
       thickness: 0.45,
       color: hair,
     });
-    this.y -= 13;
+    this.y -= 16;
   }
 
-  sign() {
-    const width = 128;
-    const height = (width * this.signature.height) / this.signature.width;
-    if (this.y - height - 12 < this.cardBottom + 18) this.addPage(height + PAD * 2);
-    else this.y -= 8;
-    this.page.drawImage(this.signature, {
-      x: this.contentLeft,
-      y: this.y - height,
-      width,
-      height,
-    });
-    this.y -= height;
+  pause() {
+    this.y -= 18;
   }
 
   finish() {
@@ -280,8 +268,7 @@ export async function planningPdfFor(client: ClientRecord, kind: PlanningPdfKind
     subset: true,
   });
   const logo = await pdf.embedPng(await readFile(path.join(process.cwd(), "public/brand/mail/logo.png")));
-  const signature = await pdf.embedPng(await readFile(path.join(process.cwd(), "public/brand/mail/firma.png")));
-  const sheet = new Sheet(pdf, font, logo, signature, amount ? `* ${copy.planningCashNote}` : "");
+  const sheet = new Sheet(pdf, font, logo, amount ? `* ${copy.planningCashNote}` : "");
 
   sheet.rule();
   if (name) sheet.title(name);
@@ -299,10 +286,10 @@ export async function planningPdfFor(client: ClientRecord, kind: PlanningPdfKind
 
   if (amount) sheet.field(pendingLabel, amount, "", true);
 
+  if (rows.length || notes.trim()) sheet.pause();
   if (!rows.length && !notes.trim() && !amount) sheet.quiet(copy.planningEmpty);
   for (const row of rows) sheet.field(row.label, row.when, row.note);
   if (notes.trim()) sheet.field(copy.planningNotes, notes);
-  sheet.sign();
   sheet.finish();
 
   return pdf.save();

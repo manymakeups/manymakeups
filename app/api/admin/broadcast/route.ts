@@ -5,7 +5,7 @@ import { clientLocale } from "@/lib/portal/client-mail";
 import { mailName } from "@/lib/portal/names";
 import { notifyEmail } from "@/lib/portal/notify";
 import { requireAdmin } from "@/lib/portal/session";
-import { getClient } from "@/lib/portal/store";
+import { listClients } from "@/lib/portal/store";
 import { unsubscribeToken } from "@/lib/portal/unsubscribe";
 import { site } from "@/lib/site";
 import { localePath } from "@/lib/i18n/path";
@@ -20,13 +20,12 @@ export async function POST(request: Request) {
   const form = await request.formData();
   const subject = text(form.get("subject")).slice(0, 140);
   const message = text(form.get("message")).slice(0, 8000);
-  const ids = form.getAll("ids").map((value) => text(value)).filter(Boolean);
-  if (!subject || message.length < 2 || !ids.length) return go(request, "/privado/difusion?error=datos");
+  if (!subject || message.length < 2) return go(request, "/privado/difusion?error=datos");
+  const audience = (await listClients()).filter((client) => client.passwordHash && !client.commercialOptOut && client.email);
+  if (!audience.length) return go(request, "/privado/difusion?error=vacio");
   let sent = 0;
   let failed = 0;
-  for (const id of ids) {
-    const client = await getClient(id);
-    if (!client?.passwordHash || client.commercialOptOut || !client.email) continue;
+  for (const client of audience) {
     const locale = clientLocale(client);
     const t = getPortalCopy(locale);
     const name = mailName(client.event, client.name);

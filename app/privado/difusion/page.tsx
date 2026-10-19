@@ -1,3 +1,4 @@
+import { BroadcastAudience } from "@/app/components/portal/BroadcastAudience";
 import { MailSetupNotice } from "@/app/components/portal/MailSetupNotice";
 import { PortalFrame, PortalNotice } from "@/app/components/portal/PortalFrame";
 import { StudioAside } from "@/app/components/portal/StudioAside";
@@ -24,8 +25,6 @@ export default async function BroadcastPage({
   const { error, ok, sent, failed } = await searchParams;
   const clients = await listClients();
   const active = clients.filter((client) => client.passwordHash);
-  const audience = active.filter((client) => !client.commercialOptOut);
-  const optedOut = active.filter((client) => client.commercialOptOut);
 
   return (
     <PortalFrame
@@ -37,7 +36,8 @@ export default async function BroadcastPage({
     >
       <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
         <MailSetupNotice />
-        {error === "datos" ? <PortalNotice>Escribe un asunto, un mensaje y elige al menos a una clienta.</PortalNotice> : null}
+        {error === "datos" ? <PortalNotice>Escribe un asunto y un mensaje.</PortalNotice> : null}
+        {error === "vacio" ? <PortalNotice>No hay destinatarias para este envío.</PortalNotice> : null}
         {ok === "enviado" ? (
           <PortalNotice>
             Enviado a {sent || "0"}.
@@ -53,36 +53,14 @@ export default async function BroadcastPage({
             Mensaje
             <textarea className="field min-h-40" name="message" required minLength={2} />
           </label>
-          <fieldset className="border border-ink/10 p-4">
-            <legend className="px-1 text-[0.68rem] uppercase tracking-[0.16em] text-gilt">
-              Reciben el correo ({audience.length})
-            </legend>
-            {audience.length ? (
-              <ul className="mt-3 flex flex-col gap-2">
-                {audience.map((client) => (
-                  <li key={client.id}>
-                    <label className="flex items-start gap-2 text-sm">
-                      <input type="checkbox" name="ids" value={client.id} defaultChecked />
-                      <span>
-                        {fullName(client.event, client.name)}
-                        <span className="text-ash"> · {client.email}</span>
-                      </span>
-                    </label>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="mt-3 text-sm text-ash">Todavía no hay clientas dadas de alta que acepten estos correos.</p>
-            )}
-          </fieldset>
-          {optedOut.length ? (
-            <p className="text-sm text-ash">
-              No reciben información comercial: {optedOut.map((client) => fullName(client.event, client.name)).join(", ")}.
-            </p>
-          ) : null}
-          <button className="btn-atelier btn-atelier-solid self-start" type="submit" disabled={!audience.length}>
-            Enviar
-          </button>
+          <BroadcastAudience
+            people={active.map((client) => ({
+              id: client.id,
+              name: fullName(client.event, client.name),
+              email: client.email,
+              optedOut: Boolean(client.commercialOptOut),
+            }))}
+          />
         </form>
       </div>
     </PortalFrame>
