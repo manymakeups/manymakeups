@@ -137,5 +137,14 @@ export function sidePlanningRows(plan: SidePlanning, title: string, copy: Portal
       minutes: minutesOf(plan.start || plan.end),
     });
   }
+  if (plan.packUpTime || plan.packUpEnd || plan.packUp) {
+    rows.push({
+      id: "pack",
+      label: copy.planningDismantle,
+      when: span(plan.packUpTime, plan.packUpEnd, copy),
+      note: plan.packUp,
+      minutes: minutesOf(plan.packUpTime || plan.packUpEnd),
+    });
+  }
   return rows;
 }

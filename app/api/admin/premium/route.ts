@@ -1,4 +1,5 @@
 import { go } from "@/lib/portal/http";
+import { mailPremiumPlanning } from "@/lib/portal/planning-mail";
 import { requireAdmin } from "@/lib/portal/session";
 import { getClient, saveClient } from "@/lib/portal/store";
 import { asPlanning, type SidePlanning } from "@/lib/portal/types";
@@ -14,11 +15,15 @@ function flag(value: FormDataEntryValue | null) {
 function sideFromForm(form: FormData): SidePlanning {
   return {
     on: true,
+    location: text(form.get("location")),
     arrivalTime: text(form.get("arrivalTime")),
     arrivalEnd: text(form.get("arrivalEnd")),
     start: text(form.get("start")),
     end: text(form.get("end")),
     note: text(form.get("note")),
+    packUpTime: text(form.get("packUpTime")),
+    packUpEnd: text(form.get("packUpEnd")),
+    packUp: text(form.get("packUp")),
   };
 }
 
@@ -47,13 +52,17 @@ export async function POST(request: Request) {
     return go(request, `${back}&ok=premium`);
   }
 
-  if (intent !== "glitter" && intent !== "beauty") return go(request, back);
-  if (intent === "glitter" && !client.event.glitterBar) return go(request, back);
-  if (intent === "beauty" && !client.event.beautyCorner) return go(request, back);
+  const send = intent.endsWith("-send");
+  const which = send ? intent.slice(0, -"-send".length) : intent;
+  if (which !== "glitter" && which !== "beauty") return go(request, back);
+  if (which === "glitter" && !client.event.glitterBar) return go(request, back);
+  if (which === "beauty" && !client.event.beautyCorner) return go(request, back);
   client.event.planning = asPlanning({
     ...current,
-    [intent]: sideFromForm(form),
+    [which]: sideFromForm(form),
   });
   await saveClient(client);
-  return go(request, `${back}&sec=${intent}&ok=premium`);
+  if (!send) return go(request, `${back}&sec=${which}&ok=premium`);
+  const sent = await mailPremiumPlanning(client, which);
+  return go(request, sent ? `${back}&sec=${which}&ok=premium-mail` : `${back}&sec=${which}&ok=premium&error=correo`);
 }

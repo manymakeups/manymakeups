@@ -114,7 +114,11 @@ export default async function StudioClientPage({
           RESEND_API_KEY en Vercel.
         </PortalNotice>
       ) : null}
-      {ok === "premium" ? <PortalNotice>Servicios premium guardados.</PortalNotice> : null}
+      {ok === "premium" && error !== "correo" ? <PortalNotice>Servicios premium guardados.</PortalNotice> : null}
+      {ok === "premium-mail" ? <PortalNotice>Planning enviado a la clienta.</PortalNotice> : null}
+      {ok === "premium" && error === "correo" ? (
+        <PortalNotice>Planning guardado, pero no he podido enviarle el correo.</PortalNotice>
+      ) : null}
       {error === "archivo" ? <PortalNotice>Ese archivo no se puede colgar.</PortalNotice> : null}
       </div>
 

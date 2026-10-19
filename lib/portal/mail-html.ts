@@ -17,7 +17,7 @@ const DETAIL_ICONS = {
 export type DetailIcon = keyof typeof DETAIL_ICONS;
 
 type MailBlock =
-  | { text: string; muted?: boolean; quote?: boolean }
+  | { text: string; muted?: boolean; quote?: boolean; strong?: string }
   | { href: string; label: string }
   | { rows: { label: string; value: string }[] }
   | { details: { title: string; rows: { icon: DetailIcon; label: string; value: string }[] } };
@@ -48,7 +48,7 @@ export function brandedClientEmail(input: ClientEmail) {
     } else if ("rows" in block) {
       textLines.push("");
       for (const row of block.rows) textLines.push(`${row.label}: ${row.value}`);
-    } else textLines.push("", block.text);
+    } else textLines.push("", block.strong ? `${block.strong} ${block.text}` : block.text);
   }
   textLines.push("", ...input.signoff);
   if (input.footer) textLines.push("", input.footer.label, input.footer.href);
@@ -102,7 +102,8 @@ export function brandedClientEmail(input: ClientEmail) {
       }
       const color = block.muted ? "#6e655c" : "#1c1714";
       const quote = block.quote ? "padding:14px 16px;border-left:2px solid #9a7b49;background:#f3efe8;" : "";
-      return `<p style="margin:0 0 16px;${sans}font-size:16px;line-height:1.6;color:${color};${quote}">${escapeHtml(block.text)}</p>`;
+      const lead = block.strong ? `<strong>${escapeHtml(block.strong)}</strong> ` : "";
+      return `<p style="margin:0 0 16px;${sans}font-size:16px;line-height:1.6;color:${color};${quote}">${lead}${escapeHtml(block.text)}</p>`;
     })
     .join("");
   const signoff = `<p style="margin:8px 0 0;${sans}font-size:16px;line-height:1.6;color:#1c1714;">${input.signoff.map(escapeHtml).join("<br>")}</p>

@@ -74,6 +74,14 @@ export type PortalCopy = {
   planningMailSubject: string;
   planningMailHello: string;
   planningMailIntro: string;
+  planningDismantle: string;
+  premiumLocation: string;
+  premiumMailSubject: string;
+  premiumMailIntro: string;
+  premiumMailTimesTitle: string;
+  premiumMailTimes: string;
+  premiumMailImportant: string;
+  premiumMailImportantBody: string;
   activationReminderSubject: string;
   activationReminderHello: string;
   activationReminderGreeting: string;
@@ -395,6 +403,17 @@ export const portalEs: PortalCopy = {
   planningMailSubject: "Planning de tu evento",
   planningMailHello: "Hola {name},",
   planningMailIntro: "Te dejo el planning del día del evento.",
+  planningDismantle: "Desmontaje",
+  premiumLocation: "Ubicación",
+  premiumMailSubject: "Tu planning de {service} e información importante para tu evento",
+  premiumMailIntro:
+    "Ya tienes disponible tu planning en tu área de cliente para que consultes todos los detalles del servicio.",
+  premiumMailTimesTitle: "Información sobre los tiempos de inicio:",
+  premiumMailTimes:
+    "Cuento con un margen de cortesía de ±20 minutos al inicio de la hora acordada. Ese margen se ajustará de forma proporcional a la hora de finalización para asegurar el tiempo total contratado.",
+  premiumMailImportant: "Punto muy importante:",
+  premiumMailImportantBody:
+    "Si transcurren esos 20 minutos de margen y aún no es posible comenzar el servicio, el tiempo contratado empezará a contabilizarse. Por eso, te recomiendo coordinar muy bien este horario con la finca, espacio o restaurante para evitar retrasos y costes adicionales de horas extra.",
   activationReminderSubject: "Tu área de cliente te está esperando",
   activationReminderHello: "Hola {name},",
   activationReminderGreeting: "Hola, {name}:",
@@ -422,7 +441,7 @@ export const portalEs: PortalCopy = {
     "Te confirmo que tu área de cliente ya está completamente lista. A través de ella podrás consultar tu ficha, revisar tus fotos y ver todos los detalles de tu servicio.",
   inviteMailCta: "Para acceder por primera vez, solo haz clic en el siguiente enlace y crea tu contraseña:",
   inviteMailLink: "Activar mi área y ver fotos",
-  inviteMailExpiry: "📌 Nota: Por seguridad, este enlace es de uso único y caducará en 21 días.",
+  inviteMailExpiry: "Nota: Por seguridad, este enlace es de uso único y caducará en 21 días.",
   mailHi: "¡Hola, {name}!",
   appointmentReminderSubject: "¡Falta una semana para nuestra cita, {name}!",
   appointmentReminderHello: "¡Hola, {name}!",
@@ -803,6 +822,16 @@ export const portalEn: PortalCopy = {
   planningMailSubject: "Your event plan",
   planningMailHello: "Hello {name},",
   planningMailIntro: "Here is the plan for the day of the event.",
+  planningDismantle: "Pack-up",
+  premiumLocation: "Location",
+  premiumMailSubject: "Your {service} plan and important information for your event",
+  premiumMailIntro: "Your plan is now in your client area, so you can check every detail of the service.",
+  premiumMailTimesTitle: "About the start times:",
+  premiumMailTimes:
+    "I allow a courtesy window of ±20 minutes from the agreed start. That window is adjusted in proportion to the finish time, so the total time you booked stays intact.",
+  premiumMailImportant: "Very important:",
+  premiumMailImportantBody:
+    "If those 20 minutes pass and the service still cannot start, the booked time begins to count. Please coordinate this schedule carefully with the venue, space or restaurant, so delays and extra-hour charges are avoided.",
   activationReminderSubject: "Your client area is waiting for you",
   activationReminderHello: "Hello {name},",
   activationReminderGreeting: "Hello, {name}:",
@@ -1206,6 +1235,16 @@ export const portalFr: PortalCopy = {
   planningMailSubject: "Le planning de ton événement",
   planningMailHello: "Bonjour {name},",
   planningMailIntro: "Voici le planning du jour de l’événement.",
+  planningDismantle: "Démontage",
+  premiumLocation: "Lieu",
+  premiumMailSubject: "Ton planning {service} et des informations importantes pour ton événement",
+  premiumMailIntro: "Ton planning est disponible dans ton espace cliente, pour que tu puisses consulter tous les détails du service.",
+  premiumMailTimesTitle: "À propos des horaires de début :",
+  premiumMailTimes:
+    "Je prévois une marge de courtoisie de ±20 minutes au début de l’heure convenue. Cette marge s’ajuste de façon proportionnelle à l’heure de fin, pour préserver le temps total réservé.",
+  premiumMailImportant: "Point très important :",
+  premiumMailImportantBody:
+    "Si ces 20 minutes s’écoulent et que le service ne peut toujours pas commencer, le temps réservé commence à être compté. Coordonne bien cet horaire avec le domaine, l’espace ou le restaurant pour éviter les retards et les heures supplémentaires.",
   activationReminderSubject: "Ton espace cliente t’attend",
   activationReminderHello: "Bonjour {name},",
   activationReminderGreeting: "Bonjour, {name} :",

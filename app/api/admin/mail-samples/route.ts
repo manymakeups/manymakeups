@@ -118,6 +118,26 @@ export async function POST(request: Request) {
         { href: link, label: t.planningTab },
       ],
     },
+    {
+      subject: interpolate(t.premiumMailSubject, { service: t.glitterBar }),
+      blocks: [
+        { text: interpolate(t.mailHi, { name: "Ana" }) },
+        { text: t.premiumMailIntro },
+        { text: t.premiumMailTimesTitle },
+        { text: t.premiumMailTimes },
+        { strong: t.premiumMailImportant, text: t.premiumMailImportantBody },
+        {
+          rows: [
+            { label: t.premiumLocation, value: "Finca El Jardín, Arganda del Rey" },
+            { label: t.mailDate, value: "27 de septiembre de 2026" },
+            { label: t.planningSideArrival, value: "16:00 – 16:30" },
+            { label: t.glitterBar, value: "17:00 – 20:00" },
+            { label: t.planningDismantle, value: "20:00 – 20:30" },
+          ],
+        },
+        { href: link, label: t.planningTab },
+      ],
+    },
   ];
   let sent = 0;
   for (const sample of samples) {

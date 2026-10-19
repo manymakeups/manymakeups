@@ -88,3 +88,42 @@ export async function mailPlanning(client: ClientRecord) {
   });
   return notifyEmail(client.email, t.planningMailSubject, mail.text, mail.html);
 }
+
+export async function mailPremiumPlanning(client: ClientRecord, service: "glitter" | "beauty") {
+  const locale = clientLocale(client);
+  const t = getPortalCopy(locale);
+  const name = mailName(client.event, client.name);
+  const plan = client.event.planning[service];
+  const title = service === "glitter" ? t.glitterBar : t.beautyCorner;
+  const rows: { label: string; value: string }[] = [];
+  if (plan.location) rows.push({ label: t.premiumLocation, value: plan.location });
+  if (client.event.eventDate) {
+    rows.push({
+      label: t.mailDate,
+      value: new Date(`${client.event.eventDate}T12:00:00`).toLocaleDateString(dateLocale(locale), {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }),
+    });
+  }
+  for (const line of sidePlanningRows({ ...plan, on: true }, title, t)) {
+    const value = [line.when, line.note].filter(Boolean).join("\n");
+    if (value) rows.push({ label: line.label, value });
+  }
+  const href = `${clientPanelUrl(client, "contratante")}&sec=planning&plan=${service}`;
+  const mail = brandedClientEmail({
+    lang: locale,
+    blocks: [
+      { text: interpolate(t.mailHi, { name }) },
+      { text: t.premiumMailIntro },
+      { text: t.premiumMailTimesTitle },
+      { text: t.premiumMailTimes },
+      { strong: t.premiumMailImportant, text: t.premiumMailImportantBody },
+      ...(rows.length ? [{ rows }] : []),
+      { href, label: t.planningTab },
+    ],
+    signoff: [t.recoverMailSignoff],
+  });
+  return notifyEmail(client.email, interpolate(t.premiumMailSubject, { service: title }), mail.text, mail.html);
+}

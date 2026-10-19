@@ -102,8 +102,13 @@ function SidePlanningView({
   copy: PortalCopy;
 }) {
   const rows = sidePlanningRows({ ...plan, on: true }, title, copy);
-  if (!rows.length) return <p className="text-sm text-ash">{copy.planningEmpty}</p>;
-  return <SideSchedule title={title} rows={rows} />;
+  if (!rows.length && !plan.location) return <p className="text-sm text-ash">{copy.planningEmpty}</p>;
+  return (
+    <div className="flex max-w-2xl flex-col gap-6">
+      {plan.location ? <p className="text-center uppercase tracking-[0.14em] text-ink">{plan.location}</p> : null}
+      <SideSchedule title={title} rows={rows} />
+    </div>
+  );
 }
 
 export function ClientPlanning(props: {
@@ -114,9 +119,10 @@ export function ClientPlanning(props: {
   copy: PortalCopy;
   locale?: Locale;
   client?: Pick<ClientRecord, "history" | "payments"> | null;
+  initial?: string;
 }) {
-  const { planning, event, copy } = props;
-  const main = <PlanningView {...props} />;
+  const { planning, event, copy, initial, ...view } = props;
+  const main = <PlanningView {...view} planning={planning} event={event} copy={copy} />;
   const extras = [
     event.glitterBar ? { id: "glitter", label: copy.glitterBar, plan: planning.glitter } : null,
     event.beautyCorner ? { id: "beauty", label: copy.beautyCorner, plan: planning.beauty } : null,
@@ -124,6 +130,7 @@ export function ClientPlanning(props: {
   if (!extras.length) return main;
   return (
     <SubTabs
+      initial={initial}
       tabs={[
         { id: "evento", label: copy.planningTab, body: main },
         ...extras.map((item) => ({

@@ -46,7 +46,7 @@ function fileHref(clientId: string, id: string, download = false) {
 export default async function BridePanelPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ok?: string; error?: string; tab?: string; mes?: string; com?: string; sec?: string; agenda?: string }>;
+  searchParams: Promise<{ ok?: string; error?: string; tab?: string; mes?: string; com?: string; sec?: string; agenda?: string; plan?: string }>;
 }) {
   const locale = await getLocale();
   const t = getPortalCopy(locale);
@@ -54,7 +54,8 @@ export default async function BridePanelPage({
   if (!session) redirect(localePath(locale, "/area-novia"));
   const client = await getClient(session.sub);
   if (!client) redirect(localePath(locale, "/area-novia"));
-  const { ok, error, tab: tabRaw, mes, com, sec, agenda } = await searchParams;
+  const { ok, error, tab: tabRaw, mes, com, sec, agenda, plan: planRaw } = await searchParams;
+  const plan = planRaw === "glitter" || planRaw === "beauty" ? planRaw : undefined;
   const tab = portalTab(tabRaw);
   const requests = (await listNotices()).filter((notice) => notice.clientId === client.id && notice.kind === "cambio");
   const unreadComms =
@@ -221,6 +222,7 @@ export default async function BridePanelPage({
                 copy={t}
                 locale={locale}
                 client={client}
+                initial={plan}
               />
             }
           />

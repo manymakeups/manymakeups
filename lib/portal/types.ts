@@ -204,11 +204,15 @@ export type PlanningExtra = {
 
 export type SidePlanning = {
   on: boolean;
+  location: string;
   arrivalTime: string;
   arrivalEnd: string;
   start: string;
   end: string;
   note: string;
+  packUpTime: string;
+  packUpEnd: string;
+  packUp: string;
 };
 
 export type EventPlanning = {
@@ -465,7 +469,18 @@ function clock(value: unknown) {
 }
 
 export function emptySidePlanning(): SidePlanning {
-  return { on: false, arrivalTime: "", arrivalEnd: "", start: "", end: "", note: "" };
+  return {
+    on: false,
+    location: "",
+    arrivalTime: "",
+    arrivalEnd: "",
+    start: "",
+    end: "",
+    note: "",
+    packUpTime: "",
+    packUpEnd: "",
+    packUp: "",
+  };
 }
 
 export function emptyPlanning(): EventPlanning {
@@ -493,11 +508,15 @@ function asSidePlanning(value: unknown): SidePlanning {
   const row = value && typeof value === "object" ? (value as SidePlanning) : emptySidePlanning();
   return {
     on: Boolean(row.on),
+    location: String(row.location ?? "").trim().slice(0, 240),
     arrivalTime: clock(row.arrivalTime),
     arrivalEnd: clock(row.arrivalEnd),
     start: clock(row.start),
     end: clock(row.end),
     note: String(row.note ?? "").trim().slice(0, 240),
+    packUpTime: clock(row.packUpTime),
+    packUpEnd: clock(row.packUpEnd),
+    packUp: String(row.packUp ?? "").trim().slice(0, 240),
   };
 }
 

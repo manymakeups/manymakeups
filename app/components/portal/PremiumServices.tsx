@@ -22,7 +22,10 @@ function SideForm({
   return (
     <form action="/api/admin/premium" method="post" className="grid max-w-xl gap-4">
       <input type="hidden" name="clientId" value={clientId} />
-      <input type="hidden" name="intent" value={intent} />
+      <label className="field-label">
+        Ubicación
+        <input className="field" name="location" defaultValue={plan.location} />
+      </label>
       <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">Llegada y montaje</p>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="field-label">
@@ -49,9 +52,29 @@ function SideForm({
         Nota
         <textarea className="field min-h-24" name="note" defaultValue={plan.note} />
       </label>
-      <button className="btn-atelier btn-atelier-solid self-start" type="submit">
-        Guardar planning
-      </button>
+      <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">Desmontaje</p>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="field-label">
+          Desde
+          <input className="field" name="packUpTime" type="time" defaultValue={plan.packUpTime} />
+        </label>
+        <label className="field-label">
+          Hasta
+          <input className="field" name="packUpEnd" type="time" defaultValue={plan.packUpEnd} />
+        </label>
+      </div>
+      <label className="field-label">
+        Nota del desmontaje
+        <input className="field" name="packUp" defaultValue={plan.packUp} />
+      </label>
+      <div className="flex flex-wrap gap-3">
+        <button className="btn-atelier btn-atelier-solid" type="submit" name="intent" value={intent}>
+          Guardar planning
+        </button>
+        <button className="btn-atelier" type="submit" name="intent" value={`${intent}-send`}>
+          Guardar y enviar por mail
+        </button>
+      </div>
     </form>
   );
 }
