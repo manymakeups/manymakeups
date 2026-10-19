@@ -4,7 +4,7 @@ import { StudioAside } from "@/app/components/portal/StudioAside";
 import { fetchCalendarEvents, monthCells, parseMonth, madridToday } from "@/lib/portal/calendar";
 import { fullName } from "@/lib/portal/names";
 import { requireAdmin } from "@/lib/portal/session";
-import { getStudioCalendars, listClients } from "@/lib/portal/store";
+import { getStudioCalendars, listClients, listHiddenCalendarIds } from "@/lib/portal/store";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
@@ -24,6 +24,7 @@ export default async function StudioCalendarPage({
   if (!admin) redirect("/privado");
   const { mes, dia, error, ok } = await searchParams;
   const clients = await listClients();
+  const hiddenIds = await listHiddenCalendarIds();
   const { primary, google, extra } = await getStudioCalendars();
   const feeds = [
     { url: primary, source: "iPhone" },
@@ -100,17 +101,21 @@ export default async function StudioCalendarPage({
             name: fullName(client.event, client.name),
             email: client.email,
           }))}
-          assignments={clients.flatMap((client) =>
-            client.appointments.flatMap((item) => {
-              if (!item.externalId?.startsWith("cal:")) return [];
-              return [
-                {
-                  eventId: item.externalId,
-                  clientId: client.id,
-                  clientName: fullName(client.event, client.name),
-                },
-              ];
-            }),
+          hiddenIds={hiddenIds}
+          appointments={clients.flatMap((client) =>
+            client.appointments.map((item) => ({
+              id: item.id,
+              clientId: client.id,
+              clientName: fullName(client.event, client.name),
+              title: item.title,
+              date: item.date,
+              time: item.time,
+              place: item.place,
+              notes: item.notes,
+              amount: item.amount,
+              status: item.status,
+              externalId: item.externalId,
+            })),
           )}
         />
       ) : null}

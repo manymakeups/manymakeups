@@ -309,7 +309,7 @@ function StudioAppointmentMenu({ clientId, item }: { clientId: string; item: App
   );
 }
 
-function AppointmentFields({ item }: { item?: Appointment }) {
+export function AppointmentFields({ item }: { item?: Appointment }) {
   return (
     <>
       <label className="field-label">

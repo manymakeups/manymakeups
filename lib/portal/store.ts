@@ -16,6 +16,11 @@ import {
 const DB_PATH = "portal/db.json";
 const ROOT = path.join(process.cwd(), "data");
 
+function hiddenCalendarIds(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === "string" && item.length > 0).slice(-400);
+}
+
 function useBlob() {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 }
@@ -37,6 +42,7 @@ async function readDb(): Promise<PortalDb> {
       studioCalendarUrl: typeof parsed.studioCalendarUrl === "string" ? parsed.studioCalendarUrl : "",
       studioCalendarGoogle: typeof parsed.studioCalendarGoogle === "string" ? parsed.studioCalendarGoogle : "",
       studioCalendarExtra: typeof parsed.studioCalendarExtra === "string" ? parsed.studioCalendarExtra : "",
+      hiddenCalendarIds: hiddenCalendarIds(parsed.hiddenCalendarIds),
     };
   }
   try {
@@ -48,6 +54,7 @@ async function readDb(): Promise<PortalDb> {
       studioCalendarUrl: typeof parsed.studioCalendarUrl === "string" ? parsed.studioCalendarUrl : "",
       studioCalendarGoogle: typeof parsed.studioCalendarGoogle === "string" ? parsed.studioCalendarGoogle : "",
       studioCalendarExtra: typeof parsed.studioCalendarExtra === "string" ? parsed.studioCalendarExtra : "",
+      hiddenCalendarIds: hiddenCalendarIds(parsed.hiddenCalendarIds),
     };
   } catch {
     return emptyDb();
@@ -76,6 +83,19 @@ export async function getStudioCalendars() {
   const primary = migrateStudioCalendarUrl(stored);
   const google = db.studioCalendarGoogle === "off" ? "" : db.studioCalendarGoogle || defaultGoogleCalendarUrl();
   return { primary, google, extra: db.studioCalendarExtra || "" };
+}
+
+export async function listHiddenCalendarIds() {
+  const db = await readDb();
+  return db.hiddenCalendarIds;
+}
+
+export async function hideCalendarEvent(id: string) {
+  const clean = id.trim().slice(0, 240);
+  if (!clean) return;
+  const db = await readDb();
+  db.hiddenCalendarIds = [...new Set([...db.hiddenCalendarIds, clean])].slice(-400);
+  await writeDb(db);
 }
 
 export async function setStudioCalendars(primary: string, google: string, extra: string) {

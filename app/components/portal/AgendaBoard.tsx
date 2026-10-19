@@ -10,13 +10,63 @@ import {
   weekdayLabels,
   type RemoteEvent,
 } from "@/lib/portal/calendar";
-import { APPOINTMENT_TITLES } from "@/lib/portal/types";
+import { AppointmentFields } from "@/app/components/portal/AgendaBlock";
+import { euros, type Appointment, type AppointmentStatus } from "@/lib/portal/types";
 
 type ClientOption = { id: string; name: string; email: string };
-type Assignment = { eventId: string; clientId: string; clientName: string };
+
+export type StudioAppointment = {
+  id: string;
+  clientId: string;
+  clientName: string;
+  title: string;
+  date: string;
+  time: string;
+  place: string;
+  notes: string;
+  amount: number;
+  status: AppointmentStatus;
+  externalId?: string;
+};
+
+const statusLabel: Record<AppointmentStatus, string> = {
+  planificada: "Planificada",
+  confirmada: "Confirmada",
+  hecha: "Hecha",
+  anulada: "Anulada",
+};
 
 function fold(value: string) {
   return value.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+}
+
+function cleanPlace(place: string) {
+  const value = place.trim();
+  if (!value || value.length > 80 || /https?:\/\//i.test(value)) return "";
+  return value;
+}
+
+function draftAppointment(event: RemoteEvent, saved?: StudioAppointment): Appointment {
+  return {
+    id: saved?.id || "nueva",
+    title: saved?.title || guessTitle(event.title),
+    date: saved?.date || event.date,
+    time: saved?.time || event.time,
+    place: saved?.place || cleanPlace(event.place),
+    notes: saved?.notes || "",
+    amount: saved?.amount || 0,
+    status: saved && saved.status !== "anulada" ? saved.status : "planificada",
+  };
+}
+
+function whenLabel(date: string, time: string) {
+  const label = new Date(`${date}T12:00:00`).toLocaleDateString("es-ES", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+  const pretty = label.charAt(0).toUpperCase() + label.slice(1);
+  return time ? `${pretty} · ${time}` : pretty;
 }
 
 function guessTitle(title: string) {
@@ -44,7 +94,8 @@ export function AgendaBoard({
   initialMonth,
   initialDay,
   clients,
-  assignments,
+  appointments,
+  hiddenIds,
 }: {
   events: RemoteEvent[];
   today: string;
@@ -52,7 +103,8 @@ export function AgendaBoard({
   initialMonth: number;
   initialDay: string;
   clients: ClientOption[];
-  assignments: Assignment[];
+  appointments: StudioAppointment[];
+  hiddenIds: string[];
 }) {
   const [year, setYear] = useState(initialYear);
   const [month, setMonth] = useState(initialMonth);
@@ -60,11 +112,14 @@ export function AgendaBoard({
   const [assigning, setAssigning] = useState<RemoteEvent | null>(null);
   const [clientId, setClientId] = useState("");
   const [query, setQuery] = useState("");
+  const hidden = useMemo(() => new Set(hiddenIds), [hiddenIds]);
   const assignedTo = useMemo(() => {
-    const map = new Map<string, Assignment>();
-    for (const item of assignments) map.set(item.eventId, item);
+    const map = new Map<string, StudioAppointment>();
+    for (const item of appointments) {
+      if (item.externalId?.startsWith("cal:")) map.set(item.externalId, item);
+    }
     return map;
-  }, [assignments]);
+  }, [appointments]);
   const matches = useMemo(() => {
     const needle = fold(query.trim());
     if (!needle) return clients;
@@ -74,6 +129,14 @@ export function AgendaBoard({
   const prefix = `${year}-${String(month).padStart(2, "0")}`;
   const inMonth = useMemo(() => events.filter((event) => event.date.startsWith(prefix)), [events, prefix]);
   const dayEvents = events.filter((event) => event.date === selected);
+  const dayOwn = appointments
+    .filter((item) => item.date === selected && item.status !== "anulada")
+    .sort((a, b) => `${a.time}${a.clientName}`.localeCompare(`${b.time}${b.clientName}`));
+  const dayIncoming = dayEvents.filter(
+    (event) => !hidden.has(event.id) && !assignedTo.has(calendarAssignmentId(event.id)),
+  );
+  const back = `/privado/calendario?mes=${prefix}&dia=${selected}`;
+  const saved = assigning ? assignedTo.get(calendarAssignmentId(assigning.id)) : undefined;
   const byDate = useMemo(() => {
     const map = new Map<string, RemoteEvent[]>();
     for (const event of inMonth) {
@@ -143,7 +206,20 @@ export function AgendaBoard({
           if (!date) {
             return <div key={`empty-${index}`} className="min-h-12 border-b border-r border-ink/10 bg-linen/40 sm:min-h-24" />;
           }
-          const items = byDate.get(date) ?? [];
+          const incoming = (byDate.get(date) ?? []).filter(
+            (event) => !hidden.has(event.id) && !assignedTo.has(calendarAssignmentId(event.id)),
+          );
+          const own = appointments.filter((item) => item.date === date && item.status !== "anulada");
+          const items = [
+            ...own.map((item) => ({
+              id: item.id,
+              text: `${item.time ? `${item.time} ` : ""}${item.clientName}`,
+            })),
+            ...incoming.map((event) => ({
+              id: event.id,
+              text: `${event.time ? `${event.time} ` : ""}${event.title}`,
+            })),
+          ];
           const isToday = date === today;
           const isSelected = date === selected;
           return (
@@ -169,8 +245,7 @@ export function AgendaBoard({
                   key={event.id}
                   className={`hidden truncate text-[0.68rem] leading-tight sm:block ${isSelected ? "text-porcelain/90" : "text-ink"}`}
                 >
-                  {event.time ? `${event.time} ` : ""}
-                  {event.title}
+                  {event.text}
                 </span>
               ))}
               {items.length > 3 ? (
@@ -183,30 +258,60 @@ export function AgendaBoard({
 
       <section className="mt-10">
         <h3 className="font-serif text-3xl">{dayLabel(selected)}</h3>
-        {dayEvents.length ? (
+        {dayOwn.length || dayIncoming.length ? (
           <ul className="mt-4 divide-y divide-ink/10 border border-ink/10">
-            {dayEvents.map((event) => {
-              const assigned = assignedTo.get(calendarAssignmentId(event.id));
-              return (
+            {dayOwn.map((item) => (
+              <li key={item.id} className="flex flex-wrap items-start justify-between gap-4 px-4 py-4">
+                <div className="min-w-0">
+                  <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">
+                    {item.title} · {statusLabel[item.status]}
+                  </p>
+                  <p className="mt-1 font-serif text-2xl capitalize">{whenLabel(item.date, item.time)}</p>
+                  <a className="mt-1 inline-block text-sm underline decoration-gilt/40 underline-offset-4" href={`/privado/novias/${item.clientId}?tab=agenda`}>
+                    {item.clientName}
+                  </a>
+                  {item.place ? <p className="mt-1 text-sm text-ash">{item.place}</p> : null}
+                  {item.amount > 0 ? <p className="mt-1 text-sm">{euros(item.amount)}</p> : null}
+                  {item.notes ? <p className="mt-2 whitespace-pre-wrap text-sm">{item.notes}</p> : null}
+                </div>
+                <form
+                  action="/api/admin/appointments"
+                  method="post"
+                  onSubmit={(event) => {
+                    if (!confirm("¿Quitar esta cita de la clienta?")) event.preventDefault();
+                  }}
+                >
+                  <input type="hidden" name="clientId" value={item.clientId} />
+                  <input type="hidden" name="deleteId" value={item.id} />
+                  <input type="hidden" name="next" value={back} />
+                  <button className="btn-atelier" type="submit">
+                    Quitar
+                  </button>
+                </form>
+              </li>
+            ))}
+            {dayIncoming.map((event) => (
               <li key={event.id} className="flex flex-wrap items-start justify-between gap-4 px-4 py-4">
                 <div className="min-w-0">
                   <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">{event.time || "Todo el día"}</p>
                   <p className="mt-1 font-serif text-2xl">{event.title}</p>
                   {event.source ? <p className="mt-1 text-[0.68rem] uppercase tracking-[0.16em] text-ash">{event.source}</p> : null}
-                  {event.place ? <p className="mt-1 text-sm text-ash">{event.place}</p> : null}
-                  {event.notes ? <p className="mt-2 whitespace-pre-wrap text-sm text-ash">{event.notes}</p> : null}
-                  {assigned ? (
-                    <a className="mt-2 inline-block text-sm text-gilt underline decoration-gilt/40 underline-offset-4" href={`/privado/novias/${assigned.clientId}?tab=agenda`}>
-                      Asignada a {assigned.clientName}
-                    </a>
-                  ) : null}
+                  {cleanPlace(event.place) ? <p className="mt-1 text-sm text-ash">{cleanPlace(event.place)}</p> : null}
                 </div>
-                <button type="button" className="btn-atelier shrink-0" onClick={() => openAssign(event)}>
-                  {assigned ? "Cambiar clienta" : "Asignar cita a clienta"}
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" className="btn-atelier" onClick={() => openAssign(event)}>
+                    Asignar cita a clienta
+                  </button>
+                  <form action="/api/admin/calendar" method="post">
+                    <input type="hidden" name="id" value={event.id} />
+                    <input type="hidden" name="next" value={back} />
+                    <button className="btn-atelier" type="submit">
+                      Quitar del calendario
+                    </button>
+                  </form>
+                </div>
               </li>
-              );
-            })}
+            ))}
           </ul>
         ) : (
           <p className="mt-4 text-sm text-ash">Este día no hay citas.</p>
@@ -223,39 +328,11 @@ export function AgendaBoard({
           >
             <h2 className="font-serif text-3xl">Asignar cita a clienta</h2>
             <p className="mt-2 text-sm text-ash">{assigning.title}</p>
-            <form key={assigning.id} action="/api/admin/appointments" method="post" className="mt-6 grid gap-4">
+            <form key={`${assigning.id}:${saved?.id ?? "nueva"}`} action="/api/admin/appointments" method="post" className="mt-6 grid gap-4">
               <input type="hidden" name="intent" value="assign" />
               <input type="hidden" name="externalId" value={calendarAssignmentId(assigning.id)} />
               <input type="hidden" name="clientId" value={clientId} />
               <input type="hidden" name="next" value={`/privado/calendario?mes=${prefix}&dia=${assigning.date}`} />
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="field-label">
-                  Fecha
-                  <input className="field" name="date" type="date" required defaultValue={assigning.date} />
-                </label>
-                <label className="field-label">
-                  Hora
-                  <input className="field" name="time" type="time" defaultValue={assigning.time} />
-                </label>
-              </div>
-              <label className="field-label">
-                Tipo de cita
-                <select className="field" name="title" defaultValue={guessTitle(assigning.title)}>
-                  {APPOINTMENT_TITLES.map((title) => (
-                    <option key={title} value={title}>
-                      {title}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="field-label">
-                Lugar
-                <input className="field" name="place" defaultValue={assigning.place} />
-              </label>
-              <label className="field-label">
-                Notas
-                <textarea className="field min-h-20" name="notes" defaultValue={assigning.notes} />
-              </label>
               <label className="field-label">
                 Clienta
                 <input
@@ -283,8 +360,9 @@ export function AgendaBoard({
                   <li className="px-4 py-3 text-sm text-ash">Nadie coincide con esa búsqueda.</li>
                 )}
               </ul>
+              <AppointmentFields item={draftAppointment(assigning, saved)} />
               <button className="btn-atelier-solid btn-atelier self-start" type="submit" disabled={!clientId}>
-                Asignar
+                Añadir a la agenda
               </button>
             </form>
             <button

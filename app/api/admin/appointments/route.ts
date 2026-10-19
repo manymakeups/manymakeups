@@ -39,6 +39,10 @@ export async function POST(request: Request) {
   if (deleteId) {
     client.appointments = client.appointments.filter((item) => item.id !== deleteId);
     client.history = client.history.filter((entry) => entry.appointmentId !== deleteId);
+    await saveClient(client);
+    const next = text(form.get("next"));
+    if (next.startsWith("/privado/calendario")) return go(request, next);
+    return go(request, `/privado/novias/${client.id}?tab=agenda&ok=agenda`);
   } else if (intent === "cancel" && editId) {
     const appointment = client.appointments.find((item) => item.id === editId);
     if (appointment) appointment.status = "anulada";
@@ -115,7 +119,9 @@ async function assignFromCalendar(request: Request, form: FormData) {
     slot.time = next.time;
     slot.place = next.place;
     slot.notes = next.notes;
-    if (slot.status === "anulada") slot.status = "planificada";
+    slot.amount = next.amount;
+    slot.status = next.status === "anulada" ? "planificada" : next.status;
+    syncCharge(current, slot);
   } else {
     const appointment: Appointment = {
       id: existing && owner?.id !== target.id ? existing.id : newId(),
@@ -124,12 +130,12 @@ async function assignFromCalendar(request: Request, form: FormData) {
       time: next.time,
       place: next.place,
       notes: next.notes,
-      amount: existing?.amount ?? 0,
-      status: existing && existing.status !== "anulada" ? existing.status : "planificada",
+      amount: next.amount,
+      status: next.status === "anulada" ? "planificada" : next.status,
       externalId,
     };
     current.appointments.push(appointment);
-    if (appointment.amount > 0) syncCharge(current, appointment);
+    syncCharge(current, appointment);
   }
   await saveClient(current);
   return go(request, `${back}${join}ok=asignada`);
