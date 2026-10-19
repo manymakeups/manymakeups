@@ -210,6 +210,7 @@ export type PortalCopy = {
   gettingReadyPlace: string;
   gettingReadyTime: string;
   ceremonyTime: string;
+  assignedStylist: string;
   services: string;
   makeup: string;
   hair: string;
@@ -578,6 +579,7 @@ export const portalEs: PortalCopy = {
   gettingReadyPlace: "Dónde os preparáis",
   gettingReadyTime: "Hora de prepararos",
   ceremonyTime: "Hora de ceremonia o inicio",
+  assignedStylist: "Estilista asignado",
   services: "Servicios",
   makeup: "Maquillaje",
   hair: "Peinado",
@@ -993,6 +995,7 @@ export const portalEn: PortalCopy = {
   gettingReadyPlace: "Where you get ready",
   gettingReadyTime: "Getting-ready time",
   ceremonyTime: "Ceremony or start time",
+  assignedStylist: "Assigned stylist",
   services: "Services",
   makeup: "Makeup",
   hair: "Hair",
@@ -1407,6 +1410,7 @@ export const portalFr: PortalCopy = {
   gettingReadyPlace: "Où vous vous préparez",
   gettingReadyTime: "Heure de préparation",
   ceremonyTime: "Heure de la cérémonie ou du début",
+  assignedStylist: "Styliste assigné",
   services: "Services",
   makeup: "Maquillage",
   hair: "Coiffure",

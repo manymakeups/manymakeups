@@ -34,6 +34,10 @@ export function NewClientModal() {
                 Correo
                 <input className="field" name="email" type="email" required />
               </label>
+              <label className="field-label sm:col-span-2">
+                Estilista asignado
+                <input className="field" name="stylist" required />
+              </label>
               <button className="btn-atelier-solid btn-atelier sm:col-span-2 self-start" type="submit">
                 Crear invitación
               </button>

@@ -101,6 +101,12 @@ export async function getClientByEmail(email: string) {
   return db.clients.find((client) => client.email === email) ?? null;
 }
 
+export async function getClientByPlannerHash(hash: string) {
+  if (!hash) return null;
+  const db = await readDb();
+  return db.clients.find((client) => client.planners.some((planner) => planner.tokenHash === hash)) ?? null;
+}
+
 export async function getClientByInviteHash(hash: string) {
   const now = Date.now();
   const db = await readDb();

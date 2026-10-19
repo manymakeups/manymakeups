@@ -58,6 +58,7 @@ export function contractorFromForm(form: FormData, fallback: EventDetails): Even
     gettingReadyPlace: text(form.get("gettingReadyPlace")),
     gettingReadyTime: text(form.get("gettingReadyTime")),
     ceremonyTime: text(form.get("ceremonyTime")),
+    stylist: form.has("stylist") ? text(form.get("stylist")).slice(0, 120) : fallback.stylist,
     makeup: flag(form.get("makeup")),
     hair: flag(form.get("hair")),
     glitterBar: fallback.glitterBar,

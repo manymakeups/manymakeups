@@ -148,6 +148,7 @@ export default async function StudioClientPage({
                 copy={portalEs}
                 includeClientId
                 showInspiration={false}
+                showStylist
               />
             }
             makeupInspiration={

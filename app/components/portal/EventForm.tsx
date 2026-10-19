@@ -15,6 +15,7 @@ export function EventForm({
   copy,
   includeClientId = false,
   showInspiration = true,
+  showStylist = false,
 }: {
   event: EventDetails;
   action: string;
@@ -24,6 +25,7 @@ export function EventForm({
   copy?: PortalCopy;
   includeClientId?: boolean;
   showInspiration?: boolean;
+  showStylist?: boolean;
 }) {
   const hooked = usePortalCopy();
   const t = copy ?? hooked;
@@ -45,6 +47,12 @@ export function EventForm({
           {t.partnerName}
           <input className="field" name="partnerName" defaultValue={event.partnerName} />
         </label>
+        {showStylist ? (
+          <label className="field-label sm:col-span-2">
+            {t.assignedStylist}
+            <input className="field" name="stylist" defaultValue={event.stylist} />
+          </label>
+        ) : null}
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="field-label">

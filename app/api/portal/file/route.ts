@@ -11,12 +11,27 @@ export async function GET(request: Request) {
   if (session.role === "client" && session.sub !== clientId) {
     return new NextResponse("Forbidden", { status: 403 });
   }
+  if (session.role === "planner" && session.clientId !== clientId) {
+    return new NextResponse("Forbidden", { status: 403 });
+  }
+  if (session.role !== "admin" && session.role !== "client" && session.role !== "planner") {
+    return new NextResponse("Forbidden", { status: 403 });
+  }
   const client = await getClient(clientId);
   if (!client) return new NextResponse("Not found", { status: 404 });
+  const plannerFile =
+    session.role === "planner"
+      ? client.documents.find(
+          (item) => item.id === fileId && (item.label === "Presupuesto" || item.label === "Contrato"),
+        )
+      : null;
   const file =
-    client.inspiration.find((item) => item.id === fileId) ??
-    client.documents.find((item) => item.id === fileId) ??
-    client.workPhotos.find((item) => item.id === fileId);
+    plannerFile ??
+    (session.role === "planner"
+      ? undefined
+      : (client.inspiration.find((item) => item.id === fileId) ??
+        client.documents.find((item) => item.id === fileId) ??
+        client.workPhotos.find((item) => item.id === fileId)));
   if (!file) return new NextResponse("Not found", { status: 404 });
   const payload = await readPortalFile(file);
   if (!payload) return new NextResponse("Not found", { status: 404 });

@@ -4,13 +4,14 @@ import { cookies } from "next/headers";
 export const SESSION_COOKIE = "mm_portal";
 const MAX_AGE = 60 * 60 * 24 * 30;
 
-export type SessionRole = "client" | "admin";
+export type SessionRole = "client" | "admin" | "planner";
 
 export type PortalSession = {
   sub: string;
   role: SessionRole;
   email: string;
   name: string;
+  clientId?: string;
 };
 
 function secretKey() {
@@ -29,6 +30,7 @@ export async function signSession(payload: PortalSession) {
     role: payload.role,
     email: payload.email,
     name: payload.name,
+    ...(payload.clientId ? { cid: payload.clientId } : {}),
   })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(payload.sub)
@@ -42,9 +44,10 @@ export async function readSessionToken(token: string) {
     const { payload } = await jwtVerify(token, secretKey());
     if (
       typeof payload.sub !== "string" ||
-      (payload.role !== "client" && payload.role !== "admin") ||
+      (payload.role !== "client" && payload.role !== "admin" && payload.role !== "planner") ||
       typeof payload.email !== "string" ||
-      typeof payload.name !== "string"
+      typeof payload.name !== "string" ||
+      (payload.role === "planner" && typeof payload.cid !== "string")
     ) {
       return null;
     }
@@ -53,6 +56,7 @@ export async function readSessionToken(token: string) {
       role: payload.role,
       email: payload.email,
       name: payload.name,
+      clientId: payload.role === "planner" ? String(payload.cid) : undefined,
     } satisfies PortalSession;
   } catch {
     return null;
@@ -90,4 +94,10 @@ export async function requireAdmin() {
   const session = await getSession();
   if (!session || session.role !== "admin") return null;
   return session;
+}
+
+export async function requirePlanner() {
+  const session = await getSession();
+  if (!session || session.role !== "planner" || !session.clientId) return null;
+  return { ...session, clientId: session.clientId };
 }

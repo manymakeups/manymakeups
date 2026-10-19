@@ -125,6 +125,10 @@ export default async function BridePanelPage({
             }}
             details={
               <div>
+                <div className="mb-8 border-b border-ink/10 pb-6">
+                  <p className="text-[0.68rem] uppercase tracking-[0.16em] text-ash">{t.assignedStylist}</p>
+                  <p className="mt-2 font-serif text-3xl text-ink">{client.event.stylist || "—"}</p>
+                </div>
                 <p className="max-w-2xl text-sm text-ash">
                   {client.event.contractorLocked ? t.lockedLead : t.yourDetailsLead}
                 </p>

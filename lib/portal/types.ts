@@ -309,6 +309,7 @@ export type EventDetails = {
   gettingReadyPlace: string;
   gettingReadyTime: string;
   ceremonyTime: string;
+  stylist: string;
   peopleCount: number;
   people: Attendee[];
   makeup: boolean;
@@ -364,10 +365,19 @@ export type PortalFile = {
   label: string;
 };
 
+export type PlannerAccess = {
+  id: string;
+  name: string;
+  email: string;
+  tokenHash: string;
+  createdAt: string;
+};
+
 export type ClientRecord = {
   id: string;
   email: string;
   name: string;
+  planners: PlannerAccess[];
   passwordHash: string | null;
   inviteTokenHash: string | null;
   inviteExpiresAt: string | null;
@@ -444,6 +454,7 @@ export function emptyEvent(name = ""): EventDetails {
     gettingReadyPlace: "",
     gettingReadyTime: "",
     ceremonyTime: "",
+    stylist: "",
     peopleCount: 0,
     people: [],
     makeup: true,
@@ -710,6 +721,27 @@ function asProducts(value: unknown): UsedProduct[] {
   });
 }
 
+function asPlanners(value: unknown): PlannerAccess[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((row) => {
+    if (!row || typeof row !== "object") return [];
+    const item = row as PlannerAccess;
+    const id = String(item.id ?? "").trim();
+    const email = String(item.email ?? "").trim().toLowerCase();
+    const tokenHash = String(item.tokenHash ?? "").trim();
+    if (!id || !email || !tokenHash) return [];
+    return [
+      {
+        id,
+        name: String(item.name ?? "").trim().slice(0, 120),
+        email,
+        tokenHash,
+        createdAt: String(item.createdAt ?? ""),
+      },
+    ];
+  });
+}
+
 export function normalizeClient(client: ClientRecord): ClientRecord {
   const count = Math.min(20, Math.max(0, Number(client.event?.peopleCount) || 0));
   const existing = Array.isArray(client.event?.people) ? client.event.people : [];
@@ -744,6 +776,7 @@ export function normalizeClient(client: ClientRecord): ClientRecord {
       makeupNotes: client.event?.makeupNotes ?? "",
       hairNotes: client.event?.hairNotes ?? "",
       clientLastName: client.event?.clientLastName ?? "",
+      stylist: String(client.event?.stylist ?? "").trim().slice(0, 120),
       contractorLocked: Boolean(client.event?.contractorLocked),
       peopleLocked: Boolean(client.event?.peopleLocked),
       planning: asPlanning(client.event?.planning),
@@ -755,6 +788,7 @@ export function normalizeClient(client: ClientRecord): ClientRecord {
       : [],
     remindersOptOut: Boolean(client.remindersOptOut),
     commercialOptOut: Boolean(client.commercialOptOut),
+    planners: asPlanners(client.planners),
     payments: migratePayments(client.payments, count),
     inspiration: client.inspiration ?? [],
     documents: client.documents ?? [],

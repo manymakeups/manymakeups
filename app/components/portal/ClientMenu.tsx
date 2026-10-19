@@ -58,16 +58,19 @@ export function ClientMenu({
   phone,
   email,
   pending = false,
+  planners = [],
 }: {
   id: string;
   name: string;
   phone: string;
   email: string;
   pending?: boolean;
+  planners?: { id: string; name: string; email: string }[];
 }) {
   const whatsapp = whatsappHref(phone);
   const call = telHref(phone);
   const dialogId = `eliminar-${id}`;
+  const plannerDialogId = `wp-${id}`;
   useDismissClientMenus();
 
   return (
@@ -138,6 +141,17 @@ export function ClientMenu({
           <button
             type="button"
             className="block w-full border-t border-ink/10 px-4 py-3 text-left text-[0.72rem] uppercase tracking-[0.14em] hover:bg-ink/5"
+            popoverTarget={plannerDialogId}
+            onClick={(event) => {
+              const menu = event.currentTarget.closest("details");
+              if (menu) menu.open = false;
+            }}
+          >
+            Crear acceso a WP
+          </button>
+          <button
+            type="button"
+            className="block w-full px-4 py-3 text-left text-[0.72rem] uppercase tracking-[0.14em] hover:bg-ink/5"
             popoverTarget={dialogId}
             onClick={(event) => {
               const menu = event.currentTarget.closest("details");
@@ -148,6 +162,62 @@ export function ClientMenu({
           </button>
         </div>
       </details>
+      <div
+        id={plannerDialogId}
+        popover="auto"
+        role="dialog"
+        aria-labelledby={`${plannerDialogId}-title`}
+        className="inset-0 m-auto h-fit max-h-[92dvh] w-[min(32rem,calc(100%-1.5rem))] overflow-y-auto border border-ink/10 bg-porcelain px-5 py-8 text-ink backdrop:bg-ink/35 sm:px-8 sm:py-10"
+      >
+        <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">Wedding planner</p>
+        <h2 id={`${plannerDialogId}-title`} className="mt-3 font-serif text-3xl leading-tight sm:text-4xl">
+          Acceso de consulta
+        </h2>
+        <p className="mt-5 text-sm leading-relaxed text-ash">
+          Recibirá un enlace para ver el servicio de {name}. Puede descargar el planning, los presupuestos y los
+          contratos. No puede modificar nada.
+        </p>
+        <form action="/api/admin/planners" method="post" className="mt-8 flex flex-col gap-4">
+          <input type="hidden" name="intent" value="create" />
+          <input type="hidden" name="clientId" value={id} />
+          <label className="field-label">
+            Nombre
+            <input className="field" name="name" required />
+          </label>
+          <label className="field-label">
+            Correo
+            <input className="field" name="email" type="email" required />
+          </label>
+          <div className="flex flex-wrap gap-3">
+            <button type="button" className="btn-atelier" popoverTarget={plannerDialogId} popoverTargetAction="hide">
+              Cancelar
+            </button>
+            <button type="submit" className="btn-atelier btn-atelier-solid">
+              Enviar acceso
+            </button>
+          </div>
+        </form>
+        {planners.length ? (
+          <ul className="mt-8 divide-y divide-ink/10 border-t border-ink/10">
+            {planners.map((planner) => (
+              <li key={planner.id} className="flex flex-wrap items-center justify-between gap-3 py-4">
+                <div>
+                  <p>{planner.name}</p>
+                  <p className="text-sm text-ash">{planner.email}</p>
+                </div>
+                <form action="/api/admin/planners" method="post">
+                  <input type="hidden" name="intent" value="revoke" />
+                  <input type="hidden" name="clientId" value={id} />
+                  <input type="hidden" name="plannerId" value={planner.id} />
+                  <button type="submit" className="text-[0.68rem] uppercase tracking-[0.16em] text-ash hover:text-ink">
+                    Quitar acceso
+                  </button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
       <div
         id={dialogId}
         popover="auto"

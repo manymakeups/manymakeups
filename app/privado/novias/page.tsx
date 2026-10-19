@@ -30,12 +30,12 @@ function formatEventDate(value: string) {
 export default async function StudioClientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; ok?: string; por?: string; q?: string; partida?: string; invite?: string; client?: string; sent?: string }>;
+  searchParams: Promise<{ error?: string; ok?: string; por?: string; q?: string; partida?: string; invite?: string; client?: string; sent?: string; wp?: string }>;
 }) {
   const admin = await requireAdmin();
   if (!admin) redirect("/privado");
   const clients = await listClients();
-  const { error, ok, por, q, partida, invite, client: inviteClient, sent } = await searchParams;
+  const { error, ok, por, q, partida, invite, client: inviteClient, sent, wp } = await searchParams;
   const mode = clientSearchMode(por);
   const query = q ?? "";
   const service = partida ?? "";
@@ -66,9 +66,16 @@ export default async function StudioClientsPage({
           contratos no se pierdan.
         </PortalNotice>
       ) : null}
-      {error === "datos" ? <PortalNotice>Nombre y correo válidos, por favor.</PortalNotice> : null}
+      {error === "datos" ? <PortalNotice>Revisa el nombre, el correo y el estilista.</PortalNotice> : null}
       {error === "existe" ? <PortalNotice>Ese correo ya tiene cuenta.</PortalNotice> : null}
       {ok === "eliminada" ? <PortalNotice>Clienta eliminada.</PortalNotice> : null}
+      {ok === "wp" && error !== "correo" ? <PortalNotice>Acceso enviado a la wedding planner.</PortalNotice> : null}
+      {ok === "wp" && error === "correo" ? (
+        <PortalNotice>
+          No he podido enviar el correo. Copia este enlace y mándaselo tú: {wp || ""}
+        </PortalNotice>
+      ) : null}
+      {ok === "wp-quitado" ? <PortalNotice>Acceso de la wedding planner retirado.</PortalNotice> : null}
       {ok === "muestras" ? (
         <PortalNotice>Muestras enviadas a tu correo ({sent || "0"}).</PortalNotice>
       ) : null}
@@ -121,6 +128,11 @@ export default async function StudioClientsPage({
                   phone={client.event.phone}
                   email={client.email}
                   pending={!client.passwordHash}
+                  planners={client.planners.map((planner) => ({
+                    id: planner.id,
+                    name: planner.name,
+                    email: planner.email,
+                  }))}
                 />
               </div>
             </li>

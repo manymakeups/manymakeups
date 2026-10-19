@@ -17,18 +17,20 @@ export async function POST(request: Request) {
   }
   const name = String(form.get("name") ?? "").trim();
   const email = normalizeEmail(String(form.get("email") ?? ""));
-  if (!name || !isEmail(email)) return go(request, "/privado/novias?error=datos");
+  const stylist = String(form.get("stylist") ?? "").trim().slice(0, 120);
+  if (!name || !isEmail(email) || !stylist) return go(request, "/privado/novias?error=datos");
   if (await getClientByEmail(email)) return go(request, "/privado/novias?error=existe");
   const token = randomToken();
   const client = {
     id: newId(),
     email,
     name,
+    planners: [],
     passwordHash: null,
     inviteTokenHash: null,
     inviteExpiresAt: null,
     createdAt: new Date().toISOString(),
-    event: emptyEvent(name),
+    event: { ...emptyEvent(name), stylist },
     payments: emptyPayments(),
     inspiration: [],
     documents: [],
