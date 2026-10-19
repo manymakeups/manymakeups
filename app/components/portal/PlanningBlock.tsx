@@ -102,9 +102,16 @@ function SidePlanningView({
   copy: PortalCopy;
 }) {
   const rows = sidePlanningRows({ ...plan, on: true }, title, copy);
-  if (!rows.length && !plan.location) return <p className="text-sm text-ash">{copy.planningEmpty}</p>;
   return (
-    <div className="flex max-w-2xl flex-col gap-6">
+    <div className="flex max-w-2xl flex-col gap-6 text-sm">
+      <div className="flex flex-col gap-3 leading-6 text-ink">
+        <p className="font-serif text-xl">{copy.premiumMailTimesTitle}</p>
+        <p>{copy.premiumMailTimes}</p>
+        <p>
+          <strong>{copy.premiumMailImportant}</strong> {copy.premiumMailImportantBody}
+        </p>
+      </div>
+      {!rows.length && !plan.location ? <p className="text-center text-ash">{copy.planningEmpty}</p> : null}
       {plan.location ? <p className="text-center uppercase tracking-[0.14em] text-ink">{plan.location}</p> : null}
       <SideSchedule title={title} rows={rows} />
     </div>
