@@ -174,8 +174,7 @@ export function ClientMenu({
           Acceso de consulta
         </h2>
         <p className="mt-5 text-sm leading-relaxed text-ash">
-          Recibirá un enlace para ver el servicio de {name}. Puede descargar el planning, los presupuestos y los
-          contratos. No puede modificar nada.
+          Recibirá un enlace al panel de {name}, igual que lo ve ella. Solo puede añadir acompañantes.
         </p>
         <form action="/api/admin/planners" method="post" className="mt-8 flex flex-col gap-4">
           <input type="hidden" name="intent" value="create" />

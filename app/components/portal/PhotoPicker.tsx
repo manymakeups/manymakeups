@@ -452,6 +452,7 @@ export function PhotoPicker({
   section,
   kind = "inspiration",
   localize = false,
+  readOnly = false,
 }: {
   personKey: string;
   files: PortalFile[];
@@ -463,6 +464,7 @@ export function PhotoPicker({
   section?: string;
   kind?: FileKind;
   localize?: boolean;
+  readOnly?: boolean;
 }) {
   const copy = usePortalCopy();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -549,24 +551,28 @@ export function PhotoPicker({
   return (
     <div className="flex flex-col gap-3">
       <p className="field-label">{fieldLabel}</p>
-      <input
-        ref={inputRef}
-        className="sr-only"
-        type="file"
-        accept="image/*,.heic,.heif"
-        multiple
-        onChange={(event) => {
-          const picked = event.currentTarget.files;
-          if (picked?.length) void upload(picked);
-        }}
-      />
-      <button className="btn-atelier self-start" type="button" disabled={busy} onClick={() => void upload()}>
-        {busy ? uploading : attach}
-      </button>
+      {readOnly ? null : (
+        <>
+          <input
+            ref={inputRef}
+            className="sr-only"
+            type="file"
+            accept="image/*,.heic,.heif"
+            multiple
+            onChange={(event) => {
+              const picked = event.currentTarget.files;
+              if (picked?.length) void upload(picked);
+            }}
+          />
+          <button className="btn-atelier self-start" type="button" disabled={busy} onClick={() => void upload()}>
+            {busy ? uploading : attach}
+          </button>
+        </>
+      )}
       <PhotoGrid
         files={shown}
         clientId={clientId}
-        canDelete
+        canDelete={!readOnly}
         kind={kind}
         removeLabel={remove}
         removeTitle={localize ? copy.removePhoto : "Quitar foto"}

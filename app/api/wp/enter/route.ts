@@ -15,5 +15,5 @@ export async function GET(request: Request) {
     name: planner.name,
     clientId: client.id,
   });
-  return go(request, "/wp");
+  return go(request, "/area-novia/panel");
 }

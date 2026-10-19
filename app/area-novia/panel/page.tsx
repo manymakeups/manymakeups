@@ -19,7 +19,7 @@ import { madridToday, parseMonth } from "@/lib/portal/calendar";
 import { INSPIRATION_MAX } from "@/lib/portal/files";
 import { companionHeading, fullName, mailName } from "@/lib/portal/names";
 import { getLocale, getPortalCopy, interpolate, localePath } from "@/lib/i18n";
-import { requireClient } from "@/lib/portal/session";
+import { requireClient, requirePlanner } from "@/lib/portal/session";
 import { getClient, listNotices, markClientCommsRead } from "@/lib/portal/store";
 import {
   CONTRACTOR_TRIAL_PHOTOS,
@@ -50,10 +50,13 @@ export default async function BridePanelPage({
 }) {
   const locale = await getLocale();
   const t = getPortalCopy(locale);
-  const session = await requireClient();
-  if (!session) redirect(localePath(locale, "/area-novia"));
-  const client = await getClient(session.sub);
-  if (!client) redirect(localePath(locale, "/area-novia"));
+  const planner = await requirePlanner();
+  const session = planner ? null : await requireClient();
+  if (!planner && !session) redirect(localePath(locale, "/area-novia"));
+  const client = await getClient(planner ? planner.clientId : session!.sub);
+  if (!client) redirect(planner ? "/wp?error=enlace" : localePath(locale, "/area-novia"));
+  if (planner && !client.planners.some((item) => item.id === planner.sub)) redirect("/wp?error=enlace");
+  const consult = Boolean(planner);
   const { ok, error, tab: tabRaw, mes, com, sec, agenda, plan: planRaw } = await searchParams;
   const plan = planRaw === "glitter" || planRaw === "beauty" ? planRaw : undefined;
   const tab = portalTab(tabRaw);
@@ -61,7 +64,7 @@ export default async function BridePanelPage({
   const unreadComms =
     client.history.filter((entry) => entry.kind === "contacto" && entry.seenByClient === false).length +
     requests.filter((notice) => notice.fromStudio && !notice.read).length;
-  if (tab === "historico" && unreadComms > 0) await markClientCommsRead(client.id);
+  if (!consult && tab === "historico" && unreadComms > 0) await markClientCommsRead(client.id);
   const today = madridToday();
   const { year: initialYear, month: initialMonth } = parseMonth(mes, today);
   const busyDates = tab === "agenda" ? await studioBusyDates() : [];
@@ -88,7 +91,7 @@ export default async function BridePanelPage({
       title={interpolate(t.hello, { name: mailName(client.event, client.name) })}
       lead={t.panelLead}
       aside={
-        <form action="/api/portal/logout" method="post">
+        <form action={consult ? "/api/portal/logout?next=/wp" : "/api/portal/logout"} method="post">
           <button className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink" type="submit">
             {t.logout}
           </button>
@@ -105,6 +108,11 @@ export default async function BridePanelPage({
         />
       </div>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      {consult ? (
+        <div className="shrink-0 pt-6">
+          <PortalNotice>Puedes consultar el panel y añadir acompañantes. El resto no se puede modificar.</PortalNotice>
+        </div>
+      ) : null}
       {ok && okText[ok] ? <div className="shrink-0 pt-6"><PortalNotice>{okText[ok]}</PortalNotice></div> : null}
       {error && errorText[error] ? <div className="shrink-0 pt-6"><PortalNotice>{errorText[error]}</PortalNotice></div> : null}
 
@@ -129,11 +137,13 @@ export default async function BridePanelPage({
                   <p className="text-[0.68rem] uppercase tracking-[0.16em] text-ash">{t.assignedStylist}</p>
                   <p className="mt-2 font-serif text-3xl text-ink">{client.event.stylist || "—"}</p>
                 </div>
-                <p className="max-w-2xl text-sm text-ash">
-                  {client.event.contractorLocked ? t.lockedLead : t.yourDetailsLead}
-                </p>
+                {consult ? null : (
+                  <p className="max-w-2xl text-sm text-ash">
+                    {client.event.contractorLocked ? t.lockedLead : t.yourDetailsLead}
+                  </p>
+                )}
                 <div className="mt-8">
-                  {client.event.contractorLocked ? (
+                  {consult || client.event.contractorLocked ? (
                     <EventView event={client.event} copy={t} />
                   ) : (
                     <EventForm
@@ -157,6 +167,7 @@ export default async function BridePanelPage({
                 tab="contratante"
                 section="maquillaje"
                 localize
+                readOnly={consult}
               />
             }
             hairInspiration={
@@ -168,6 +179,7 @@ export default async function BridePanelPage({
                 tab="contratante"
                 section="peinado"
                 localize
+                readOnly={consult}
               />
             }
             photos={
@@ -237,22 +249,24 @@ export default async function BridePanelPage({
         <section className="flex min-h-0 flex-1 flex-col pt-4">
           <div className="flex shrink-0 flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="font-serif text-3xl">{t.companionsTitle}</h2>
-            {client.event.peopleLocked ? (
+            {consult || client.event.peopleLocked ? (
               <AddCompanionModal clientId={client.id} action="/api/portal/companions" copy={t} />
             ) : null}
           </div>
-          <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">
-            {client.event.peopleLocked ? t.lockedLead : t.companionsLead}
-          </p>
+          {consult ? null : (
+            <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">
+              {client.event.peopleLocked ? t.lockedLead : t.companionsLead}
+            </p>
+          )}
           <div
             className={
-              client.event.peopleLocked
+              consult || client.event.peopleLocked
                 ? "mt-4 flex min-h-0 flex-1 flex-col"
                 : "mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16"
             }
-            {...(client.event.peopleLocked ? {} : { "data-portal-scroll": "" })}
+            {...(consult || client.event.peopleLocked ? {} : { "data-portal-scroll": "" })}
           >
-            {client.event.peopleLocked ? (
+            {consult || client.event.peopleLocked ? (
               client.event.people.length ? (
                 <CompanionSwitch
                   label={t.companionOne}
@@ -277,6 +291,7 @@ export default async function BridePanelPage({
                         workPhotos={client.workPhotos.filter((file) => file.label === `prueba-persona-${i}`)}
                         copy={t}
                         section={sec?.startsWith(`${i}-`) ? sec.slice(`${i}-`.length) : undefined}
+                        readOnly={consult}
                       />
                     ),
                   }))}
@@ -305,7 +320,7 @@ export default async function BridePanelPage({
           <div className="mt-4 flex min-h-0 flex-1 flex-col">
             <SubTabs
               fill
-              initial={com === "nueva" || ok === "cambio" || error === "cambio" ? "nueva" : "historico"}
+              initial={consult ? "historico" : com === "nueva" || ok === "cambio" || error === "cambio" ? "nueva" : "historico"}
               tabs={[
                 {
                   id: "historico",
@@ -317,10 +332,13 @@ export default async function BridePanelPage({
                       clientName={fullName(client.event, client.name)}
                       copy={t}
                       locale={locale}
-                      canReply
+                      canReply={!consult}
                     />
                   ),
                 },
+                ...(consult
+                  ? []
+                  : [
                 {
                   id: "nueva",
                   label: t.commsWrite,
@@ -345,6 +363,7 @@ export default async function BridePanelPage({
                       <p className="text-sm text-ash">{t.commsWait}</p>
                     ),
                 },
+              ]),
               ]}
             />
           </div>
@@ -372,7 +391,9 @@ export default async function BridePanelPage({
         <section className="flex min-h-0 flex-1 flex-col pt-4">
           <div className="flex shrink-0 flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="font-serif text-3xl">{t.docsTitle}</h2>
-            <SendDocumentModal label={t.sendDocument} hint={t.sendDocumentHint} closeLabel={t.agendaClose} fileLabel={t.sendDocumentFile} />
+            {consult ? null : (
+              <SendDocumentModal label={t.sendDocument} hint={t.sendDocumentHint} closeLabel={t.agendaClose} fileLabel={t.sendDocumentFile} />
+            )}
           </div>
           <p className="mt-3 max-w-2xl shrink-0 text-sm text-ash">{t.docsLead}</p>
           <div data-portal-scroll className="mt-6 min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
@@ -423,6 +444,7 @@ export default async function BridePanelPage({
                       closeLabel={t.agendaClose}
                       previousLabel={t.agendaPrev}
                       nextLabel={t.agendaNext}
+                      bookable={!consult}
                     />
                   ),
                 },
@@ -430,7 +452,7 @@ export default async function BridePanelPage({
                   id: "historico",
                   label: t.agendaHistory,
                   body: (
-                    <AgendaView appointments={client.appointments} copy={t} locale={locale} editable />
+                    <AgendaView appointments={client.appointments} copy={t} locale={locale} editable={!consult} />
                   ),
                 },
               ]}

@@ -38,7 +38,6 @@ export async function POST(request: Request) {
   await saveClient(client);
   const sent = await mailPlannerAccess({
     to: email,
-    plannerName: name,
     clientName: fullName(client.event, client.name),
     link,
   });

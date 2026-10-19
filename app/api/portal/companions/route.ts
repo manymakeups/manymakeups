@@ -2,17 +2,21 @@ import { companionsFromForm, peopleFields } from "@/lib/portal/event-parse";
 import { goPortal } from "@/lib/portal/http";
 import { companionsChangeMessage, newCompanionMessage } from "@/lib/portal/notice-text";
 import { clientLabel, notifyStudio } from "@/lib/portal/notify";
-import { requireClient } from "@/lib/portal/session";
+import { requireClient, requirePlanner } from "@/lib/portal/session";
 import { getClient, saveClient } from "@/lib/portal/store";
 import { emptyAttendee } from "@/lib/portal/types";
 
 export async function POST(request: Request) {
-  const session = await requireClient();
-  if (!session) return goPortal(request, "/area-novia");
-  const client = await getClient(session.sub);
-  if (!client) return goPortal(request, "/area-novia");
+  const planner = await requirePlanner();
+  const session = planner ? null : await requireClient();
+  if (!planner && !session) return goPortal(request, "/area-novia");
+  const client = await getClient(planner ? planner.clientId : session!.sub);
+  if (!client || (planner && !client.planners.some((item) => item.id === planner.sub))) {
+    return goPortal(request, planner ? "/wp?error=enlace" : "/area-novia");
+  }
   const form = await request.formData();
   const intent = String(form.get("intent") ?? "");
+  if (planner && intent !== "add") return goPortal(request, "/area-novia/panel?tab=acompanantes");
   if (intent === "add") {
     if (client.event.people.length >= 20) {
       return goPortal(request, "/area-novia/panel?tab=acompanantes");

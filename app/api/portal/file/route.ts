@@ -19,19 +19,13 @@ export async function GET(request: Request) {
   }
   const client = await getClient(clientId);
   if (!client) return new NextResponse("Not found", { status: 404 });
-  const plannerFile =
-    session.role === "planner"
-      ? client.documents.find(
-          (item) => item.id === fileId && (item.label === "Presupuesto" || item.label === "Contrato"),
-        )
-      : null;
+  if (session.role === "planner" && !client.planners.some((item) => item.id === session.sub)) {
+    return new NextResponse("Forbidden", { status: 403 });
+  }
   const file =
-    plannerFile ??
-    (session.role === "planner"
-      ? undefined
-      : (client.inspiration.find((item) => item.id === fileId) ??
-        client.documents.find((item) => item.id === fileId) ??
-        client.workPhotos.find((item) => item.id === fileId)));
+    client.inspiration.find((item) => item.id === fileId) ??
+    client.documents.find((item) => item.id === fileId) ??
+    client.workPhotos.find((item) => item.id === fileId);
   if (!file) return new NextResponse("Not found", { status: 404 });
   const payload = await readPortalFile(file);
   if (!payload) return new NextResponse("Not found", { status: 404 });

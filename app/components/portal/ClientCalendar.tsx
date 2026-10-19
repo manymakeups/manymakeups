@@ -13,6 +13,7 @@ export function ClientCalendar({
   closeLabel,
   previousLabel,
   nextLabel,
+  bookable = true,
 }: {
   busyDates: string[];
   today: string;
@@ -22,6 +23,7 @@ export function ClientCalendar({
   closeLabel: string;
   previousLabel: string;
   nextLabel: string;
+  bookable?: boolean;
 }) {
   const busy = useMemo(() => new Set(busyDates), [busyDates]);
   const [year, setYear] = useState(initialYear);
@@ -109,7 +111,7 @@ export function ClientCalendar({
               ) : null}
             </>
           );
-          if (!free) {
+          if (!free || !bookable) {
             return (
               <div key={date} className={className}>
                 {inner}

@@ -20,6 +20,7 @@ export function CompanionView({
   copy,
   section,
   variant = "tabs",
+  readOnly = false,
 }: {
   index: number;
   person: Attendee;
@@ -29,6 +30,7 @@ export function CompanionView({
   copy: PortalCopy;
   section?: string;
   variant?: "tabs" | "filters" | "responsive";
+  readOnly?: boolean;
 }) {
   const labels = {
     data: copy.eventData,
@@ -83,6 +85,7 @@ export function CompanionView({
               tab="acompanantes"
               section={`${index}-maquillaje`}
               localize
+              readOnly={readOnly}
             />
           }
           hairInspiration={
@@ -94,6 +97,7 @@ export function CompanionView({
               tab="acompanantes"
               section={`${index}-peinado`}
               localize
+              readOnly={readOnly}
             />
           }
           photos={
