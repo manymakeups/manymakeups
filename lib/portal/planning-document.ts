@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFImage, type PDFPage } from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
+import { PDFDocument, rgb, type PDFFont, type PDFImage, type PDFPage } from "pdf-lib";
 import type { Locale } from "@/lib/i18n/config";
 import { dateLocale, interpolate, type PortalCopy } from "@/lib/i18n/portal-messages";
 import { contractedServiceNames, serviceAmountDue } from "./budget";
@@ -10,35 +11,31 @@ import type { ClientRecord } from "./types";
 
 const PAGE_W = 595.28;
 const PAGE_H = 841.89;
-const MARGIN = 52;
+const OUTER = 36;
+const PAD = 28;
 
 const porcelain = rgb(244 / 255, 241 / 255, 234 / 255);
-const ink = rgb(28 / 255, 23 / 255, 20 / 255);
+const card = rgb(251 / 255, 248 / 255, 243 / 255);
+const frame = rgb(228 / 255, 216 / 255, 198 / 255);
+const hair = rgb(234 / 255, 223 / 255, 206 / 255);
 const gilt = rgb(154 / 255, 123 / 255, 73 / 255);
-const ash = rgb(110 / 255, 102 / 255, 94 / 255);
+const ink = rgb(74 / 255, 67 / 255, 62 / 255);
+const ash = rgb(138 / 255, 129 / 255, 120 / 255);
 
 export type PlanningPdfKind = "evento" | "glitter" | "beauty";
 
-function plain(value: string) {
-  return value
-    .replaceAll("–", "-")
-    .replaceAll("—", "-")
-    .replaceAll("’", "'")
-    .replaceAll("‘", "'")
-    .replaceAll("“", '"')
-    .replaceAll("”", '"')
-    .replaceAll("…", "...")
-    .replaceAll("\u00a0", " ");
-}
-
-function wrap(text: string, font: PDFFont, size: number, max: number) {
-  const words = plain(text).split(/\s+/).filter(Boolean);
+function linesOf(text: string, font: PDFFont, size: number, max: number, tracking = 0) {
+  const words = text.replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
   if (!words.length) return [];
+  const width = (value: string) => {
+    const chars = [...value];
+    return chars.reduce((sum, char) => sum + font.widthOfTextAtSize(char, size), 0) + tracking * Math.max(0, chars.length - 1);
+  };
   const lines: string[] = [];
   let current = "";
   for (const word of words) {
     const next = current ? `${current} ${word}` : word;
-    if (font.widthOfTextAtSize(next, size) > max && current) {
+    if (width(next) > max && current) {
       lines.push(current);
       current = word;
     } else current = next;
@@ -50,128 +47,192 @@ function wrap(text: string, font: PDFFont, size: number, max: number) {
 class Sheet {
   page!: PDFPage;
   y = 0;
+  private pages: PDFPage[] = [];
+  private cardBottom = 0;
+  private contentLeft = 0;
+  private contentRight = 0;
+  private opening = true;
 
   constructor(
     private pdf: PDFDocument,
     private font: PDFFont,
-    private bold: PDFFont,
     private logo: PDFImage,
+    private signature: PDFImage,
+    private foot: string,
   ) {
     this.addPage();
   }
 
-  private paint() {
-    this.page.drawRectangle({ x: 0, y: 0, width: PAGE_W, height: PAGE_H, color: porcelain });
-  }
-
-  addPage() {
+  private addPage(cardHeight?: number) {
     this.page = this.pdf.addPage([PAGE_W, PAGE_H]);
-    this.paint();
-    this.y = PAGE_H - MARGIN;
+    this.pages.push(this.page);
+    this.page.drawRectangle({ x: 0, y: 0, width: PAGE_W, height: PAGE_H, color: porcelain });
+    let top = PAGE_H - OUTER;
+    if (this.opening) {
+      const width = 168;
+      const height = (width * this.logo.height) / this.logo.width;
+      this.page.drawImage(this.logo, {
+        x: (PAGE_W - width) / 2,
+        y: top - height,
+        width,
+        height,
+      });
+      top -= height + 14;
+      this.opening = false;
+    }
+    const footLines = this.foot ? linesOf(this.foot, this.font, 7.5, PAGE_W - OUTER * 2) : [];
+    const footReserve = OUTER + (footLines.length ? 18 + footLines.length * 10 : 16);
+    this.cardBottom = cardHeight ? Math.max(footReserve, top - cardHeight) : footReserve;
+    this.page.drawRectangle({
+      x: OUTER,
+      y: this.cardBottom,
+      width: PAGE_W - OUTER * 2,
+      height: Math.max(80, top - this.cardBottom),
+      color: card,
+      borderColor: frame,
+      borderWidth: 0.8,
+    });
+    this.contentLeft = OUTER + PAD;
+    this.contentRight = PAGE_W - OUTER - PAD;
+    this.y = top - PAD;
   }
 
   private need(height: number) {
-    if (this.y - height < MARGIN) this.addPage();
+    if (this.y - height < this.cardBottom + 18) this.addPage();
   }
 
-  logoMark() {
-    const width = 168;
-    const height = (width * this.logo.height) / this.logo.width;
-    this.need(height + 8);
-    this.page.drawImage(this.logo, {
-      x: (PAGE_W - width) / 2,
-      y: this.y - height,
-      width,
-      height,
+  private text(value: string, x: number, y: number, size: number, color: typeof ink) {
+    this.page.drawText(value, { x, y, size, font: this.font, color });
+  }
+
+  private tracked(value: string, x: number, y: number, size: number, color: typeof ink, tracking: number) {
+    let cursor = x;
+    for (const char of value) {
+      this.text(char, cursor, y, size, color);
+      cursor += this.font.widthOfTextAtSize(char, size) + tracking;
+    }
+  }
+
+  rule() {
+    this.need(20);
+    this.page.drawLine({
+      start: { x: this.contentLeft, y: this.y },
+      end: { x: this.contentLeft + 42, y: this.y },
+      thickness: 0.7,
+      color: gilt,
     });
-    this.y -= height + 18;
+    this.y -= 18;
   }
 
-  center(text: string, size: number, font: PDFFont, color: typeof ink, gap = 8) {
-    const line = plain(text).trim();
-    if (!line) return;
-    this.need(size + gap);
-    const width = font.widthOfTextAtSize(line, size);
-    this.page.drawText(line, {
-      x: (PAGE_W - width) / 2,
-      y: this.y - size,
-      size,
-      font,
-      color,
-    });
-    this.y -= size + gap;
+  title(value: string) {
+    const size = 20;
+    this.need(size + 8);
+    this.y -= size;
+    this.text(value, this.contentLeft, this.y, size, ink);
+    this.y -= 10;
   }
 
-  paragraph(text: string, size: number, font: PDFFont, color: typeof ink, gap = 4) {
-    const lines = wrap(text, font, size, PAGE_W - MARGIN * 2);
+  kicker(value: string) {
+    const size = 8;
+    this.need(size + 8);
+    this.y -= size;
+    this.tracked(value.toUpperCase(), this.contentLeft, this.y, size, gilt, 1.15);
+    this.y -= 12;
+  }
+
+  quiet(value: string) {
+    const size = 11;
+    const lines = linesOf(value, this.font, size, this.contentRight - this.contentLeft);
     for (const line of lines) {
-      this.need(size + gap);
-      this.page.drawText(line, { x: MARGIN, y: this.y - size, size, font, color });
-      this.y -= size + gap;
+      this.need(size + 4);
+      this.y -= size;
+      this.text(line, this.contentLeft, this.y, size, ash);
+      this.y -= 4;
+    }
+    this.y -= 4;
+  }
+
+  prose(value: string, color: typeof ink = ink) {
+    const size = 11;
+    const lines = linesOf(value, this.font, size, this.contentRight - this.contentLeft);
+    for (const line of lines) {
+      this.need(size + 4);
+      this.y -= size;
+      this.text(line, this.contentLeft, this.y, size, color);
+      this.y -= 4.5;
     }
     this.y -= 6;
   }
 
-  rule() {
-    this.need(16);
-    this.page.drawLine({
-      start: { x: MARGIN, y: this.y },
-      end: { x: PAGE_W - MARGIN, y: this.y },
-      thickness: 0.6,
-      color: gilt,
-      opacity: 0.55,
+  field(label: string, value: string, note = "", marked = false) {
+    const labelSize = 8;
+    const valueSize = 12.5;
+    const noteSize = 10;
+    const width = this.contentRight - this.contentLeft;
+    const labels = linesOf(label.toUpperCase(), this.font, labelSize, width * 0.84, 1.05);
+    const values = value.trim() ? linesOf(value, this.font, valueSize, width) : [];
+    const notes = note.trim() ? linesOf(note, this.font, noteSize, width) : [];
+    const height =
+      labels.length * 12 +
+      values.length * 16 +
+      notes.length * 13 +
+      18;
+    this.need(height);
+    for (const line of labels) {
+      this.y -= labelSize;
+      this.tracked(line, this.contentLeft, this.y, labelSize, gilt, 1.05);
+      this.y -= 4;
+    }
+    this.y -= 1;
+    values.forEach((line, index) => {
+      this.y -= valueSize;
+      this.text(line, this.contentLeft, this.y, valueSize, ink);
+      if (marked && index === values.length - 1) {
+        const x = this.contentLeft + this.font.widthOfTextAtSize(line, valueSize) + 1.5;
+        this.text("*", x, this.y + 3, 9, gilt);
+      }
+      this.y -= 3;
     });
-    this.y -= 16;
+    for (const line of notes) {
+      this.y -= noteSize;
+      this.text(line, this.contentLeft, this.y, noteSize, ash);
+      this.y -= 3;
+    }
+    this.y -= 7;
+    this.page.drawLine({
+      start: { x: this.contentLeft, y: this.y },
+      end: { x: this.contentRight, y: this.y },
+      thickness: 0.45,
+      color: hair,
+    });
+    this.y -= 13;
   }
 
-  row(when: string, label: string, note: string) {
-    const labelSize = 13;
-    const whenSize = 9;
-    const noteSize = 10;
-    const column = 118;
-    const labelWidth = PAGE_W - MARGIN - column - MARGIN;
-    const labels = wrap(label, this.bold, labelSize, labelWidth);
-    const notes = note.trim() ? wrap(note, this.font, noteSize, labelWidth) : [];
-    const height = Math.max(labelSize, labels.length * (labelSize + 3)) + notes.length * (noteSize + 3) + 16;
-    this.need(height);
-    const baseline = this.y - labelSize;
-    if (when.trim()) {
-      this.page.drawText(plain(when), {
-        x: MARGIN,
-        y: baseline + 1,
-        size: whenSize,
-        font: this.font,
-        color: gilt,
-      });
+  sign() {
+    const width = 128;
+    const height = (width * this.signature.height) / this.signature.width;
+    if (this.y - height - 12 < this.cardBottom + 18) this.addPage(height + PAD * 2);
+    else this.y -= 8;
+    this.page.drawImage(this.signature, {
+      x: this.contentLeft,
+      y: this.y - height,
+      width,
+      height,
+    });
+    this.y -= height;
+  }
+
+  finish() {
+    if (!this.foot.trim()) return;
+    const size = 7.5;
+    const lines = linesOf(this.foot, this.font, size, PAGE_W - OUTER * 2);
+    for (const page of this.pages) {
+      let y = 12 + lines.length * 10;
+      for (const line of lines) {
+        y -= 10;
+        page.drawText(line, { x: OUTER, y, size, font: this.font, color: ash });
+      }
     }
-    labels.forEach((line, index) => {
-      this.page.drawText(line, {
-        x: MARGIN + column,
-        y: baseline - index * (labelSize + 3),
-        size: labelSize,
-        font: this.bold,
-        color: ink,
-      });
-    });
-    const noteTop = baseline - labels.length * (labelSize + 3) - 2;
-    notes.forEach((line, index) => {
-      this.page.drawText(line, {
-        x: MARGIN + column,
-        y: noteTop - index * (noteSize + 3),
-        size: noteSize,
-        font: this.font,
-        color: ash,
-      });
-    });
-    this.y = noteTop - notes.length * (noteSize + 3) - 8;
-    this.page.drawLine({
-      start: { x: MARGIN, y: this.y },
-      end: { x: PAGE_W - MARGIN, y: this.y },
-      thickness: 0.4,
-      color: ink,
-      opacity: 0.12,
-    });
-    this.y -= 12;
   }
 }
 
@@ -211,44 +272,38 @@ export async function planningPdfFor(client: ClientRecord, kind: PlanningPdfKind
   const due = premium ? 0 : serviceAmountDue(client);
   const amount =
     due > 0 ? new Intl.NumberFormat(dateLocale(locale), { style: "currency", currency: "EUR" }).format(due) : "";
+  const pendingLabel = copy.planningPending.split(":")[0].trim();
 
   const pdf = await PDFDocument.create();
-  const font = await pdf.embedFont(StandardFonts.TimesRoman);
-  const bold = await pdf.embedFont(StandardFonts.TimesRomanBold);
+  pdf.registerFontkit(fontkit);
+  const font = await pdf.embedFont(await readFile(path.join(process.cwd(), "lib/portal/fonts/Skia.ttf")), {
+    subset: true,
+  });
   const logo = await pdf.embedPng(await readFile(path.join(process.cwd(), "public/brand/mail/logo.png")));
-  const sheet = new Sheet(pdf, font, bold, logo);
+  const signature = await pdf.embedPng(await readFile(path.join(process.cwd(), "public/brand/mail/firma.png")));
+  const sheet = new Sheet(pdf, font, logo, signature, amount ? `* ${copy.planningCashNote}` : "");
 
-  sheet.logoMark();
-  sheet.center(name, 22, bold, ink, 8);
-  sheet.center(title.toUpperCase(), 10, font, gilt, 10);
-  if (date) sheet.center(date, 12, font, ink, 6);
-  if (location.trim()) sheet.center(location.toUpperCase(), 10, font, ink, 8);
-  sheet.y -= 8;
   sheet.rule();
+  if (name) sheet.title(name);
+  sheet.kicker(title);
+  if (date) sheet.quiet(date);
+  if (location.trim()) sheet.quiet(location);
+  sheet.y -= 6;
 
   if (premium) {
-    sheet.paragraph(copy.premiumMailTimesTitle, 13, bold, ink, 5);
-    sheet.paragraph(copy.premiumMailTimes, 11, font, ink, 4);
-    sheet.paragraph(copy.premiumMailImportant, 11, bold, ink, 3);
-    sheet.paragraph(copy.premiumMailImportantBody, 11, font, ink, 4);
-    sheet.y -= 4;
+    sheet.prose(copy.premiumMailTimesTitle, gilt);
+    sheet.prose(copy.premiumMailTimes);
+    sheet.prose(copy.premiumMailImportant, gilt);
+    sheet.prose(copy.premiumMailImportantBody);
   }
 
-  if (amount) {
-    sheet.center(interpolate(copy.planningPending, { amount }), 13, bold, ink, 6);
-    sheet.paragraph(copy.planningCashNote, 10, font, ash, 3);
-    sheet.rule();
-  }
+  if (amount) sheet.field(pendingLabel, amount, "", true);
 
-  if (!rows.length && !notes.trim()) {
-    sheet.center(copy.planningEmpty, 12, font, ash, 8);
-  }
-  for (const row of rows) sheet.row(row.when, row.label, row.note);
-  if (notes.trim()) {
-    sheet.y -= 6;
-    sheet.paragraph(copy.planningNotes, 10, font, gilt, 4);
-    sheet.paragraph(notes, 11, font, ink, 4);
-  }
+  if (!rows.length && !notes.trim() && !amount) sheet.quiet(copy.planningEmpty);
+  for (const row of rows) sheet.field(row.label, row.when, row.note);
+  if (notes.trim()) sheet.field(copy.planningNotes, notes);
+  sheet.sign();
+  sheet.finish();
 
   return pdf.save();
 }

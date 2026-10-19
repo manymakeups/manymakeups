@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  outputFileTracingIncludes: {
+    "/api/portal/planning-pdf": ["./lib/portal/fonts/Skia.ttf"],
+    "/api/wp/planning": ["./lib/portal/fonts/Skia.ttf"],
+  },
   async redirects() {
     return [
       {
