@@ -16,7 +16,7 @@
   --color-ash: var(--ash);
   --color-gilt: var(--gilt);
   --color-gilt-deep: var(--gilt-deep);
-  --font-sans: Skia, "Skia-Regular", Palatino, serif;
+  --font-sans: var(--font-outfit);
   --font-serif: var(--font-cormorant);
 }
 

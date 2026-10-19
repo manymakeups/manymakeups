@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond } from "next/font/google";
+import { Cormorant_Garamond, Outfit } from "next/font/google";
 import { IntroSplash } from "./components/IntroSplash";
 import { JsonLd } from "./components/JsonLd";
 import { ScrollJump } from "./components/ScrollJump";
@@ -9,6 +9,11 @@ import { getLocale, getRequestPathname } from "@/lib/i18n/server";
 import { getMessages } from "@/lib/i18n/messages";
 import { I18nProvider } from "@/lib/i18n/context";
 import { Analytics } from "@vercel/analytics/next";
+
+const sans = Outfit({
+  variable: "--font-outfit",
+  subsets: ["latin"],
+});
 
 const serif = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -102,7 +107,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang={locale}
-      className={`${serif.variable} h-full antialiased`}
+      className={`${sans.variable} ${serif.variable} h-full antialiased`}
     >
       <body className="min-h-full font-sans">
         <I18nProvider locale={locale} messages={messages}>
