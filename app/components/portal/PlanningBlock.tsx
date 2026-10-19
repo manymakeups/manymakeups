@@ -1,10 +1,11 @@
 import { PlanningExtras } from "@/app/components/portal/PlanningExtras";
+import { SubTabs } from "@/app/components/portal/SubTabs";
 import { contractedServiceNames, serviceAmountDue } from "@/lib/portal/budget";
 import { companionHeading, fullName } from "@/lib/portal/names";
 import { planningTimeline, sidePlanningRows } from "@/lib/portal/planning-timeline";
 import type { Locale } from "@/lib/i18n/config";
 import { dateLocale, interpolate, portalEs, type PortalCopy } from "@/lib/i18n/portal-messages";
-import type { Attendee, ClientRecord, EventDetails, EventPlanning } from "@/lib/portal/types";
+import type { Attendee, ClientRecord, EventDetails, EventPlanning, SidePlanning } from "@/lib/portal/types";
 
 function peopleOf(eventName: string, event: EventDetails, people: Attendee[], copy: PortalCopy) {
   return [
@@ -39,8 +40,6 @@ export function PlanningView({
   client?: Pick<ClientRecord, "history" | "payments"> | null;
 }) {
   const timeline = planningTimeline(planning, peopleOf(eventName, event, people, copy), copy);
-  const glitterRows = sidePlanningRows(planning.glitter, copy.glitterBar, copy);
-  const beautyRows = sidePlanningRows(planning.beauty, copy.beautyCorner, copy);
   const due = client ? serviceAmountDue(client) : 0;
   const amount =
     due > 0
@@ -54,7 +53,7 @@ export function PlanningView({
       })
     : "";
   const filled = Boolean(
-    planning.location || planning.notes || timeline.length || glitterRows.length || beautyRows.length || amount || eventDate,
+    planning.location || planning.notes || timeline.length || amount || eventDate,
   );
   return (
     <div className="flex max-w-2xl flex-col gap-6 text-sm">
@@ -83,8 +82,6 @@ export function PlanningView({
           ))}
         </ul>
       ) : null}
-      <SideSchedule title={copy.glitterBar} rows={glitterRows} />
-      <SideSchedule title={copy.beautyCorner} rows={beautyRows} />
       {planning.notes ? (
         <div>
           <p className="text-ash">{copy.planningNotes}</p>
@@ -92,6 +89,50 @@ export function PlanningView({
         </div>
       ) : null}
     </div>
+  );
+}
+
+function SidePlanningView({
+  title,
+  plan,
+  copy,
+}: {
+  title: string;
+  plan: SidePlanning;
+  copy: PortalCopy;
+}) {
+  const rows = sidePlanningRows({ ...plan, on: true }, title, copy);
+  if (!rows.length) return <p className="text-sm text-ash">{copy.planningEmpty}</p>;
+  return <SideSchedule title={title} rows={rows} />;
+}
+
+export function ClientPlanning(props: {
+  planning: EventPlanning;
+  eventName: string;
+  event: EventDetails;
+  people: Attendee[];
+  copy: PortalCopy;
+  locale?: Locale;
+  client?: Pick<ClientRecord, "history" | "payments"> | null;
+}) {
+  const { planning, event, copy } = props;
+  const main = <PlanningView {...props} />;
+  const extras = [
+    event.glitterBar ? { id: "glitter", label: copy.glitterBar, plan: planning.glitter } : null,
+    event.beautyCorner ? { id: "beauty", label: copy.beautyCorner, plan: planning.beauty } : null,
+  ].filter((item) => item !== null);
+  if (!extras.length) return main;
+  return (
+    <SubTabs
+      tabs={[
+        { id: "evento", label: copy.planningTab, body: main },
+        ...extras.map((item) => ({
+          id: item.id,
+          label: item.label,
+          body: <SidePlanningView title={item.label} plan={item.plan} copy={copy} />,
+        })),
+      ]}
+    />
   );
 }
 
@@ -180,13 +221,7 @@ export function PlanningForm({
           );
         })}
       </div>
-      <PlanningExtras
-        extras={planning.extras}
-        glitter={planning.glitter}
-        beauty={planning.beauty}
-        glitterOn={event.glitterBar}
-        beautyOn={event.beautyCorner}
-      />
+      <PlanningExtras extras={planning.extras} />
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="field-label">
           Descanso desde

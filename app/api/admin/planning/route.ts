@@ -2,7 +2,7 @@ import { go } from "@/lib/portal/http";
 import { mailPlanning } from "@/lib/portal/planning-mail";
 import { requireAdmin } from "@/lib/portal/session";
 import { getClient, saveClient } from "@/lib/portal/store";
-import { asPlanning, type SidePlanning } from "@/lib/portal/types";
+import { asPlanning } from "@/lib/portal/types";
 
 function text(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
@@ -45,18 +45,7 @@ export async function POST(request: Request) {
       },
     ];
   });
-  const side = (prefix: string): SidePlanning => ({
-    on: text(form.get(`${prefix}On`)) === "si",
-    arrivalTime: text(form.get(`${prefix}Arrival`)),
-    arrivalEnd: text(form.get(`${prefix}ArrivalEnd`)),
-    start: text(form.get(`${prefix}Start`)),
-    end: text(form.get(`${prefix}End`)),
-    note: text(form.get(`${prefix}Note`)),
-  });
-  const glitter = side("glitter");
-  const beauty = side("beauty");
-  client.event.glitterBar = glitter.on;
-  client.event.beautyCorner = beauty.on;
+  const current = client.event.planning;
   client.event.planning = asPlanning({
     location: text(form.get("location")),
     arrivalTime: text(form.get("arrivalTime")),
@@ -72,8 +61,8 @@ export async function POST(request: Request) {
     notes: text(form.get("notes")),
     slots,
     extras,
-    glitter,
-    beauty,
+    glitter: current.glitter,
+    beauty: current.beauty,
   });
   await saveClient(client);
   const back = `/privado/novias/${client.id}?tab=contratante&sec=planning`;

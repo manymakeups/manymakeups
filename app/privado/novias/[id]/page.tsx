@@ -10,6 +10,7 @@ import { StudioNav } from "@/app/components/portal/PortalTabs";
 import { CompanionDeck, EventSections, SubTabs } from "@/app/components/portal/SubTabs";
 import { StudioAside } from "@/app/components/portal/StudioAside";
 import { PlanningForm } from "@/app/components/portal/PlanningBlock";
+import { PremiumServices } from "@/app/components/portal/PremiumServices";
 import { LookNotesForm, WorkForm } from "@/app/components/portal/WorkBlock";
 import { portalEs } from "@/lib/i18n/portal-messages";
 import { companionHeading, fullName } from "@/lib/portal/names";
@@ -21,7 +22,8 @@ import {
   filesFor,
   personInspirationLookKey,
   personTrialPhotoKey,
-  portalTab,
+  STUDIO_TABS,
+  studioTab,
   productsFor,
 } from "@/lib/portal/types";
 import { requireAdmin } from "@/lib/portal/session";
@@ -51,7 +53,7 @@ export default async function StudioClientPage({
   const requests = (await listNotices()).filter((notice) => notice.clientId === client.id && notice.kind === "cambio");
   const { ok, error, tab: tabRaw, com, sec } = await searchParams;
   const event = client.event;
-  const tab = portalTab(tabRaw);
+  const tab = studioTab(tabRaw);
 
   return (
     <PortalFrame
@@ -70,7 +72,7 @@ export default async function StudioClientPage({
       }
     >
       <div className="relative z-30 min-w-0 shrink-0">
-        <StudioNav basePath={`/privado/novias/${client.id}`} active={tab} />
+        <StudioNav basePath={`/privado/novias/${client.id}`} active={tab} tabs={STUDIO_TABS} />
       </div>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden pb-4">
       <div className="shrink-0 pt-6">
@@ -112,6 +114,7 @@ export default async function StudioClientPage({
           RESEND_API_KEY en Vercel.
         </PortalNotice>
       ) : null}
+      {ok === "premium" ? <PortalNotice>Servicios premium guardados.</PortalNotice> : null}
       {error === "archivo" ? <PortalNotice>Ese archivo no se puede colgar.</PortalNotice> : null}
       </div>
 
@@ -229,6 +232,18 @@ export default async function StudioClientPage({
                 people={event.people}
               />
             }
+          />
+        </section>
+      ) : null}
+
+      {tab === "premium" ? (
+        <section className="flex min-h-0 flex-1 flex-col pt-4">
+          <PremiumServices
+            clientId={client.id}
+            glitterBar={event.glitterBar}
+            beautyCorner={event.beautyCorner}
+            planning={event.planning}
+            section={sec}
           />
         </section>
       ) : null}

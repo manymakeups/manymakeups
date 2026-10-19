@@ -95,14 +95,6 @@ export function EventForm({
           <input type="checkbox" name="hair" defaultChecked={event.hair} />
           {t.hair}
         </label>
-        <label className="flex items-center gap-2 text-sm normal-case tracking-normal text-ink">
-          <input type="checkbox" name="glitterBar" defaultChecked={event.glitterBar} />
-          {t.glitterBar}
-        </label>
-        <label className="flex items-center gap-2 text-sm normal-case tracking-normal text-ink">
-          <input type="checkbox" name="beautyCorner" defaultChecked={event.beautyCorner} />
-          {t.beautyCorner}
-        </label>
       </fieldset>
       <label className="field-label">
         {t.skinNotes}

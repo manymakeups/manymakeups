@@ -96,7 +96,19 @@ export const PORTAL_TABS = [
   { id: "agenda", label: "Agenda" },
 ] as const;
 
+export const STUDIO_TABS = [
+  PORTAL_TABS[0],
+  { id: "premium", label: "Servicios premium" },
+  ...PORTAL_TABS.slice(1),
+] as const;
+
 export type PortalTab = (typeof PORTAL_TABS)[number]["id"];
+export type StudioTab = PortalTab | "premium";
+
+export function studioTab(value: string | undefined): StudioTab {
+  if (value === "premium") return "premium";
+  return portalTab(value);
+}
 
 export function portalTab(value: string | undefined): PortalTab {
   if (value === "facturacion") return "budget";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import type { PlanningExtra, SidePlanning } from "@/lib/portal/types";
+import type { PlanningExtra } from "@/lib/portal/types";
 
 const FIXED = [
   { id: "colocacionvelo", label: "Colocación de velo" },
@@ -58,52 +58,7 @@ function YesNo({
   );
 }
 
-function namedSide(prefix: string, plan: SidePlanning) {
-  return (
-    <>
-      <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">Llegada y montaje</p>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="field-label">
-          Desde
-          <input className="field" name={`${prefix}Arrival`} type="time" defaultValue={plan.arrivalTime} />
-        </label>
-        <label className="field-label">
-          Hasta
-          <input className="field" name={`${prefix}ArrivalEnd`} type="time" defaultValue={plan.arrivalEnd} />
-        </label>
-      </div>
-      <p className="text-[0.68rem] uppercase tracking-[0.16em] text-gilt">Horario</p>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="field-label">
-          Desde
-          <input className="field" name={`${prefix}Start`} type="time" defaultValue={plan.start} />
-        </label>
-        <label className="field-label">
-          Hasta
-          <input className="field" name={`${prefix}End`} type="time" defaultValue={plan.end} />
-        </label>
-      </div>
-      <label className="field-label">
-        Nota
-        <input className="field" name={`${prefix}Note`} defaultValue={plan.note} />
-      </label>
-    </>
-  );
-}
-
-export function PlanningExtras({
-  extras,
-  glitter,
-  beauty,
-  glitterOn,
-  beautyOn,
-}: {
-  extras: PlanningExtra[];
-  glitter: SidePlanning;
-  beauty: SidePlanning;
-  glitterOn: boolean;
-  beautyOn: boolean;
-}) {
+export function PlanningExtras({ extras }: { extras: PlanningExtra[] }) {
   const fixed = FIXED.map((item) => {
     const saved =
       extras.find((extra) => extra.id === item.id) || extras.find((extra) => extra.label === item.label);
@@ -195,12 +150,6 @@ export function PlanningExtras({
       >
         Añadir otro extra
       </button>
-      <YesNo label="Glitter Bar" name="glitterOn" initial={glitter.on || glitterOn}>
-        {namedSide("glitter", glitter)}
-      </YesNo>
-      <YesNo label="Beauty Corner" name="beautyOn" initial={beauty.on || beautyOn}>
-        {namedSide("beauty", beauty)}
-      </YesNo>
     </div>
   );
 }

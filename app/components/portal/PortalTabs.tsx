@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { PORTAL_TABS, type PortalTab } from "@/lib/portal/types";
+import { PORTAL_TABS, type PortalTab, type StudioTab } from "@/lib/portal/types";
 
 const tabClass =
   "inline-flex shrink-0 items-center whitespace-nowrap border-b-2 px-3 py-3 text-[0.68rem] uppercase tracking-[0.12em] md:tracking-[0.16em]";
@@ -60,12 +60,14 @@ export function StudioNav({
   labels,
   badges,
   menuLabel = "Secciones",
+  tabs = PORTAL_TABS,
 }: {
   basePath: string;
-  active: PortalTab;
-  labels?: Record<PortalTab, string>;
-  badges?: Partial<Record<PortalTab, number>>;
+  active: StudioTab;
+  labels?: Partial<Record<StudioTab, string>>;
+  badges?: Partial<Record<StudioTab, number>>;
   menuLabel?: string;
+  tabs?: readonly { id: StudioTab; label: string }[];
 }) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -86,7 +88,7 @@ export function StudioNav({
     };
   }, [open]);
 
-  const current = PORTAL_TABS.find((tab) => tab.id === active);
+  const current = tabs.find((tab) => tab.id === active);
   const currentLabel = current ? (labels?.[current.id] ?? current.label) : "";
   return (
     <div ref={root} className="relative">
@@ -109,7 +111,7 @@ export function StudioNav({
       </div>
       {open ? (
         <div role="menu" className="absolute left-0 top-full z-40 flex min-w-52 flex-col border border-ink/10 bg-porcelain py-1 shadow-[0_16px_40px_rgba(26,22,19,0.12)]">
-          {PORTAL_TABS.map((tab) => {
+          {tabs.map((tab) => {
             const on = tab.id === active;
             const count = badges?.[tab.id] ?? 0;
             return (
