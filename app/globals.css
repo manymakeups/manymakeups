@@ -16,7 +16,7 @@
   --color-ash: var(--ash);
   --color-gilt: var(--gilt);
   --color-gilt-deep: var(--gilt-deep);
-  --font-sans: var(--font-outfit);
+  --font-sans: Helvetica, "Helvetica Neue", Arial, sans-serif;
   --font-serif: var(--font-cormorant);
 }
 

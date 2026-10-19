@@ -4,7 +4,7 @@ const logoUrl = `${site.url}/brand/mail/logo.png?v=5`;
 const signatureUrl = `${site.url}/brand/mail/firma.png?v=4`;
 const signatureWidth = 168;
 
-const sans = "font-family:Helvetica,Arial,sans-serif;";
+const sans = "font-family:Helvetica,'Helvetica Neue',Arial,sans-serif;";
 
 const DETAIL_ICONS = {
   service: "icon-service.png",
@@ -113,13 +113,20 @@ export function brandedClientEmail(input: ClientEmail) {
 
   const html = `<!DOCTYPE html>
 <html lang="${escapeHtml(input.lang || "es")}">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body, table, td, p, a, span, font { ${sans} }
+    </style>
+  </head>
   <body style="margin:0;padding:0;background:#f4f1ea;${sans}">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1ea;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1ea;${sans}">
       <tr>
-        <td align="center" style="padding:36px 16px;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+        <td align="center" style="padding:36px 16px;${sans}">
+          <font face="Helvetica, Helvetica Neue, Arial, sans-serif">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;${sans}">
             <tr>
-              <td align="center" style="padding:0 0 22px;">
+              <td align="center" style="padding:0 0 22px;${sans}">
                 <img src="${logoUrl}" width="240" alt="Many Makeups" style="display:block;width:240px;max-width:240px;height:auto;border:0;margin:0 auto;" />
               </td>
             </tr>
@@ -131,11 +138,12 @@ export function brandedClientEmail(input: ClientEmail) {
               </td>
             </tr>
             <tr>
-              <td align="left" style="padding:18px 8px 0;">
+              <td align="left" style="padding:18px 8px 0;${sans}">
                 ${footer}
               </td>
             </tr>
           </table>
+          </font>
         </td>
       </tr>
     </table>

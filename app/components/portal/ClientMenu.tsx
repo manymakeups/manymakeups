@@ -84,7 +84,7 @@ export function ClientMenu({
         }}
       >
         <summary
-          className="relative z-40 inline-flex size-11 cursor-pointer list-none items-center justify-center border border-ink/15 text-ink hover:border-ink [&::-webkit-details-marker]:hidden"
+          className="inline-flex size-11 cursor-pointer list-none items-center justify-center border border-ink/15 text-ink hover:border-ink [&::-webkit-details-marker]:hidden"
           aria-label={`Opciones de ${name}`}
         >
           <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">

@@ -88,7 +88,7 @@ export default async function StudioClientsPage({
           <li className="py-6 text-sm text-ash">Ninguna clienta coincide con la búsqueda.</li>
         ) : (
           visible.map((client) => (
-            <li key={client.id} className="relative flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
+            <li key={client.id} className="relative flex flex-col gap-4 py-5 has-[details[open]]:z-30 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="font-serif text-2xl">{fullName(client.event, client.name)}</p>
                 <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
