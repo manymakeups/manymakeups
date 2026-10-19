@@ -1,10 +1,9 @@
 import { site } from "@/lib/site";
 
-const logoUrl = `${site.url}/brand/mail/logo.png?v=4`;
+const logoUrl = `${site.url}/brand/mail/logo.png?v=5`;
 const signatureUrl = `${site.url}/brand/mail/firma.png?v=4`;
 const signatureWidth = 168;
 
-const serif = "font-family:Georgia,'Times New Roman',serif;";
 const sans = "font-family:Helvetica,Arial,sans-serif;";
 
 const DETAIL_ICONS = {
@@ -74,7 +73,7 @@ export function brandedClientEmail(input: ClientEmail) {
               </td>
               <td valign="middle" style="padding:12px 16px 12px 8px;${rule}">
                 <p style="margin:0;${sans}font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#9a7b49;">${escapeHtml(row.label)}</p>
-                <p style="margin:3px 0 0;${serif}font-size:17px;line-height:1.35;color:#1c1714;">${escapeHtml(row.value)}</p>
+                <p style="margin:3px 0 0;${sans}font-size:17px;line-height:1.35;color:#1c1714;">${escapeHtml(row.value)}</p>
               </td>
             </tr>`;
           })
@@ -94,7 +93,7 @@ export function brandedClientEmail(input: ClientEmail) {
             (row) =>
               `<tr><td style="padding:10px 0;border-bottom:1px solid #e6dccb;">
                 <p style="margin:0;${sans}font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#9a7b49;">${escapeHtml(row.label)}</p>
-                <p style="margin:4px 0 0;${serif}font-size:16px;line-height:1.45;color:#1c1714;">${escapeHtml(row.value)}</p>
+                <p style="margin:4px 0 0;${sans}font-size:16px;line-height:1.45;color:#1c1714;">${escapeHtml(row.value)}</p>
               </td></tr>`,
           )
           .join("");
@@ -103,10 +102,10 @@ export function brandedClientEmail(input: ClientEmail) {
       }
       const color = block.muted ? "#6e655c" : "#1c1714";
       const quote = block.quote ? "padding:14px 16px;border-left:2px solid #9a7b49;background:#f3efe8;" : "";
-      return `<p style="margin:0 0 16px;${serif}font-size:16px;line-height:1.6;color:${color};${quote}">${escapeHtml(block.text)}</p>`;
+      return `<p style="margin:0 0 16px;${sans}font-size:16px;line-height:1.6;color:${color};${quote}">${escapeHtml(block.text)}</p>`;
     })
     .join("");
-  const signoff = `<p style="margin:8px 0 0;${serif}font-size:16px;line-height:1.6;color:#1c1714;">${input.signoff.map(escapeHtml).join("<br>")}</p>
+  const signoff = `<p style="margin:8px 0 0;${sans}font-size:16px;line-height:1.6;color:#1c1714;">${input.signoff.map(escapeHtml).join("<br>")}</p>
     <img src="${signatureUrl}" width="${signatureWidth}" alt="Ana Zarza, Makeup Artist. Many Makeups." style="display:block;width:${signatureWidth}px;max-width:100%;height:auto;border:0;margin:12px 0 0;" />`;
   const footer = input.footer
     ? `<p style="margin:18px 0 0;${sans}font-size:11px;line-height:1.5;letter-spacing:0.04em;"><a href="${escapeHtml(input.footer.href)}" style="color:#6e655c;text-decoration:underline;">${escapeHtml(input.footer.label)}</a></p>`
@@ -114,18 +113,18 @@ export function brandedClientEmail(input: ClientEmail) {
 
   const html = `<!DOCTYPE html>
 <html lang="${escapeHtml(input.lang || "es")}">
-  <body style="margin:0;padding:0;background:#efe8dc;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#efe8dc;">
+  <body style="margin:0;padding:0;background:#f4f1ea;${sans}">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1ea;">
       <tr>
         <td align="center" style="padding:36px 16px;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
             <tr>
               <td align="center" style="padding:0 0 22px;">
-                <img src="${logoUrl}" width="210" alt="Many Makeups" style="display:block;width:210px;max-width:210px;height:auto;border:0;margin:0 auto;" />
+                <img src="${logoUrl}" width="240" alt="Many Makeups" style="display:block;width:240px;max-width:240px;height:auto;border:0;margin:0 auto;" />
               </td>
             </tr>
             <tr>
-              <td style="background:#fbf8f3;border:1px solid #e4d8c6;padding:36px 32px 32px;">
+              <td style="background:#fbf8f3;border:1px solid #e4d8c6;padding:36px 32px 32px;${sans}">
                 <p style="margin:0 0 22px;width:42px;border-top:1px solid #9a7b49;font-size:0;line-height:0;">&nbsp;</p>
                 ${body}
                 ${signoff}

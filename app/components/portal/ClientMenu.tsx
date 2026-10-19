@@ -1,5 +1,43 @@
 "use client";
 
+import { useEffect } from "react";
+
+let dismissBound = 0;
+
+function closeMenusOutside(target: EventTarget | null) {
+  document.querySelectorAll<HTMLDetailsElement>("details[data-client-menu][open]").forEach((menu) => {
+    if (!(target instanceof Node) || !menu.contains(target)) menu.open = false;
+  });
+}
+
+function onDocPointer(event: PointerEvent) {
+  closeMenusOutside(event.target);
+}
+
+function onDocKey(event: KeyboardEvent) {
+  if (event.key !== "Escape") return;
+  document.querySelectorAll<HTMLDetailsElement>("details[data-client-menu][open]").forEach((menu) => {
+    menu.open = false;
+  });
+}
+
+function useDismissClientMenus() {
+  useEffect(() => {
+    if (dismissBound === 0) {
+      document.addEventListener("pointerdown", onDocPointer);
+      document.addEventListener("keydown", onDocKey);
+    }
+    dismissBound += 1;
+    return () => {
+      dismissBound -= 1;
+      if (dismissBound === 0) {
+        document.removeEventListener("pointerdown", onDocPointer);
+        document.removeEventListener("keydown", onDocKey);
+      }
+    };
+  }, []);
+}
+
 function whatsappHref(phone: string) {
   const digits = phone.replace(/\D/g, "");
   if (!digits) return null;
@@ -30,6 +68,7 @@ export function ClientMenu({
   const whatsapp = whatsappHref(phone);
   const call = telHref(phone);
   const dialogId = `eliminar-${id}`;
+  useDismissClientMenus();
 
   return (
     <>
