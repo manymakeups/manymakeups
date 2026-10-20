@@ -3,6 +3,7 @@ import path from "node:path";
 import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, rgb, type PDFFont, type PDFImage, type PDFPage } from "pdf-lib";
 import type { PortalCopy } from "@/lib/i18n/portal-messages";
+import { embedDocumentFonts } from "./document-fonts";
 import { HAIR_ZONES, PRODUCT_ZONES, type UsedProduct } from "./types";
 
 const PAGE_W = 595.28;
@@ -51,15 +52,16 @@ class Sheet {
 
   constructor(
     private pdf: PDFDocument,
-    private font: PDFFont,
+    private serif: PDFFont,
+    private sans: PDFFont,
     private logo: PDFImage,
   ) {}
 
-  private fit(value: string) {
+  private fit(font: PDFFont, value: string) {
     return [...value]
       .filter((char) => {
         try {
-          this.font.encodeText(char);
+          font.encodeText(char);
           return true;
         } catch {
           return false;
@@ -69,44 +71,37 @@ class Sheet {
   }
 
   private clip(value: string, size: number, max: number) {
-    const text = this.fit(value).replace(/\s+/g, " ").trim();
-    if (!text || widthOf(this.font, text, size) <= max) return text;
-    const mark = this.fit("…") || "...";
+    const text = this.fit(this.sans, value).replace(/\s+/g, " ").trim();
+    if (!text || widthOf(this.sans, text, size) <= max) return text;
+    const mark = this.fit(this.sans, "…") || "...";
     let cut = text;
-    while (cut && widthOf(this.font, `${cut}${mark}`, size) > max) cut = [...cut].slice(0, -1).join("");
+    while (cut && widthOf(this.sans, `${cut}${mark}`, size) > max) cut = [...cut].slice(0, -1).join("");
     return `${cut.trimEnd()}${mark}`;
   }
 
-  private text(value: string, x: number, y: number, size: number, color: typeof ink) {
-    const safe = this.fit(value);
+  private text(value: string, x: number, y: number, size: number, color: typeof ink, font: PDFFont = this.sans) {
+    const safe = this.fit(font, value);
     if (!safe) return;
-    this.page.drawText(safe, { x, y, size, font: this.font, color });
+    this.page.drawText(safe, { x, y, size, font, color });
   }
 
   private tracked(value: string, x: number, y: number, size: number, color: typeof ink, tracking: number) {
     let cursor = x;
-    for (const char of this.fit(value)) {
+    for (const char of this.fit(this.sans, value)) {
       this.text(char, cursor, y, size, color);
-      cursor += this.font.widthOfTextAtSize(char, size) + tracking;
+      cursor += this.sans.widthOfTextAtSize(char, size) + tracking;
     }
   }
 
   private trackedWidth(value: string, size: number, tracking: number) {
-    return widthOf(this.font, this.fit(value), size, tracking);
+    return widthOf(this.sans, this.fit(this.sans, value), size, tracking);
   }
 
-  private centerTracked(value: string, y: number, size: number, color: typeof ink, tracking: number) {
-    const safe = this.fit(value);
+  private centerText(value: string, y: number, size: number, color: typeof ink, font: PDFFont) {
+    const safe = this.fit(font, value);
     if (!safe) return;
-    const x = (PAGE_W - this.trackedWidth(safe, size, tracking)) / 2;
-    this.tracked(safe, x, y, size, color, tracking);
-  }
-
-  private centerText(value: string, y: number, size: number, color: typeof ink) {
-    const safe = this.fit(value);
-    if (!safe) return;
-    const x = (PAGE_W - this.font.widthOfTextAtSize(safe, size)) / 2;
-    this.text(safe, x, y, size, color);
+    const x = (PAGE_W - font.widthOfTextAtSize(safe, size)) / 2;
+    this.text(safe, x, y, size, color, font);
   }
 
   private frame() {
@@ -137,9 +132,10 @@ class Sheet {
     this.frame();
     this.y = PAGE_H - MARGIN - 36;
     if (!this.opening && this.documentTitle) {
-      const size = 11;
-      this.centerText(this.documentTitle, this.y, size, ink);
-      this.y -= 12;
+      const size = 16;
+      this.y -= size;
+      this.centerText(this.documentTitle, this.y, size, ink, this.serif);
+      this.y -= 10;
       const rule = 28;
       this.page.drawLine({
         start: { x: (PAGE_W - rule) / 2, y: this.y },
@@ -171,17 +167,17 @@ class Sheet {
       color: gilt,
     });
     this.y -= 28;
-    const size = 22;
-    const lines = linesOf(this.fit(title), this.font, size, PAGE_W - 140);
+    const size = 26;
+    const lines = linesOf(this.fit(this.serif, title), this.serif, size, PAGE_W - 140);
     for (const line of lines) {
       this.y -= size;
-      this.centerText(line, this.y, size, ink);
+      this.centerText(line, this.y, size, ink, this.serif);
       this.y -= 4;
     }
     if (name.trim()) {
-      this.y -= 8;
-      this.centerText(name.trim(), this.y - 11, 12, ash);
-      this.y -= 16;
+      this.y -= 10;
+      this.centerText(name.trim(), this.y - 16, 16, ash, this.serif);
+      this.y -= 22;
     }
     this.y -= 18;
     this.opening = false;
@@ -253,7 +249,7 @@ class Sheet {
 
   prose(value: string) {
     const size = 12;
-    const lines = linesOf(this.fit(value), this.font, size, RIGHT - NAME_X);
+    const lines = linesOf(this.fit(this.sans, value), this.sans, size, RIGHT - NAME_X);
     for (const line of lines) {
       this.ensure(size + 6);
       this.y -= size;
@@ -267,11 +263,11 @@ class Sheet {
     this.pages.forEach((page, index) => {
       const label = String(index + 1);
       const size = 8;
-      page.drawText(label, {
-        x: (PAGE_W - this.font.widthOfTextAtSize(label, size)) / 2,
+      page.drawText(this.fit(this.sans, label), {
+        x: (PAGE_W - this.sans.widthOfTextAtSize(label, size)) / 2,
         y: 16,
         size,
-        font: this.font,
+        font: this.sans,
         color: ash,
       });
     });
@@ -300,9 +296,9 @@ export async function productsPdf(input: {
 }) {
   const pdf = await PDFDocument.create();
   pdf.registerFontkit(fontkit);
-  const font = await pdf.embedFont(await readFile(path.join(process.cwd(), "lib/portal/fonts/Skia.ttf")), { subset: true });
+  const { serif, sans } = await embedDocumentFonts(pdf);
   const logo = await pdf.embedPng(await readFile(path.join(process.cwd(), "public/brand/mail/logo.png")));
-  const sheet = new Sheet(pdf, font, logo);
+  const sheet = new Sheet(pdf, serif, sans, logo);
   sheet.open(input.copy.productsDocumentTitle, input.name);
   const sections = [
     { title: input.copy.makeupTab, products: input.makeup, zones: PRODUCT_ZONES },

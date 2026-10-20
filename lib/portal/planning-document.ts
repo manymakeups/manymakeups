@@ -5,6 +5,7 @@ import { PDFDocument, rgb, type PDFFont, type PDFImage, type PDFPage } from "pdf
 import type { Locale } from "@/lib/i18n/config";
 import { dateLocale, interpolate, type PortalCopy } from "@/lib/i18n/portal-messages";
 import { contractedServiceNames, serviceAmountDue } from "./budget";
+import { embedDocumentFonts } from "./document-fonts";
 import { companionHeading, fullName } from "./names";
 import { planningTimeline, sidePlanningRows } from "./planning-timeline";
 import type { ClientRecord } from "./types";
@@ -55,7 +56,8 @@ class Sheet {
 
   constructor(
     private pdf: PDFDocument,
-    private font: PDFFont,
+    private serif: PDFFont,
+    private sans: PDFFont,
     private logo: PDFImage,
     private foot: string,
   ) {
@@ -79,7 +81,7 @@ class Sheet {
       top -= height + 14;
       this.opening = false;
     }
-    const footLines = this.foot ? linesOf(this.foot, this.font, 7.5, PAGE_W - OUTER * 2) : [];
+    const footLines = this.foot ? linesOf(this.foot, this.sans, 7.5, PAGE_W - OUTER * 2) : [];
     this.cardBottom = OUTER + (footLines.length ? 18 + footLines.length * 10 : 16);
     this.page.drawRectangle({
       x: OUTER,
@@ -99,15 +101,15 @@ class Sheet {
     if (this.y - height < this.cardBottom + 18) this.addPage();
   }
 
-  private text(value: string, x: number, y: number, size: number, color: typeof ink) {
-    this.page.drawText(value, { x, y, size, font: this.font, color });
+  private text(value: string, x: number, y: number, size: number, color: typeof ink, font: PDFFont = this.sans) {
+    this.page.drawText(value, { x, y, size, font, color });
   }
 
   private tracked(value: string, x: number, y: number, size: number, color: typeof ink, tracking: number) {
     let cursor = x;
     for (const char of value) {
       this.text(char, cursor, y, size, color);
-      cursor += this.font.widthOfTextAtSize(char, size) + tracking;
+      cursor += this.sans.widthOfTextAtSize(char, size) + tracking;
     }
   }
 
@@ -123,11 +125,16 @@ class Sheet {
   }
 
   title(value: string) {
-    const size = 16;
-    this.need(size + 8);
-    this.y -= size;
-    this.text(value, this.contentLeft, this.y, size, ink);
-    this.y -= 8;
+    const size = 22;
+    const lines = linesOf(value, this.serif, size, this.contentRight - this.contentLeft);
+    if (!lines.length) return;
+    this.need(lines.length * (size + 4) + 6);
+    for (const line of lines) {
+      this.y -= size;
+      this.text(line, this.contentLeft, this.y, size, ink, this.serif);
+      this.y -= 4;
+    }
+    this.y -= 4;
   }
 
   kicker(value: string) {
@@ -140,7 +147,7 @@ class Sheet {
 
   quiet(value: string) {
     const size = 10;
-    const lines = linesOf(value, this.font, size, this.contentRight - this.contentLeft);
+    const lines = linesOf(value, this.sans, size, this.contentRight - this.contentLeft);
     for (const line of lines) {
       this.need(size + 4);
       this.y -= size;
@@ -152,7 +159,7 @@ class Sheet {
 
   prose(value: string, color: typeof ink = ink) {
     const size = 10;
-    const lines = linesOf(value, this.font, size, this.contentRight - this.contentLeft);
+    const lines = linesOf(value, this.sans, size, this.contentRight - this.contentLeft);
     for (const line of lines) {
       this.need(size + 4);
       this.y -= size;
@@ -167,9 +174,9 @@ class Sheet {
     const valueSize = 11;
     const noteSize = 9;
     const width = this.contentRight - this.contentLeft;
-    const labels = linesOf(label.toUpperCase(), this.font, labelSize, width * 0.84, 1.05);
-    const values = value.trim() ? linesOf(value, this.font, valueSize, width) : [];
-    const notes = note.trim() ? linesOf(note, this.font, noteSize, width) : [];
+    const labels = linesOf(label.toUpperCase(), this.sans, labelSize, width * 0.84, 1.05);
+    const values = value.trim() ? linesOf(value, this.sans, valueSize, width) : [];
+    const notes = note.trim() ? linesOf(note, this.sans, noteSize, width) : [];
     const height =
       labels.length * 12 +
       values.length * 16 +
@@ -186,7 +193,7 @@ class Sheet {
       this.y -= valueSize;
       this.text(line, this.contentLeft, this.y, valueSize, ink);
       if (marked && index === values.length - 1) {
-        const x = this.contentLeft + this.font.widthOfTextAtSize(line, valueSize) + 1.5;
+        const x = this.contentLeft + this.sans.widthOfTextAtSize(line, valueSize) + 1.5;
         this.text("*", x, this.y + 3, 9, gilt);
       }
       this.y -= 3;
@@ -213,12 +220,12 @@ class Sheet {
   finish() {
     if (!this.foot.trim()) return;
     const size = 7.5;
-    const lines = linesOf(this.foot, this.font, size, PAGE_W - OUTER * 2);
+    const lines = linesOf(this.foot, this.sans, size, PAGE_W - OUTER * 2);
     for (const page of this.pages) {
       let y = 12 + lines.length * 10;
       for (const line of lines) {
         y -= 10;
-        page.drawText(line, { x: OUTER, y, size, font: this.font, color: ash });
+        page.drawText(line, { x: OUTER, y, size, font: this.sans, color: ash });
       }
     }
   }
@@ -265,11 +272,9 @@ export async function planningPdfFor(client: ClientRecord, kind: PlanningPdfKind
 
   const pdf = await PDFDocument.create();
   pdf.registerFontkit(fontkit);
-  const font = await pdf.embedFont(await readFile(path.join(process.cwd(), "lib/portal/fonts/Skia.ttf")), {
-    subset: true,
-  });
+  const { serif, sans } = await embedDocumentFonts(pdf);
   const logo = await pdf.embedPng(await readFile(path.join(process.cwd(), "public/brand/mail/logo.png")));
-  const sheet = new Sheet(pdf, font, logo, amount ? `* ${copy.planningCashNote}` : "");
+  const sheet = new Sheet(pdf, serif, sans, logo, amount ? `* ${copy.planningCashNote}` : "");
 
   sheet.rule();
   if (name) sheet.title(name);
