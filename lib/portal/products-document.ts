@@ -7,29 +7,32 @@ import { HAIR_ZONES, PRODUCT_ZONES, type UsedProduct } from "./types";
 
 const PAGE_W = 595.28;
 const PAGE_H = 841.89;
-const OUTER = 36;
-const PAD = 28;
+const MARGIN = 32;
 
 const porcelain = rgb(244 / 255, 241 / 255, 234 / 255);
-const card = rgb(251 / 255, 248 / 255, 243 / 255);
-const frame = rgb(228 / 255, 216 / 255, 198 / 255);
-const hair = rgb(234 / 255, 223 / 255, 206 / 255);
-const gilt = rgb(154 / 255, 123 / 255, 73 / 255);
-const ink = rgb(74 / 255, 67 / 255, 62 / 255);
-const ash = rgb(138 / 255, 129 / 255, 120 / 255);
+const paper = rgb(251 / 255, 248 / 255, 243 / 255);
+const ink = rgb(26 / 255, 22 / 255, 19 / 255);
+const ash = rgb(109 / 255, 100 / 255, 91 / 255);
+const gilt = rgb(156 / 255, 125 / 255, 82 / 255);
 
-function linesOf(text: string, font: PDFFont, size: number, max: number, tracking = 0) {
+const NAME_X = MARGIN + 28;
+const BRAND_X = MARGIN + 236;
+const SHADE_X = MARGIN + 372;
+const RIGHT = PAGE_W - MARGIN - 28;
+
+function widthOf(font: PDFFont, value: string, size: number, tracking = 0) {
+  const chars = [...value];
+  return chars.reduce((sum, char) => sum + font.widthOfTextAtSize(char, size), 0) + tracking * Math.max(0, chars.length - 1);
+}
+
+function linesOf(text: string, font: PDFFont, size: number, max: number) {
   const words = text.replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
   if (!words.length) return [];
-  const width = (value: string) => {
-    const chars = [...value];
-    return chars.reduce((sum, char) => sum + font.widthOfTextAtSize(char, size), 0) + tracking * Math.max(0, chars.length - 1);
-  };
   const lines: string[] = [];
   let current = "";
   for (const word of words) {
     const next = current ? `${current} ${word}` : word;
-    if (width(next) > max && current) {
+    if (widthOf(font, next, size) > max && current) {
       lines.push(current);
       current = word;
     } else current = next;
@@ -41,48 +44,16 @@ function linesOf(text: string, font: PDFFont, size: number, max: number, trackin
 class Sheet {
   page!: PDFPage;
   y = 0;
+  private pages: PDFPage[] = [];
   private opening = true;
-  private cardBottom = 0;
-  private contentLeft = 0;
-  private contentRight = 0;
+  private bottom = MARGIN + 22;
+  private documentTitle = "";
 
   constructor(
     private pdf: PDFDocument,
     private font: PDFFont,
     private logo: PDFImage,
-  ) {
-    this.addPage();
-  }
-
-  private addPage() {
-    this.page = this.pdf.addPage([PAGE_W, PAGE_H]);
-    this.page.drawRectangle({ x: 0, y: 0, width: PAGE_W, height: PAGE_H, color: porcelain });
-    let top = PAGE_H - OUTER;
-    if (this.opening) {
-      const width = 168;
-      const height = (width * this.logo.height) / this.logo.width;
-      this.page.drawImage(this.logo, { x: (PAGE_W - width) / 2, y: top - height, width, height });
-      top -= height + 14;
-      this.opening = false;
-    }
-    this.cardBottom = OUTER + 16;
-    this.page.drawRectangle({
-      x: OUTER,
-      y: this.cardBottom,
-      width: PAGE_W - OUTER * 2,
-      height: Math.max(80, top - this.cardBottom),
-      color: card,
-      borderColor: frame,
-      borderWidth: 0.8,
-    });
-    this.contentLeft = OUTER + PAD;
-    this.contentRight = PAGE_W - OUTER - PAD;
-    this.y = top - PAD;
-  }
-
-  private need(height: number) {
-    if (this.y - height < this.cardBottom + 18) this.addPage();
-  }
+  ) {}
 
   private fit(value: string) {
     return [...value]
@@ -95,6 +66,15 @@ class Sheet {
         }
       })
       .join("");
+  }
+
+  private clip(value: string, size: number, max: number) {
+    const text = this.fit(value).replace(/\s+/g, " ").trim();
+    if (!text || widthOf(this.font, text, size) <= max) return text;
+    const mark = this.fit("…") || "...";
+    let cut = text;
+    while (cut && widthOf(this.font, `${cut}${mark}`, size) > max) cut = [...cut].slice(0, -1).join("");
+    return `${cut.trimEnd()}${mark}`;
   }
 
   private text(value: string, x: number, y: number, size: number, color: typeof ink) {
@@ -111,79 +91,190 @@ class Sheet {
     }
   }
 
-  title(value: string) {
-    this.block(this.fit(value), 18, ink, 8);
+  private trackedWidth(value: string, size: number, tracking: number) {
+    return widthOf(this.font, this.fit(value), size, tracking);
   }
 
-  heading(value: string) {
-    this.block(this.fit(value), 15, ink, 10);
+  private centerTracked(value: string, y: number, size: number, color: typeof ink, tracking: number) {
+    const safe = this.fit(value);
+    if (!safe) return;
+    const x = (PAGE_W - this.trackedWidth(safe, size, tracking)) / 2;
+    this.tracked(safe, x, y, size, color, tracking);
   }
 
-  private block(value: string, size: number, color: typeof ink, after: number) {
-    const lines = linesOf(value, this.font, size, this.contentRight - this.contentLeft);
-    if (!lines.length) return;
-    this.need(lines.length * (size + 4) + after);
-    for (const line of lines) {
-      this.y -= size;
-      this.text(line, this.contentLeft, this.y, size, color);
-      this.y -= 4;
+  private centerText(value: string, y: number, size: number, color: typeof ink) {
+    const safe = this.fit(value);
+    if (!safe) return;
+    const x = (PAGE_W - this.font.widthOfTextAtSize(safe, size)) / 2;
+    this.text(safe, x, y, size, color);
+  }
+
+  private frame() {
+    this.page.drawRectangle({ x: 0, y: 0, width: PAGE_W, height: PAGE_H, color: porcelain });
+    this.page.drawRectangle({
+      x: MARGIN,
+      y: MARGIN,
+      width: PAGE_W - MARGIN * 2,
+      height: PAGE_H - MARGIN * 2,
+      borderColor: gilt,
+      borderWidth: 0.6,
+      color: paper,
+    });
+    this.page.drawRectangle({
+      x: MARGIN + 5,
+      y: MARGIN + 5,
+      width: PAGE_W - (MARGIN + 5) * 2,
+      height: PAGE_H - (MARGIN + 5) * 2,
+      borderColor: gilt,
+      borderWidth: 0.25,
+      borderOpacity: 0.45,
+    });
+  }
+
+  private addPage() {
+    this.page = this.pdf.addPage([PAGE_W, PAGE_H]);
+    this.pages.push(this.page);
+    this.frame();
+    this.y = PAGE_H - MARGIN - 36;
+    if (!this.opening && this.documentTitle) {
+      const size = 11;
+      this.centerText(this.documentTitle, this.y, size, ink);
+      this.y -= 12;
+      const rule = 28;
+      this.page.drawLine({
+        start: { x: (PAGE_W - rule) / 2, y: this.y },
+        end: { x: (PAGE_W + rule) / 2, y: this.y },
+        thickness: 0.6,
+        color: gilt,
+      });
+      this.y -= 26;
     }
-    this.y -= after;
   }
 
-  kicker(value: string) {
-    const size = 8;
-    this.need(size + 16);
-    this.y -= 8;
+  open(title: string, name: string) {
+    this.documentTitle = title;
+    this.addPage();
+    const logoWidth = 132;
+    const logoHeight = (logoWidth * this.logo.height) / this.logo.width;
+    this.page.drawImage(this.logo, {
+      x: (PAGE_W - logoWidth) / 2,
+      y: this.y - logoHeight,
+      width: logoWidth,
+      height: logoHeight,
+    });
+    this.y -= logoHeight + 16;
+    const rule = 42;
     this.page.drawLine({
-      start: { x: this.contentLeft, y: this.y },
-      end: { x: this.contentLeft + 36, y: this.y },
+      start: { x: (PAGE_W - rule) / 2, y: this.y },
+      end: { x: (PAGE_W + rule) / 2, y: this.y },
       thickness: 0.7,
       color: gilt,
     });
-    this.y -= 14;
+    this.y -= 28;
+    const size = 22;
+    const lines = linesOf(this.fit(title), this.font, size, PAGE_W - 140);
+    for (const line of lines) {
+      this.y -= size;
+      this.centerText(line, this.y, size, ink);
+      this.y -= 4;
+    }
+    if (name.trim()) {
+      this.y -= 8;
+      this.centerText(name.trim(), this.y - 11, 12, ash);
+      this.y -= 16;
+    }
+    this.y -= 18;
+    this.opening = false;
+  }
+
+  private ensure(height: number) {
+    if (this.y - height >= this.bottom) return;
+    this.addPage();
+    this.y -= 8;
+  }
+
+  look(title: string) {
+    this.ensure(52);
+    this.y -= 6;
+    const size = 8;
+    const tracking = 1.6;
+    const label = title.toUpperCase();
+    const labelWidth = this.trackedWidth(label, size, tracking);
+    const x = (PAGE_W - labelWidth) / 2;
     this.y -= size;
-    this.tracked(value.toUpperCase(), this.contentLeft, this.y, size, gilt, 1.1);
+    this.tracked(label, x, this.y, size, gilt, tracking);
+    this.y -= 10;
+    const line = Math.min(160, labelWidth + 36);
+    this.page.drawLine({
+      start: { x: (PAGE_W - line) / 2, y: this.y },
+      end: { x: (PAGE_W + line) / 2, y: this.y },
+      thickness: 0.45,
+      color: gilt,
+      opacity: 0.7,
+    });
+    this.y -= 18;
+  }
+
+  columns(copy: PortalCopy) {
+    this.ensure(18);
+    const size = 6.5;
+    const tracking = 0.85;
+    this.y -= size;
+    this.tracked(copy.productName.toUpperCase(), NAME_X, this.y, size, gilt, tracking);
+    this.tracked(copy.productBrand.toUpperCase(), BRAND_X, this.y, size, gilt, tracking);
+    this.tracked(copy.productShade.toUpperCase(), SHADE_X, this.y, size, gilt, tracking);
+    this.y -= 8;
+  }
+
+  zone(value: string) {
+    this.ensure(26);
     this.y -= 12;
+    this.tracked(value.toUpperCase(), NAME_X, this.y, 7.5, ink, 1.15);
+    this.y -= 8;
+  }
+
+  row(name: string, brand: string, shade: string) {
+    this.ensure(24);
+    const size = 11;
+    this.y -= size;
+    this.text(this.clip(name, size, BRAND_X - NAME_X - 14), NAME_X, this.y, size, ink);
+    this.text(this.clip(brand, size, SHADE_X - BRAND_X - 14), BRAND_X, this.y, size, ash);
+    this.text(this.clip(shade, size, RIGHT - SHADE_X), SHADE_X, this.y, size, ash);
+    this.y -= 7;
+    this.page.drawLine({
+      start: { x: NAME_X, y: this.y },
+      end: { x: RIGHT, y: this.y },
+      thickness: 0.35,
+      color: ink,
+      opacity: 0.12,
+    });
+    this.y -= 8;
   }
 
   prose(value: string) {
-    this.block(this.fit(value), 12, ink, 0);
+    const size = 12;
+    const lines = linesOf(this.fit(value), this.font, size, RIGHT - NAME_X);
+    for (const line of lines) {
+      this.ensure(size + 6);
+      this.y -= size;
+      this.text(line, NAME_X, this.y, size, ink);
+      this.y -= 5;
+    }
   }
 
-  product(copy: PortalCopy, item: UsedProduct) {
-    const rows = [
-      item.name.trim() ? { label: copy.productName, value: item.name.trim() } : null,
-      item.brand.trim() ? { label: copy.productBrand, value: item.brand.trim() } : null,
-      item.shade.trim() ? { label: copy.productShade, value: item.shade.trim() } : null,
-    ].filter((row) => row != null);
-    if (!rows.length) return;
-    const width = this.contentRight - this.contentLeft;
-    const wrapped = rows.map((row) => ({
-      label: row.label.toUpperCase(),
-      lines: linesOf(this.fit(row.value), this.font, 12, width),
-    })).filter((row) => row.lines.length);
-    if (!wrapped.length) return;
-    const height = wrapped.reduce((sum, row) => sum + 12 + row.lines.length * 16, 18);
-    this.need(height);
-    for (const row of wrapped) {
-      this.y -= 8;
-      this.tracked(row.label, this.contentLeft, this.y, 7.5, gilt, 1.05);
-      this.y -= 6;
-      for (const line of row.lines) {
-        this.y -= 12;
-        this.text(line, this.contentLeft, this.y, 12, ink);
-        this.y -= 3;
-      }
-    }
-    this.y -= 6;
-    this.page.drawLine({
-      start: { x: this.contentLeft, y: this.y },
-      end: { x: this.contentRight, y: this.y },
-      thickness: 0.4,
-      color: hair,
+  finish() {
+    if (this.pages.length < 2) return;
+    this.pages.forEach((page, index) => {
+      const label = String(index + 1);
+      const size = 8;
+      page.drawText(label, {
+        x: (PAGE_W - this.font.widthOfTextAtSize(label, size)) / 2,
+        y: 16,
+        size,
+        font: this.font,
+        color: ash,
+      });
     });
-    this.y -= 14;
   }
 }
 
@@ -212,18 +303,20 @@ export async function productsPdf(input: {
   const font = await pdf.embedFont(await readFile(path.join(process.cwd(), "lib/portal/fonts/Skia.ttf")), { subset: true });
   const logo = await pdf.embedPng(await readFile(path.join(process.cwd(), "public/brand/mail/logo.png")));
   const sheet = new Sheet(pdf, font, logo);
-  if (input.name) sheet.title(input.name);
+  sheet.open(input.copy.productsDocumentTitle, input.name);
   const sections = [
     { title: input.copy.makeupTab, products: input.makeup, zones: PRODUCT_ZONES },
     { title: input.copy.hairTab, products: input.hair, zones: HAIR_ZONES },
   ].filter((section) => section.products.length);
   for (const section of sections) {
-    sheet.heading(section.title);
+    sheet.look(section.title);
+    sheet.columns(input.copy);
     for (const group of grouped(section.products, section.zones)) {
-      sheet.kicker(input.copy.productZones[group.zone] || group.zone);
-      for (const product of group.products) sheet.product(input.copy, product);
+      sheet.zone(input.copy.productZones[group.zone] || group.zone);
+      for (const product of group.products) sheet.row(product.name, product.brand, product.shade);
     }
   }
   if (!sections.length && input.legacy?.trim()) sheet.prose(input.legacy.trim());
+  sheet.finish();
   return pdf.save();
 }

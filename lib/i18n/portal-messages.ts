@@ -56,6 +56,7 @@ export type PortalCopy = {
   planningDownload: string;
   downloadPhotos: string;
   downloadProducts: string;
+  productsDocumentTitle: string;
   planningLocation: string;
   planningAddress: string;
   planningArrival: string;
@@ -409,6 +410,7 @@ export const portalEs: PortalCopy = {
   planningDownload: "Descargar planning",
   downloadPhotos: "Descargar fotos",
   downloadProducts: "Descargar listado de productos",
+  productsDocumentTitle: "Productos de tu gran día",
   planningLocation: "Localización",
   planningAddress: "Dirección",
   planningArrival: "Hora de llegada",
@@ -855,6 +857,7 @@ export const portalEn: PortalCopy = {
   planningDownload: "Download planning",
   downloadPhotos: "Download photos",
   downloadProducts: "Download product list",
+  productsDocumentTitle: "Products for your big day",
   planningLocation: "Location",
   planningAddress: "Address",
   planningArrival: "Arrival time",
@@ -1294,6 +1297,7 @@ export const portalFr: PortalCopy = {
   planningDownload: "Télécharger le planning",
   downloadPhotos: "Télécharger les photos",
   downloadProducts: "Télécharger la liste de produits",
+  productsDocumentTitle: "Les produits de ton grand jour",
   planningLocation: "Lieu",
   planningAddress: "Adresse",
   planningArrival: "Heure d’arrivée",
