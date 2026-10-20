@@ -65,12 +65,13 @@ export function PaymentsView({
 }) {
   const guestIndex = guestIndexOf(who);
   const guest = guestIndex >= 0 ? people[guestIndex] : undefined;
+  const guestPay = guestIndex >= 0 ? (payments.guests[guestIndex] ?? emptyPersonPayments()) : undefined;
   const shown =
     guestIndex < 0
       ? { payments: payments.contractor, showTrial: true }
       : {
-          payments: payments.guests[guestIndex] ?? emptyPersonPayments(),
-          showTrial: Boolean(guest?.wantsTrial),
+          payments: guestPay ?? emptyPersonPayments(),
+          showTrial: Boolean(guest?.wantsTrial) || (guestPay?.trial.amount ?? 0) > 0 || Boolean(guestPay?.trial.paid),
         };
   return <PersonPayView key={who} title="" payments={shown.payments} showTrial={shown.showTrial} />;
 }

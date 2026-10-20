@@ -33,6 +33,15 @@ export function CompanionView({
   variant?: "tabs" | "filters" | "responsive";
   readOnly?: boolean;
 }) {
+  const recordedTrial = Boolean(
+    person.wantsTrial ||
+      person.productsUsed.trim() ||
+      person.makeupNotes.trim() ||
+      person.hairNotes.trim() ||
+      person.trialNotes.trim() ||
+      person.products.some((item) => item.name.trim() || item.brand.trim() || item.shade.trim()) ||
+      filesFor(workPhotos, personTrialPhotoKey(index)).length,
+  );
   const labels = {
     data: copy.eventData,
     inspirations: copy.inspirationsTab,
@@ -49,7 +58,7 @@ export function CompanionView({
           variant={variant}
           labels={labels}
           section={section}
-          showTrial={person.wantsTrial}
+          showTrial={readOnly || recordedTrial}
           details={
             <dl className="space-y-3 text-sm">
               <div>
