@@ -256,6 +256,9 @@ export type PortalCopy = {
   pending: string;
   productsUsed: string;
   productsEmpty: string;
+  productName: string;
+  productBrand: string;
+  productShade: string;
   productZones: Record<string, string>;
   trialPhotos: string;
   trialPhotosEmpty: string;
@@ -656,6 +659,9 @@ export const portalEs: PortalCopy = {
   pending: "Pendiente de pagar: {amount}",
   productsUsed: "Productos utilizados",
   productsEmpty: "Aún no hay productos anotados.",
+  productName: "Producto",
+  productBrand: "Marca",
+  productShade: "Tono",
   productZones: {
     Ojos: "Ojos",
     Labios: "Labios",
@@ -1092,6 +1098,9 @@ export const portalEn: PortalCopy = {
   pending: "Outstanding: {amount}",
   productsUsed: "Products used",
   productsEmpty: "No products noted yet.",
+  productName: "Product",
+  productBrand: "Brand",
+  productShade: "Shade",
   productZones: {
     Ojos: "Eyes",
     Labios: "Lips",
@@ -1527,6 +1536,9 @@ export const portalFr: PortalCopy = {
   pending: "Reste à payer : {amount}",
   productsUsed: "Produits utilisés",
   productsEmpty: "Aucun produit noté pour l’instant.",
+  productName: "Produit",
+  productBrand: "Marque",
+  productShade: "Teinte",
   productZones: {
     Ojos: "Yeux",
     Labios: "Lèvres",

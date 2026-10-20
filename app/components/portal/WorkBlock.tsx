@@ -37,11 +37,30 @@ export function ProductList({
         <div key={zone}>
           <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">{zoneLabel(zone, copy)}</p>
           <ul className="mt-2 divide-y divide-ink/10 border border-ink/10">
-            {(groups.get(zone) ?? []).map((product, index) => (
-              <li key={`${zone}-${index}`} className="px-4 py-3 text-sm">
-                {[product.brand, product.name, product.shade].filter(Boolean).join(" · ") || "—"}
-              </li>
-            ))}
+            {(groups.get(zone) ?? []).map((product, index) => {
+              const lines = [
+                product.name ? { label: copy.productName, value: product.name } : null,
+                product.brand ? { label: copy.productBrand, value: product.brand } : null,
+                product.shade ? { label: copy.productShade, value: product.shade } : null,
+              ].filter((line) => line != null);
+              return (
+                <li key={`${zone}-${index}`} className="px-4 py-3 text-sm">
+                  {lines.length ? (
+                    <p>
+                      {lines.map((line, lineIndex) => (
+                        <span key={line.label}>
+                          {lineIndex ? " " : null}
+                          <span className="text-ash">{line.label}: </span>
+                          {line.value}
+                        </span>
+                      ))}
+                    </p>
+                  ) : (
+                    "—"
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </div>
       ))}
