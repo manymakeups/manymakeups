@@ -27,6 +27,7 @@ import {
   filesFor,
   PORTAL_TABS,
   portalTab,
+  productsDownloadHref,
   productsFor,
 } from "@/lib/portal/types";
 import { redirect } from "next/navigation";
@@ -198,6 +199,11 @@ export default async function BridePanelPage({
                     photos={filesFor(client.workPhotos, CONTRACTOR_TRIAL_PHOTOS)}
                     clientId={client.id}
                     copy={t}
+                    downloadPhotos={
+                      filesFor(client.workPhotos, CONTRACTOR_TRIAL_PHOTOS).length
+                        ? "/api/portal/photos?person=contractor"
+                        : ""
+                    }
                   />
                 </div>
               </div>
@@ -210,6 +216,7 @@ export default async function BridePanelPage({
                 photos={[]}
                 clientId={client.id}
                 copy={t}
+                downloadProducts={productsDownloadHref("contractor", client.event.products, client.event.productsUsed, "maquillaje")}
               />
             }
             hairProducts={
@@ -220,6 +227,7 @@ export default async function BridePanelPage({
                 photos={[]}
                 clientId={client.id}
                 copy={t}
+                downloadProducts={productsDownloadHref("contractor", client.event.products, client.event.productsUsed, "peinado")}
               />
             }
             trialComments={

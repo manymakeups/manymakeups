@@ -141,6 +141,19 @@ export function productsFor(products: UsedProduct[], look: ProductLook) {
   return products.filter((product) => (product.look || "maquillaje") === look);
 }
 
+export function filledProducts(products: UsedProduct[]) {
+  return products.filter((product) => product.name.trim() || product.brand.trim() || product.shade.trim());
+}
+
+export function productsDownloadHref(person: string, products: UsedProduct[], legacy: string, look?: ProductLook) {
+  const filled = filledProducts(products);
+  const lines = look ? filledProducts(productsFor(products, look)) : filled;
+  if (lines.length || (!filled.length && legacy.trim())) {
+    return `/api/portal/products-pdf?person=${encodeURIComponent(person)}`;
+  }
+  return "";
+}
+
 export type Attendee = {
   name: string;
   who: string;

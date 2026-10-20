@@ -77,6 +77,8 @@ export function WorkView({
   copy = portalEs,
   part = "both",
   notes = "",
+  downloadPhotos = "",
+  downloadProducts = "",
 }: {
   title?: string;
   products: string;
@@ -86,6 +88,8 @@ export function WorkView({
   copy?: PortalCopy;
   part?: "both" | "photos" | "products";
   notes?: string;
+  downloadPhotos?: string;
+  downloadProducts?: string;
 }) {
   const showProducts = part !== "photos";
   const showPhotos = part !== "products";
@@ -95,18 +99,28 @@ export function WorkView({
         <p className="text-[0.68rem] uppercase tracking-[0.18em] text-gilt">{title}</p>
       ) : null}
       {showProducts ? (
-      <div>
+      <div className="flex flex-col gap-4">
         {part === "both" ? (
           <p className="text-[0.68rem] uppercase tracking-[0.16em] text-ash">{copy.productsUsed}</p>
         ) : null}
+        {downloadProducts ? (
+          <a className="btn-atelier self-start" href={downloadProducts}>
+            {copy.downloadProducts}
+          </a>
+        ) : null}
         <ProductList products={productLines} legacy={products} copy={copy} />
-        {notes ? <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed">{notes}</p> : null}
+        {notes ? <p className="whitespace-pre-wrap text-sm leading-relaxed">{notes}</p> : null}
       </div>
       ) : null}
       {showPhotos ? (
       <div>
         {part === "both" ? (
           <p className="text-[0.68rem] uppercase tracking-[0.16em] text-ash">{copy.trialPhotos}</p>
+        ) : null}
+        {downloadPhotos ? (
+          <a className={`btn-atelier self-start ${part === "both" ? "mt-3" : ""}`} href={downloadPhotos}>
+            {copy.downloadPhotos}
+          </a>
         ) : null}
         <div className="mt-3">
           {photos.length ? (

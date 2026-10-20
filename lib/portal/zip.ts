@@ -1,0 +1,52 @@
+import { crc32, deflateRawSync } from "node:zlib";
+
+export function zipFiles(files: { name: string; data: Buffer }[]) {
+  const date = new Date();
+  const time = (date.getHours() << 11) | (date.getMinutes() << 5) | Math.floor(date.getSeconds() / 2);
+  const day = ((date.getFullYear() - 1980) << 9) | ((date.getMonth() + 1) << 5) | date.getDate();
+  const locals: Buffer[] = [];
+  const centrals: Buffer[] = [];
+  let offset = 0;
+  files.forEach((file, index) => {
+    const safe = file.name.replace(/[^\w.\- áéíóúüñÁÉÍÓÚÜÑ]+/gi, "_").slice(0, 80) || "foto";
+    const name = Buffer.from(`${String(index + 1).padStart(2, "0")} ${safe}`, "utf8");
+    const compressed = deflateRawSync(file.data);
+    const sum = crc32(file.data) >>> 0;
+    const local = Buffer.alloc(30);
+    local.writeUInt32LE(0x04034b50, 0);
+    local.writeUInt16LE(20, 4);
+    local.writeUInt16LE(0x800, 6);
+    local.writeUInt16LE(8, 8);
+    local.writeUInt16LE(time, 10);
+    local.writeUInt16LE(day, 12);
+    local.writeUInt32LE(sum, 14);
+    local.writeUInt32LE(compressed.length, 18);
+    local.writeUInt32LE(file.data.length, 22);
+    local.writeUInt16LE(name.length, 26);
+    const chunk = Buffer.concat([local, name, compressed]);
+    locals.push(chunk);
+    const central = Buffer.alloc(46);
+    central.writeUInt32LE(0x02014b50, 0);
+    central.writeUInt16LE(20, 4);
+    central.writeUInt16LE(20, 6);
+    central.writeUInt16LE(0x800, 8);
+    central.writeUInt16LE(8, 10);
+    central.writeUInt16LE(time, 12);
+    central.writeUInt16LE(day, 14);
+    central.writeUInt32LE(sum, 16);
+    central.writeUInt32LE(compressed.length, 20);
+    central.writeUInt32LE(file.data.length, 24);
+    central.writeUInt16LE(name.length, 28);
+    central.writeUInt32LE(offset, 42);
+    centrals.push(Buffer.concat([central, name]));
+    offset += chunk.length;
+  });
+  const directory = Buffer.concat(centrals);
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0);
+  end.writeUInt16LE(files.length, 8);
+  end.writeUInt16LE(files.length, 10);
+  end.writeUInt32LE(directory.length, 12);
+  end.writeUInt32LE(offset, 16);
+  return Buffer.concat([...locals, directory, end]);
+}

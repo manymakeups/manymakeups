@@ -6,6 +6,7 @@ import {
   filesFor,
   personInspirationLookKey,
   personTrialPhotoKey,
+  productsDownloadHref,
   productsFor,
   type Attendee,
   type PortalFile,
@@ -108,6 +109,11 @@ export function CompanionView({
               photos={filesFor(workPhotos, personTrialPhotoKey(index))}
               clientId={clientId}
               copy={copy}
+              downloadPhotos={
+                filesFor(workPhotos, personTrialPhotoKey(index)).length
+                  ? `/api/portal/photos?person=${index}`
+                  : ""
+              }
             />
           }
           makeupProducts={
@@ -118,6 +124,7 @@ export function CompanionView({
               photos={[]}
               clientId={clientId}
               copy={copy}
+              downloadProducts={productsDownloadHref(String(index), person.products, person.productsUsed, "maquillaje")}
             />
           }
           hairProducts={
@@ -128,6 +135,7 @@ export function CompanionView({
               photos={[]}
               clientId={clientId}
               copy={copy}
+              downloadProducts={productsDownloadHref(String(index), person.products, person.productsUsed, "peinado")}
             />
           }
           trialComments={
