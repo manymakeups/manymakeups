@@ -1,0 +1,28 @@
+---
+description: Desde el 30 oct 2026, cada tabla nueva en public necesita GRANT en la misma migración
+alwaysApply: true
+---
+
+# Tablas Supabase nuevas
+
+A partir del **30 de octubre de 2026**, una tabla nueva de `public` no se expone sola a la Data API. Hay que poner los `GRANT` en la misma migración que el `CREATE TABLE`. Sin ellos, `supabase-js`, PostgREST y GraphQL responden `permission denied`.
+
+Las tablas que ya existen no cambian. No reescribas sus grants por este aviso. También aplica si la migración recrea el esquema: proyecto nuevo, preview branch o `supabase db reset`.
+
+Ajusta privilegios al uso real: `anon` solo `SELECT` si la tabla es pública; no des escritura a `anon` ni a `authenticated` si no deben escribir.
+
+```sql
+grant select
+on public.your_table
+to anon;
+
+grant select, insert, update, delete
+on public.your_table
+to authenticated;
+
+grant select, insert, update, delete
+on public.your_table
+to service_role;
+```
+
+Los `GRANT` solo exponen la tabla a la API. RLS sigue decidiendo las filas.
