@@ -725,7 +725,7 @@ export function MailDesk() {
                     ))}
                   </ul>
                 ) : null}
-                <p className="mt-2 text-[0.68rem] text-ash">{box.key === "binder" ? "Sale como STAFF M.K.B. Hasta 8 archivos y 3 MB." : box.key === "hotmail" ? "Sale como Ana Belén Martínez. Hasta 8 archivos y 3 MB." : "Hasta 8 archivos y 20 MB. Quien lo reciba verá este fondo y esta firma."}</p>
+                <p className="mt-2 text-[0.68rem] text-ash">{box.key === "binder" ? "Sale como STAFF My K-Pop Binder. Hasta 8 archivos y 3 MB." : box.key === "hotmail" ? "Sale como Ana Belén Martínez. Hasta 8 archivos y 3 MB." : "Hasta 8 archivos y 20 MB. Quien lo reciba verá este fondo y esta firma."}</p>
                 {box.signature ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={box.signature} alt="Firma" className="mt-4 w-[193px] max-w-full" />

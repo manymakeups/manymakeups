@@ -9,7 +9,7 @@ export const MAILBOXES = [
 export const BINDER_MAILBOX = {
   address: "info@mykpopbinder.com",
   label: "My K-pop Binder",
-  fromName: "STAFF M.K.B.",
+  fromName: "STAFF My K-Pop Binder",
   key: "binder",
   signature: "",
 } as const;
