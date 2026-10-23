@@ -465,7 +465,7 @@ export async function sendMail(input: {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: `Many Makeups <${box.address}>`,
+      from: `"${box.fromName}" <${box.address}>`,
       to,
       reply_to: box.address,
       subject,
@@ -493,7 +493,7 @@ export async function sendMail(input: {
     id: newId(),
     account: box.key,
     folder: "sent",
-    from: `Many Makeups <${box.address}>`,
+    from: `"${box.fromName}" <${box.address}>`,
     to: to.join(", "),
     subject,
     seen: true,

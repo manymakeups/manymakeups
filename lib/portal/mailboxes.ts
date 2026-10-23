@@ -1,9 +1,9 @@
 export const MAILBOXES = [
-  { address: "info@manymakeups.com", label: "Info", key: "info", signature: "/brand/firmas-correo/info.png" },
-  { address: "accounting@manymakeups.com", label: "Accounting", key: "accounting", signature: "/brand/firmas-correo/accounting.png" },
-  { address: "formaciones@manymakeups.com", label: "Formaciones", key: "formaciones", signature: "/brand/firmas-correo/formaciones.png" },
-  { address: "comercial@manymakeups.com", label: "Comercial", key: "comercial", signature: "/brand/firmas-correo/comercial.png" },
-  { address: "management@manymakeups.com", label: "Management", key: "management", signature: "/brand/firmas-correo/management.png" },
+  { address: "info@manymakeups.com", label: "Info", fromName: "Many Makeups by Ana Zarza", key: "info", signature: "/brand/firmas-correo/info.png" },
+  { address: "accounting@manymakeups.com", label: "Accounting", fromName: "Accounting Many Makeups by Ana Zarza", key: "accounting", signature: "/brand/firmas-correo/accounting.png" },
+  { address: "formaciones@manymakeups.com", label: "Formaciones", fromName: "Formaciones Many Makeups by Ana Zarza", key: "formaciones", signature: "/brand/firmas-correo/formaciones.png" },
+  { address: "comercial@manymakeups.com", label: "Comercial", fromName: "Comercial Many Makeups by Ana Zarza", key: "comercial", signature: "/brand/firmas-correo/comercial.png" },
+  { address: "management@manymakeups.com", label: "Management", fromName: "Management Many Makeups by Ana Zarza", key: "management", signature: "/brand/firmas-correo/management.png" },
 ] as const;
 
 export const SIGNATURE_BACKGROUND = "#f4f1ea";

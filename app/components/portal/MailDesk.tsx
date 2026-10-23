@@ -641,7 +641,8 @@ export function MailDesk() {
                     </button>
                   ))}
                 </div>
-                <p className="mt-3 text-[0.68rem] uppercase tracking-[0.16em] text-ash">{box.address}</p>
+                <p className="mt-3 text-sm text-ink">{box.fromName}</p>
+                <p className="text-[0.68rem] uppercase tracking-[0.16em] text-ash">{box.address}</p>
                 <label className="field-label mt-4">
                   Para
                   <input className="field" value={compose.to} onChange={(event) => setCompose({ ...compose, to: event.target.value })} required />
