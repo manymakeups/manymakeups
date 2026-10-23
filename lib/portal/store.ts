@@ -230,8 +230,12 @@ export async function addStudioNotice(clientId: string, notice: NewStudioNotice)
 }
 
 export async function listNotices() {
-  const db = await readDb();
-  return db.notices;
+  try {
+    const db = await readDb();
+    return db.notices;
+  } catch {
+    return [];
+  }
 }
 
 export async function mutateNotices(
