@@ -586,8 +586,8 @@ export function MailDesk() {
         </div>
       </aside>
 
-      <section className="grid min-h-0 min-w-0 md:grid-cols-[minmax(16rem,22rem)_minmax(0,1fr)]">
-        <div className={`${reading ? "hidden" : "flex"} min-h-0 min-w-0 flex-col border-ink/10 bg-porcelain md:flex md:border-r`}>
+      <section className="grid min-h-0 min-w-0 md:grid-rows-[minmax(10rem,32%)_minmax(0,1fr)]">
+        <div className={`${reading ? "hidden" : "flex"} min-h-0 min-w-0 flex-col border-ink/10 bg-porcelain md:flex md:border-b`}>
           <div className="flex items-center gap-1 border-b border-ink/10 px-2 py-2">
             <Tool
               label={selecting ? "Dejar de seleccionar" : "Seleccionar"}
