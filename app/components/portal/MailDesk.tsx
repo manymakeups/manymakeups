@@ -139,6 +139,12 @@ function Icon({ name }: { name: string }) {
   if (name === "sent") {
     return <svg {...common}><path d="m4 12 16-8-6 16-2.5-6.5Z" /></svg>;
   }
+  if (name === "search") {
+    return <svg {...common}><circle cx="11" cy="11" r="6" /><path d="m20 20-3.5-3.5" /></svg>;
+  }
+  if (name === "filter") {
+    return <svg {...common}><path d="M4 6h16" /><path d="M7 12h10" /><path d="M10 18h4" /></svg>;
+  }
   return <svg {...common}><path d="M15 18H5V6h10" /><path d="m12 9 4 3-4 3" /></svg>;
 }
 
@@ -171,13 +177,21 @@ export function MailDesk() {
   const [files, setFiles] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
   const [phase, setPhase] = useState("");
+  const [query, setQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [readFilter, setReadFilter] = useState<"all" | "unread" | "read">("all");
   const fileRef = useRef<HTMLInputElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
   const place = describe(view);
   const placeRef = useRef(place);
 
   useEffect(() => {
     placeRef.current = { account: place.account, folder: place.folder };
   }, [place.account, place.folder]);
+
+  useEffect(() => {
+    if (searchOpen) searchRef.current?.focus();
+  }, [searchOpen]);
 
   const load = useCallback(async (next = place) => {
     setError("");
@@ -263,6 +277,9 @@ export function MailDesk() {
     setPicked([]);
     setCompose(null);
     setSelecting(false);
+    setQuery("");
+    setSearchOpen(false);
+    setReadFilter("all");
   }
 
   async function openMessage(id: string) {
@@ -469,7 +486,14 @@ export function MailDesk() {
   const mixed = place.account === "all";
   const totalUnread = ACCOUNTS.reduce((sum, item) => sum + (counts[item.key] || 0), 0);
   const markAsRead = messages.some((item) => picked.includes(item.id) && !item.seen);
-  const allPicked = messages.length > 0 && messages.every((item) => picked.includes(item.id));
+  const needle = query.trim().toLowerCase();
+  const shown = messages.filter((item) => {
+    if (readFilter === "unread" && item.seen) return false;
+    if (readFilter === "read" && !item.seen) return false;
+    if (!needle) return true;
+    return `${item.subject} ${item.from} ${item.to}`.toLowerCase().includes(needle);
+  });
+  const allPicked = shown.length > 0 && shown.every((item) => picked.includes(item.id));
 
   return (
     <div className="grid min-h-0 flex-1 overflow-hidden rounded-sm border border-ink/10 bg-porcelain md:grid-cols-[17rem_minmax(0,1fr)]">
@@ -581,7 +605,7 @@ export function MailDesk() {
                 className="ml-1 size-4"
                 checked={allPicked}
                 aria-label="Seleccionar todos"
-                onChange={() => setPicked(allPicked ? [] : messages.map((item) => item.id))}
+                onChange={() => setPicked(allPicked ? [] : shown.map((item) => item.id))}
               />
             ) : null}
             <Tool label={place.folder === "archive" ? "Mover a entrada" : "Archivar"} disabled={!picked.length} onClick={() => void post("move", picked, { destination: place.folder === "archive" ? "inbox" : "archive" })}>
@@ -597,14 +621,27 @@ export function MailDesk() {
             >
               <Icon name={markAsRead ? "read" : "unread"} />
             </Tool>
+            <Tool label="Buscar" active={searchOpen} onClick={() => setSearchOpen((value) => !value)}>
+              <Icon name="search" />
+            </Tool>
+            <Tool label="Filtro" active={readFilter !== "all"} onClick={() => setReadFilter((value) => (value === "all" ? "unread" : value === "unread" ? "read" : "all"))}>
+              <Icon name="filter" />
+            </Tool>
           </div>
+          {searchOpen ? (
+            <div className="border-b border-ink/10 px-3 py-2">
+              <input ref={searchRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar en asunto, remitente o destinatario" aria-label="Buscar" className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-ash" />
+            </div>
+          ) : null}
+          {readFilter !== "all" ? <p className="border-b border-ink/10 px-3 py-1 text-[0.68rem] uppercase tracking-[0.14em] text-ash">{readFilter === "unread" ? "No leídos" : "Leídos"}</p> : null}
           {error ? <p className="px-4 py-2 text-sm text-ash">{error}</p> : null}
           {connect ? <a href={connect} className="mx-4 mb-2 inline-block rounded-full bg-ink px-4 py-2 text-sm text-porcelain">Conectar Hotmail</a> : null}
           <div className="min-h-0 flex-1 overflow-y-auto">
             {loading && !messages.length ? <p className="px-4 py-6 text-sm text-ash">Abriendo…</p> : null}
             {!loading && !messages.length && !connect ? <p className="px-4 py-6 text-sm text-ash">Esta bandeja está vacía.</p> : null}
+            {!loading && messages.length > 0 && !shown.length ? <p className="px-4 py-6 text-sm text-ash">Ningún mensaje coincide.</p> : null}
             <ul>
-              {messages.map((item) => {
+              {shown.map((item) => {
                 const active = selected?.id === item.id;
                 return (
                   <li key={item.id} className={`border-b border-ink/5 ${active ? "bg-ink/[0.04]" : ""}`}>

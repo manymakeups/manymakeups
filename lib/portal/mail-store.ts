@@ -185,10 +185,12 @@ function sanitizeMailHtml(html: string) {
     .slice(0, 500_000);
 }
 
-function letterHtml(account: MailboxKey, message: string) {
+const SIGNATURE_WIDTH = 193;
+const SIGNATURE_HEIGHT = 343;
+
+function letterHtml(account: MailboxKey, message: string, src: string) {
   const box = mailboxByKey(account);
-  const src = `${site.url}${box?.signature || "/brand/firmas-correo/info.png"}`;
-  return `<div style="margin:0;padding:20px 0 36px;background:${SIGNATURE_BACKGROUND};text-align:left;"><div style="font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.6;color:#1a1613;text-align:justify;text-align-last:left;white-space:pre-wrap;">${escapeHtml(message)}</div><img src="${src}" alt="Ana Zarza · Many Makeups" width="193" style="display:block;border:0;width:193px;max-width:100%;height:auto;margin:22px 0 0;background:${SIGNATURE_BACKGROUND};" /></div>`;
+  return `<div style="margin:0;padding:20px 0 36px;background:${SIGNATURE_BACKGROUND};text-align:left;"><div style="font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.6;color:#1a1613;text-align:justify;text-align-last:left;white-space:pre-wrap;">${escapeHtml(message)}</div><img src="${src}" alt="Ana Zarza · ${box?.address || "Many Makeups"}" width="${SIGNATURE_WIDTH}" height="${SIGNATURE_HEIGHT}" style="display:block;border:0;width:${SIGNATURE_WIDTH}px;max-width:100%;height:auto;margin:22px 0 0;background:${SIGNATURE_BACKGROUND};" /></div>`;
 }
 
 function escapeHtml(value: string) {
@@ -459,7 +461,16 @@ export async function sendMail(input: {
   const key = (process.env.RESEND_API_KEY || "").trim();
   if (!key) throw new Error("MISSING_RESEND");
   const message = text || "Te envío los archivos adjuntos.";
-  const letter = letterHtml(box.key, message);
+  const publicSrc = `${site.url}${box.signature || "/brand/firmas-correo/info.png"}`;
+  let signature: Buffer | null = null;
+  try {
+    const rel = (box.signature || "/brand/firmas-correo/info.png").replace(/^\//, "");
+    signature = await readFile(path.join(process.cwd(), "public", rel));
+  } catch {
+    signature = null;
+  }
+  const letter = letterHtml(box.key, message, signature ? "cid:firma" : publicSrc);
+  const storedLetter = letterHtml(box.key, message, publicSrc);
   const inReplyTo = input.inReplyTo?.replace(/[\r\n\0]/g, "").trim().slice(0, 500) || "";
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -471,11 +482,16 @@ export async function sendMail(input: {
       subject,
       text: `${message}\n\nAna Zarza\nMany Makeups\n${box.address}\n${site.phoneDisplay}`,
       html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:${SIGNATURE_BACKGROUND};">${letter}</body></html>`,
-      attachments: files.map((file) => ({
-        filename: file.filename,
-        content: file.content.toString("base64"),
-        content_type: file.contentType || "application/octet-stream",
-      })),
+      attachments: [
+        ...files.map((file) => ({
+          filename: file.filename,
+          content: file.content.toString("base64"),
+          content_type: file.contentType || "application/octet-stream",
+        })),
+        ...(signature
+          ? [{ filename: "firma.png", content: signature.toString("base64"), content_type: "image/png", content_id: "firma" }]
+          : []),
+      ],
       headers: inReplyTo ? { "In-Reply-To": inReplyTo, References: inReplyTo } : undefined,
     }),
   });
@@ -501,7 +517,7 @@ export async function sendMail(input: {
     createdAt: new Date().toISOString(),
     messageId: "",
     text: message,
-    html: letter,
+    html: storedLetter,
     inReplyTo,
     attachments: kept.map(({ id, filename, contentType, bytes }) => ({ id, filename, contentType, size: bytes.length })),
   };
