@@ -187,8 +187,8 @@ function sanitizeMailHtml(html: string) {
 
 function letterHtml(account: MailboxKey, message: string) {
   const box = mailboxByKey(account);
-  const src = `${site.url}${box?.signature || "/brand/firmas-correo/info.jpg"}`;
-  return `<div style="margin:0;padding:0;background:${SIGNATURE_BACKGROUND};"><div style="max-width:640px;margin:0 auto;padding:32px 28px 8px;font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.55;color:#1a1613;white-space:pre-wrap;">${escapeHtml(message)}</div><div style="max-width:640px;margin:0 auto;padding:12px 28px 40px;"><img src="${src}" alt="Ana Zarza · Many Makeups" width="193" style="display:block;border:0;width:193px;max-width:100%;height:auto;background:${SIGNATURE_BACKGROUND};" /></div></div>`;
+  const src = `${site.url}${box?.signature || "/brand/firmas-correo/info.png"}`;
+  return `<div style="margin:0;padding:20px 0 36px;background:${SIGNATURE_BACKGROUND};text-align:left;"><div style="font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.6;color:#1a1613;text-align:justify;text-align-last:left;white-space:pre-wrap;">${escapeHtml(message)}</div><img src="${src}" alt="Ana Zarza · Many Makeups" width="280" style="display:block;border:0;width:280px;max-width:100%;height:auto;margin:22px 0 0;background:${SIGNATURE_BACKGROUND};" /></div>`;
 }
 
 function escapeHtml(value: string) {
