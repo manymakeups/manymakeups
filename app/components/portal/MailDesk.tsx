@@ -706,7 +706,7 @@ export function MailDesk() {
                 ) : null}
                 <p className="mt-2 text-[0.68rem] text-ash">Hasta 8 archivos y 20 MB. Quien lo reciba verá este fondo y esta firma.</p>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={box.signature} alt="Firma" className="mt-4 w-[280px] max-w-full" />
+                <img src={box.signature} alt="Firma" className="mt-4 w-[193px] max-w-full" />
               </div>
             </form>
           ) : selected ? (
