@@ -1,11 +1,14 @@
 "use client";
 
-import { MAILBOXES, type MailboxKey, type MailFolder } from "@/lib/portal/mailboxes";
+import { BINDER_MAILBOX, MAILBOXES, type MailboxKey, type MailFolder } from "@/lib/portal/mailboxes";
+
+type DeskKey = MailboxKey | "binder";
+const ACCOUNTS = [...MAILBOXES, BINDER_MAILBOX];
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type MailSummary = {
   id: string;
-  account: MailboxKey;
+  account: DeskKey;
   from: string;
   to: string;
   subject: string;
@@ -24,7 +27,7 @@ type MailMessage = MailSummary & {
   attachments: MailFile[];
 };
 
-type Counts = Record<MailboxKey, number>;
+type Counts = Record<DeskKey, number>;
 
 const FOLDERS: Array<{ id: MailFolder; label: string }> = [
   { id: "inbox", label: "Entrada" },
@@ -35,12 +38,12 @@ const FOLDERS: Array<{ id: MailFolder; label: string }> = [
 
 type View =
   | { id: "global-inbox" }
-  | { id: "all-inbox"; account: MailboxKey }
+  | { id: "all-inbox"; account: DeskKey }
   | { id: "all-sent" }
   | { id: "all-trash" }
-  | { id: "box"; account: MailboxKey; folder: MailFolder };
+  | { id: "box"; account: DeskKey; folder: MailFolder };
 
-function describe(next: View): { account: MailboxKey | "all"; folder: MailFolder } {
+function describe(next: View): { account: DeskKey | "all"; folder: MailFolder } {
   if (next.id === "global-inbox") return { account: "all", folder: "inbox" };
   if (next.id === "all-sent") return { account: "all", folder: "sent" };
   if (next.id === "all-trash") return { account: "all", folder: "trash" };
@@ -57,7 +60,7 @@ function viewMark(next: View) {
 }
 
 function accountLabel(key: string) {
-  return MAILBOXES.find((item) => item.key === key)?.label || key;
+  return ACCOUNTS.find((item) => item.key === key)?.label || key;
 }
 
 const MAX_FILES = 8;
@@ -160,10 +163,10 @@ export function MailDesk() {
   const [selected, setSelected] = useState<MailMessage | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
   const [selecting, setSelecting] = useState(false);
-  const [counts, setCounts] = useState<Counts>({ info: 0, accounting: 0, formaciones: 0, comercial: 0, management: 0 });
+  const [counts, setCounts] = useState<Counts>({ info: 0, accounting: 0, formaciones: 0, comercial: 0, management: 0, binder: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [compose, setCompose] = useState<{ from: MailboxKey; to: string; subject: string; text: string; inReplyTo: string; forwardId: string; forwardFiles: MailFile[] } | null>(null);
+  const [compose, setCompose] = useState<{ from: DeskKey; to: string; subject: string; text: string; inReplyTo: string; forwardId: string; forwardFiles: MailFile[] } | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
   const [phase, setPhase] = useState("");
@@ -218,7 +221,7 @@ export function MailDesk() {
     async function poll() {
       try {
         const res = await fetch("/api/admin/mail?unseen=1", { cache: "no-store" });
-        const json = (await res.json()) as { counts?: Counts; items?: Array<{ id: string; account: MailboxKey }> };
+        const json = (await res.json()) as { counts?: Counts; items?: Array<{ id: string; account: DeskKey }> };
         if (dead || !res.ok || !json.counts) return;
         setCounts(json.counts);
         const ids = new Set((json.items || []).map((item) => item.id));
@@ -257,7 +260,7 @@ export function MailDesk() {
     setError("");
     setCompose(null);
     const row = messages.find((item) => item.id === id);
-    const owner: MailboxKey = row?.account || (place.account === "all" ? "info" : place.account);
+    const owner: DeskKey = row?.account || (place.account === "all" ? "info" : place.account);
     const wasUnseen = Boolean(row && !row.seen);
     const res = await fetch(`/api/admin/mail?account=${owner}&id=${id}`, { cache: "no-store" });
     const json = (await res.json()) as { message?: MailMessage; error?: string };
@@ -276,7 +279,7 @@ export function MailDesk() {
   async function post(action: "delete" | "seen" | "move", ids: string[], extra?: { seen?: boolean; destination?: MailFolder }) {
     if (!ids.length) return;
     const rows = messages.filter((item) => ids.includes(item.id));
-    const groups = new Map<MailboxKey, string[]>();
+    const groups = new Map<DeskKey, string[]>();
     for (const row of rows) {
       groups.set(row.account, [...(groups.get(row.account) || []), row.id]);
     }
@@ -326,12 +329,12 @@ export function MailDesk() {
   function sendingAccount() {
     if (selected?.account) return selected.account;
     if (view.id === "all-inbox" || view.id === "box") return view.account;
-    return "info" as MailboxKey;
+    return "info" as DeskKey;
   }
 
   function startCompose(kind: "new" | "reply" | "reply-all" | "forward") {
     const from = sendingAccount();
-    const box = MAILBOXES.find((item) => item.key === from) ?? MAILBOXES[0];
+    const box = ACCOUNTS.find((item) => item.key === from) ?? MAILBOXES[0];
     if (kind === "new" || !selected) {
       setSelected(null);
       setCompose({ from, to: "", subject: "", text: "", inReplyTo: "", forwardId: "", forwardFiles: [] });
@@ -369,14 +372,15 @@ export function MailDesk() {
     if (!compose || sending) return;
     const chosen = files.slice(0, MAX_FILES);
     const weight = chosen.reduce((sum, file) => sum + file.size, 0) + compose.forwardFiles.reduce((sum, file) => sum + file.size, 0);
-    if (files.length + compose.forwardFiles.length > MAX_FILES || weight > MAX_BYTES) {
-      setError("Cada envío admite hasta 8 archivos y 20 MB.");
+    const binder = compose.from === "binder";
+    if (files.length + compose.forwardFiles.length > MAX_FILES || weight > (binder ? 3_500_000 : MAX_BYTES)) {
+      setError(binder ? "My K-pop Binder admite hasta 8 archivos y 3 MB." : "Cada envío admite hasta 8 archivos y 20 MB.");
       return;
     }
     setSending(true);
     setError("");
     try {
-      const heavy = weight > DIRECT_LIMIT || chosen.some((file) => file.size > DIRECT_LIMIT);
+      const heavy = !binder && (weight > DIRECT_LIMIT || chosen.some((file) => file.size > DIRECT_LIMIT));
       setPhase(heavy && chosen.length ? "Subiendo archivos…" : "Enviando…");
       let res: Response;
       if (heavy) {
@@ -444,10 +448,10 @@ export function MailDesk() {
   }
 
   const fromKey = compose?.from || sendingAccount();
-  const box = MAILBOXES.find((item) => item.key === fromKey) ?? MAILBOXES[0];
+  const box = ACCOUNTS.find((item) => item.key === fromKey) ?? MAILBOXES[0];
   const reading = Boolean(selected || compose);
   const mixed = place.account === "all";
-  const totalUnread = MAILBOXES.reduce((sum, item) => sum + (counts[item.key] || 0), 0);
+  const totalUnread = ACCOUNTS.reduce((sum, item) => sum + (counts[item.key] || 0), 0);
   const markAsRead = messages.some((item) => picked.includes(item.id) && !item.seen);
   const allPicked = messages.length > 0 && messages.every((item) => picked.includes(item.id));
 
@@ -475,7 +479,7 @@ export function MailDesk() {
                 <span className={`min-w-0 flex-1 truncate ${totalUnread ? "font-semibold" : ""}`}>Entrada</span>
                 {totalUnread ? <span className="font-bold tabular-nums">{totalUnread}</span> : null}
               </button>
-              {MAILBOXES.map((item) => {
+              {ACCOUNTS.map((item) => {
                 const active = view.id === "all-inbox" && view.account === item.key;
                 const count = counts[item.key] || 0;
                 return (
@@ -509,7 +513,7 @@ export function MailDesk() {
               </button>
             </div>
           </section>
-          {MAILBOXES.map((item) => (
+          {ACCOUNTS.map((item) => (
             <section key={item.key}>
               <button
                 type="button"
@@ -643,7 +647,7 @@ export function MailDesk() {
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto bg-porcelain px-4 py-4 md:px-6">
                 <div className="flex flex-wrap gap-1">
-                  {MAILBOXES.map((item) => (
+                  {ACCOUNTS.map((item) => (
                     <button
                       key={item.key}
                       type="button"
@@ -704,9 +708,11 @@ export function MailDesk() {
                     ))}
                   </ul>
                 ) : null}
-                <p className="mt-2 text-[0.68rem] text-ash">Hasta 8 archivos y 20 MB. Quien lo reciba verá este fondo y esta firma.</p>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={box.signature} alt="Firma" className="mt-4 w-[193px] max-w-full" />
+                <p className="mt-2 text-[0.68rem] text-ash">{box.key === "binder" ? "Sale como STAFF M.K.B. Hasta 8 archivos y 3 MB." : "Hasta 8 archivos y 20 MB. Quien lo reciba verá este fondo y esta firma."}</p>
+                {box.signature ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={box.signature} alt="Firma" className="mt-4 w-[193px] max-w-full" />
+                ) : null}
               </div>
             </form>
           ) : selected ? (

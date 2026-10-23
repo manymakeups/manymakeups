@@ -6,6 +6,14 @@ export const MAILBOXES = [
   { address: "management@manymakeups.com", label: "Management", fromName: "Management Many Makeups by Ana Zarza", key: "management", signature: "/brand/firmas-correo/management.jpg" },
 ] as const;
 
+export const BINDER_MAILBOX = {
+  address: "info@mykpopbinder.com",
+  label: "My K-pop Binder",
+  fromName: "STAFF M.K.B.",
+  key: "binder",
+  signature: "",
+} as const;
+
 export const SIGNATURE_BACKGROUND = "#f4f1ea";
 
 export type MailboxKey = (typeof MAILBOXES)[number]["key"];
