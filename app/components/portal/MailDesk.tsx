@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 type MailSummary = {
   id: string;
+  account: MailboxKey;
   from: string;
   to: string;
   subject: string;
@@ -31,6 +32,30 @@ const FOLDERS: Array<{ id: MailFolder; label: string }> = [
   { id: "archive", label: "Archivo" },
   { id: "trash", label: "Papelera" },
 ];
+
+type View =
+  | { id: "all-inbox"; account: MailboxKey }
+  | { id: "all-sent" }
+  | { id: "all-trash" }
+  | { id: "box"; account: MailboxKey; folder: MailFolder };
+
+function describe(next: View): { account: MailboxKey | "all"; folder: MailFolder } {
+  if (next.id === "all-sent") return { account: "all", folder: "sent" as MailFolder };
+  if (next.id === "all-trash") return { account: "all", folder: "trash" as MailFolder };
+  if (next.id === "all-inbox") return { account: next.account, folder: "inbox" as MailFolder };
+  return { account: next.account, folder: next.folder };
+}
+
+function viewMark(next: View) {
+  if (next.id === "all-sent") return "all-sent";
+  if (next.id === "all-trash") return "all-trash";
+  if (next.id === "all-inbox") return `all-inbox:${next.account}`;
+  return `box:${next.account}:${next.folder}`;
+}
+
+function accountLabel(key: string) {
+  return MAILBOXES.find((item) => item.key === key)?.label || key;
+}
 
 const MAX_FILES = 8;
 const MAX_BYTES = 20_000_000;
@@ -127,8 +152,7 @@ function Tool({ label, onClick, disabled, active, children }: { label: string; o
 }
 
 export function MailDesk() {
-  const [account, setAccount] = useState<MailboxKey>("info");
-  const [folder, setFolder] = useState<MailFolder>("inbox");
+  const [view, setView] = useState<View>({ id: "all-inbox", account: "info" });
   const [messages, setMessages] = useState<MailSummary[]>([]);
   const [selected, setSelected] = useState<MailMessage | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
@@ -136,21 +160,22 @@ export function MailDesk() {
   const [counts, setCounts] = useState<Counts>({ info: 0, accounting: 0, formaciones: 0, comercial: 0, management: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [compose, setCompose] = useState<{ to: string; subject: string; text: string; inReplyTo: string; forwardId: string; forwardFiles: MailFile[] } | null>(null);
+  const [compose, setCompose] = useState<{ from: MailboxKey; to: string; subject: string; text: string; inReplyTo: string; forwardId: string; forwardFiles: MailFile[] } | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
   const [phase, setPhase] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
-  const placeRef = useRef({ account, folder });
+  const place = describe(view);
+  const placeRef = useRef(place);
 
   useEffect(() => {
-    placeRef.current = { account, folder };
-  }, [account, folder]);
+    placeRef.current = { account: place.account, folder: place.folder };
+  }, [place.account, place.folder]);
 
-  const load = useCallback(async (nextAccount = account, nextFolder = folder) => {
+  const load = useCallback(async (next = place) => {
     setError("");
     try {
-      const params = new URLSearchParams({ account: nextAccount, folder: nextFolder });
+      const params = new URLSearchParams({ account: next.account, folder: next.folder });
       const res = await fetch(`/api/admin/mail?${params}`, { cache: "no-store" });
       const json = (await res.json()) as { messages?: MailSummary[]; error?: string };
       if (!res.ok) throw new Error(json.error || "No se ha podido abrir la bandeja.");
@@ -160,13 +185,13 @@ export function MailDesk() {
     } finally {
       setLoading(false);
     }
-  }, [account, folder]);
+  }, [place]);
 
   useEffect(() => {
     let dead = false;
     void (async () => {
       try {
-        const params = new URLSearchParams({ account, folder });
+        const params = new URLSearchParams({ account: place.account, folder: place.folder });
         const res = await fetch(`/api/admin/mail?${params}`, { cache: "no-store" });
         const json = (await res.json()) as { messages?: MailSummary[]; error?: string };
         if (dead) return;
@@ -182,7 +207,7 @@ export function MailDesk() {
     return () => {
       dead = true;
     };
-  }, [account, folder]);
+  }, [place.account, place.folder]);
 
   useEffect(() => {
     let dead = false;
@@ -194,9 +219,9 @@ export function MailDesk() {
         if (dead || !res.ok || !json.counts) return;
         setCounts(json.counts);
         const ids = new Set((json.items || []).map((item) => item.id));
-        const place = placeRef.current;
-        if (seen.ids && place.folder === "inbox" && (json.items || []).some((item) => item.account === place.account && !seen.ids?.has(item.id))) {
-          const params = new URLSearchParams({ account: place.account, folder: "inbox" });
+        const here = placeRef.current;
+        if (seen.ids && here.folder === "inbox" && here.account !== "all" && (json.items || []).some((item) => item.account === here.account && !seen.ids?.has(item.id))) {
+          const params = new URLSearchParams({ account: here.account, folder: "inbox" });
           const list = await fetch(`/api/admin/mail?${params}`, { cache: "no-store" });
           const body = (await list.json()) as { messages?: MailSummary[] };
           if (!dead && list.ok) setMessages(body.messages || []);
@@ -214,11 +239,10 @@ export function MailDesk() {
     };
   }, []);
 
-  function openPlace(nextAccount: MailboxKey, nextFolder: MailFolder) {
-    if (nextAccount === account && nextFolder === folder) return;
-    setLoading(true);
-    setAccount(nextAccount);
-    setFolder(nextFolder);
+  function openView(next: View) {
+    if (viewMark(next) === viewMark(view)) return;
+    if (`${place.account}:${place.folder}` !== `${describe(next).account}:${describe(next).folder}`) setLoading(true);
+    setView(next);
     setSelected(null);
     setPicked([]);
     setCompose(null);
@@ -228,8 +252,10 @@ export function MailDesk() {
   async function openMessage(id: string) {
     setError("");
     setCompose(null);
-    const wasUnseen = messages.some((item) => item.id === id && !item.seen);
-    const res = await fetch(`/api/admin/mail?account=${account}&id=${id}`, { cache: "no-store" });
+    const row = messages.find((item) => item.id === id);
+    const owner: MailboxKey = row?.account || (place.account === "all" ? "info" : place.account);
+    const wasUnseen = Boolean(row && !row.seen);
+    const res = await fetch(`/api/admin/mail?account=${owner}&id=${id}`, { cache: "no-store" });
     const json = (await res.json()) as { message?: MailMessage; error?: string };
     if (!res.ok || !json.message) {
       setError(json.error || "No se ha podido abrir el mensaje.");
@@ -237,32 +263,48 @@ export function MailDesk() {
     }
     setSelected(json.message);
     setMessages((prev) => prev.map((item) => (item.id === id ? { ...item, seen: true } : item)));
-    if (wasUnseen && folder === "inbox") {
-      setCounts((prev) => ({ ...prev, [account]: Math.max(0, (prev[account] || 0) - 1) }));
+    if (wasUnseen && place.folder === "inbox") {
+      setCounts((prev) => ({ ...prev, [owner]: Math.max(0, (prev[owner] || 0) - 1) }));
       window.dispatchEvent(new Event("mm-mail"));
     }
   }
 
   async function post(action: "delete" | "seen" | "move", ids: string[], extra?: { seen?: boolean; destination?: MailFolder }) {
     if (!ids.length) return;
-    const res = await fetch("/api/admin/mail", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, account, folder, ids, ...extra }),
-    });
-    const json = (await res.json()) as { error?: string };
-    if (!res.ok) {
-      setError(json.error || "No se ha podido completar.");
+    const rows = messages.filter((item) => ids.includes(item.id));
+    const groups = new Map<MailboxKey, string[]>();
+    for (const row of rows) {
+      groups.set(row.account, [...(groups.get(row.account) || []), row.id]);
+    }
+    if (!groups.size && place.account !== "all") groups.set(place.account, ids);
+    const results = await Promise.all([...groups].map(async ([key, groupIds]) => {
+      const res = await fetch("/api/admin/mail", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, account: key, folder: place.folder, ids: groupIds, ...extra }),
+      });
+      const json = (await res.json()) as { error?: string };
+      return { ok: res.ok, error: json.error };
+    }));
+    const failed = results.find((item) => !item.ok);
+    if (failed) {
+      setError(failed.error || "No se ha podido completar.");
       return;
     }
     window.dispatchEvent(new Event("mm-mail"));
     if (action === "seen") {
       const seen = Boolean(extra?.seen);
-      if (folder === "inbox") {
-        const delta = seen
-          ? -messages.filter((item) => ids.includes(item.id) && !item.seen).length
-          : messages.filter((item) => ids.includes(item.id) && item.seen).length;
-        setCounts((prev) => ({ ...prev, [account]: Math.max(0, (prev[account] || 0) + delta) }));
+      if (place.folder === "inbox") {
+        setCounts((prev) => {
+          const next = { ...prev };
+          for (const [key, groupIds] of groups) {
+            const delta = seen
+              ? -messages.filter((item) => groupIds.includes(item.id) && !item.seen).length
+              : messages.filter((item) => groupIds.includes(item.id) && item.seen).length;
+            next[key] = Math.max(0, (next[key] || 0) + delta);
+          }
+          return next;
+        });
       }
       setMessages((prev) => prev.map((item) => (ids.includes(item.id) ? { ...item, seen } : item)));
       setSelected((current) => (current && ids.includes(current.id) ? { ...current, seen } : current));
@@ -277,15 +319,23 @@ export function MailDesk() {
     return `\n\n---------- Mensaje reenviado ----------\nDe: ${message.from}\nPara: ${message.to}\nAsunto: ${message.subject}\n\n${message.text}`;
   }
 
+  function sendingAccount() {
+    if (selected?.account) return selected.account;
+    if (view.id === "all-inbox" || view.id === "box") return view.account;
+    return "info" as MailboxKey;
+  }
+
   function startCompose(kind: "new" | "reply" | "reply-all" | "forward") {
-    const box = MAILBOXES.find((item) => item.key === account) ?? MAILBOXES[0];
+    const from = sendingAccount();
+    const box = MAILBOXES.find((item) => item.key === from) ?? MAILBOXES[0];
     if (kind === "new" || !selected) {
       setSelected(null);
-      setCompose({ to: "", subject: "", text: "", inReplyTo: "", forwardId: "", forwardFiles: [] });
+      setCompose({ from, to: "", subject: "", text: "", inReplyTo: "", forwardId: "", forwardFiles: [] });
       return;
     }
     if (kind === "forward") {
       setCompose({
+        from: selected.account,
         to: "",
         subject: selected.subject.startsWith("Fwd:") ? selected.subject : `Fwd: ${selected.subject}`,
         text: quoteForward(selected),
@@ -296,11 +346,12 @@ export function MailDesk() {
       return;
     }
     const own = box.address.toLowerCase();
-    const replyTo = folder === "sent"
+    const replyTo = place.folder === "sent"
       ? selected.to
       : addresses(selected.from)[0] || selected.from;
     const everyone = [...new Set([...addresses(selected.from), ...addresses(selected.to)].map((item) => item.toLowerCase()))].filter((item) => item !== own);
     setCompose({
+      from: selected.account,
       to: kind === "reply-all" && everyone.length ? everyone.join(", ") : replyTo,
       subject: selected.subject.startsWith("Re:") ? selected.subject : `Re: ${selected.subject}`,
       text: "",
@@ -343,7 +394,7 @@ export function MailDesk() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             action: "send",
-            account,
+            account: compose.from,
             to: compose.to,
             subject: compose.subject,
             text: compose.text,
@@ -354,7 +405,7 @@ export function MailDesk() {
         });
       } else {
         const form = new FormData();
-        form.set("account", account);
+        form.set("account", compose.from);
         form.set("to", compose.to);
         form.set("subject", compose.subject);
         form.set("text", compose.text);
@@ -368,10 +419,13 @@ export function MailDesk() {
       setCompose(null);
       setFiles([]);
       setSelected(null);
-      if (folder === "sent") await load(account, "sent");
+      const next: View = view.id === "box"
+        ? { id: "box", account: compose.from, folder: "sent" }
+        : { id: "all-sent" };
+      if (`${place.account}:${place.folder}` === `${describe(next).account}:${describe(next).folder}`) await load(describe(next));
       else {
         setLoading(true);
-        setFolder("sent");
+        setView(next);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se ha podido enviar.");
@@ -385,13 +439,16 @@ export function MailDesk() {
     setPicked((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
   }
 
-  const box = MAILBOXES.find((item) => item.key === account) ?? MAILBOXES[0];
+  const fromKey = compose?.from || sendingAccount();
+  const box = MAILBOXES.find((item) => item.key === fromKey) ?? MAILBOXES[0];
   const reading = Boolean(selected || compose);
+  const mixed = place.account === "all";
+  const totalUnread = MAILBOXES.reduce((sum, item) => sum + (counts[item.key] || 0), 0);
   const markAsRead = messages.some((item) => picked.includes(item.id) && !item.seen);
   const allPicked = messages.length > 0 && messages.every((item) => picked.includes(item.id));
 
   return (
-    <div className="grid min-h-0 flex-1 overflow-hidden rounded-sm border border-ink/10 bg-white md:grid-cols-[17rem_minmax(0,1fr)]">
+    <div className="grid min-h-0 flex-1 overflow-hidden rounded-sm border border-ink/10 bg-porcelain md:grid-cols-[17rem_minmax(0,1fr)]">
       <aside className={`${reading ? "hidden" : "flex"} min-h-0 flex-col overflow-y-auto border-ink/10 bg-porcelain md:flex md:border-r`}>
         <div className="flex items-center gap-1 px-3 py-3">
           <Tool label="Mensaje nuevo" onClick={() => startCompose("new")}>
@@ -399,11 +456,51 @@ export function MailDesk() {
           </Tool>
         </div>
         <div className="grid gap-2 px-2 pb-4">
+          <section>
+            <p className="flex items-center justify-between gap-2 px-2 py-1">
+              <span className="truncate text-[0.72rem] uppercase tracking-[0.16em] text-ash">Todas</span>
+              {totalUnread ? <span className="font-bold tabular-nums text-sm text-ink">{totalUnread}</span> : null}
+            </p>
+            <div className="mt-1 grid">
+              {MAILBOXES.map((item) => {
+                const active = view.id === "all-inbox" && view.account === item.key;
+                const count = counts[item.key] || 0;
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => openView({ id: "all-inbox", account: item.key })}
+                    className={`flex items-center gap-2 rounded-lg px-2 py-1 text-left text-sm ${active ? "bg-ink/10" : "hover:bg-ink/5"}`}
+                  >
+                    <span className="text-ash"><Icon name="inbox" /></span>
+                    <span className={`min-w-0 flex-1 truncate ${count ? "font-semibold" : ""}`}>{item.label}</span>
+                    {count ? <span className="font-bold tabular-nums">{count}</span> : null}
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => openView({ id: "all-sent" })}
+                className={`flex items-center gap-2 rounded-lg px-2 py-1 text-left text-sm ${view.id === "all-sent" ? "bg-ink/10" : "hover:bg-ink/5"}`}
+              >
+                <span className="text-ash"><Icon name="sent" /></span>
+                <span className="min-w-0 flex-1 truncate">Enviados</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => openView({ id: "all-trash" })}
+                className={`flex items-center gap-2 rounded-lg px-2 py-1 text-left text-sm ${view.id === "all-trash" ? "bg-ink/10" : "hover:bg-ink/5"}`}
+              >
+                <span className="text-ash"><Icon name="trash" /></span>
+                <span className="min-w-0 flex-1 truncate">Papelera</span>
+              </button>
+            </div>
+          </section>
           {MAILBOXES.map((item) => (
             <section key={item.key}>
               <button
                 type="button"
-                onClick={() => openPlace(item.key, "inbox")}
+                onClick={() => openView({ id: "box", account: item.key, folder: "inbox" })}
                 className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1 text-left"
               >
                 <span className="truncate text-[0.72rem] uppercase tracking-[0.16em] text-ash">{item.label}</span>
@@ -411,13 +508,13 @@ export function MailDesk() {
               </button>
               <div className="mt-1 grid">
                 {FOLDERS.map((entry) => {
-                  const active = item.key === account && entry.id === folder;
+                  const active = view.id === "box" && view.account === item.key && view.folder === entry.id;
                   const count = entry.id === "inbox" ? counts[item.key] : 0;
                   return (
                     <button
                       key={entry.id}
                       type="button"
-                      onClick={() => openPlace(item.key, entry.id)}
+                      onClick={() => openView({ id: "box", account: item.key, folder: entry.id })}
                       className={`flex items-center gap-2 rounded-lg px-2 py-1 text-left text-sm ${active ? "bg-ink/10" : "hover:bg-ink/5"}`}
                     >
                       <span className="text-ash"><Icon name={entry.id === "sent" ? "sent" : entry.id === "trash" ? "trash" : entry.id === "archive" ? "archive" : "inbox"} /></span>
@@ -433,7 +530,7 @@ export function MailDesk() {
       </aside>
 
       <section className="grid min-h-0 min-w-0 md:grid-cols-[minmax(16rem,22rem)_minmax(0,1fr)]">
-        <div className={`${reading ? "hidden" : "flex"} min-h-0 min-w-0 flex-col border-ink/10 md:flex md:border-r`}>
+        <div className={`${reading ? "hidden" : "flex"} min-h-0 min-w-0 flex-col border-ink/10 bg-porcelain md:flex md:border-r`}>
           <div className="flex items-center gap-1 border-b border-ink/10 px-2 py-2">
             <Tool
               label={selecting ? "Dejar de seleccionar" : "Seleccionar"}
@@ -454,10 +551,10 @@ export function MailDesk() {
                 onChange={() => setPicked(allPicked ? [] : messages.map((item) => item.id))}
               />
             ) : null}
-            <Tool label={folder === "archive" ? "Mover a entrada" : "Archivar"} disabled={!picked.length} onClick={() => void post("move", picked, { destination: folder === "archive" ? "inbox" : "archive" })}>
-              <Icon name={folder === "archive" ? "inbox" : "archive"} />
+            <Tool label={place.folder === "archive" ? "Mover a entrada" : "Archivar"} disabled={!picked.length} onClick={() => void post("move", picked, { destination: place.folder === "archive" ? "inbox" : "archive" })}>
+              <Icon name={place.folder === "archive" ? "inbox" : "archive"} />
             </Tool>
-            <Tool label={folder === "trash" ? "Borrar" : "Papelera"} disabled={!picked.length} onClick={() => void post("delete", picked)}>
+            <Tool label={place.folder === "trash" ? "Borrar" : "Papelera"} disabled={!picked.length} onClick={() => void post("delete", picked)}>
               <Icon name="trash" />
             </Tool>
             <Tool
@@ -492,7 +589,7 @@ export function MailDesk() {
                       <button type="button" className="min-w-0 flex-1 text-left" onClick={() => void openMessage(item.id)}>
                         <span className="flex items-baseline justify-between gap-3">
                           <span className={`truncate text-sm ${item.seen ? "text-ash" : "font-semibold text-ink"}`}>
-                            {folder === "sent" ? displayName(item.to) : displayName(item.from)}
+                            {place.folder === "sent" ? displayName(item.to) : displayName(item.from)}
                           </span>
                           <span className="shrink-0 text-[0.68rem] text-ash">{formatWhen(item.createdAt)}</span>
                         </span>
@@ -500,6 +597,7 @@ export function MailDesk() {
                           {item.files > 0 ? <span className="text-ash"><Icon name="clip" /></span> : null}
                           <span className="truncate">{item.subject || "(sin asunto)"}</span>
                         </span>
+                        {mixed ? <span className="mt-0.5 block text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-ink">{accountLabel(item.account)}</span> : null}
                       </button>
                     </div>
                   </li>
@@ -509,7 +607,7 @@ export function MailDesk() {
           </div>
         </div>
 
-        <div className={`${reading ? "flex" : "hidden"} min-h-0 min-w-0 flex-col md:flex`}>
+        <div className={`${reading ? "flex" : "hidden"} min-h-0 min-w-0 flex-col bg-porcelain md:flex`}>
           {compose ? (
             <form
               className="flex min-h-0 flex-1 flex-col"
@@ -531,7 +629,19 @@ export function MailDesk() {
                 </button>
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto bg-porcelain px-4 py-4 md:px-6">
-                <p className="text-[0.68rem] uppercase tracking-[0.16em] text-ash">{box.address}</p>
+                <div className="flex flex-wrap gap-1">
+                  {MAILBOXES.map((item) => (
+                    <button
+                      key={item.key}
+                      type="button"
+                      onClick={() => setCompose({ ...compose, from: item.key })}
+                      className={`rounded-full px-2 py-1 text-[0.68rem] uppercase tracking-[0.14em] ${compose.from === item.key ? "bg-ink text-porcelain" : "text-ash hover:bg-ink/5"}`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-3 text-[0.68rem] uppercase tracking-[0.16em] text-ash">{box.address}</p>
                 <label className="field-label mt-4">
                   Para
                   <input className="field" value={compose.to} onChange={(event) => setCompose({ ...compose, to: event.target.value })} required />
@@ -597,12 +707,12 @@ export function MailDesk() {
                 <Tool label="Responder a todos" onClick={() => startCompose("reply-all")}><Icon name="reply-all" /></Tool>
                 <Tool label="Reenviar" onClick={() => startCompose("forward")}><Icon name="forward" /></Tool>
                 <Tool
-                  label={folder === "archive" ? "Mover a entrada" : "Archivar"}
-                  onClick={() => void post("move", [selected.id], { destination: folder === "archive" ? "inbox" : "archive" })}
+                  label={place.folder === "archive" ? "Mover a entrada" : "Archivar"}
+                  onClick={() => void post("move", [selected.id], { destination: place.folder === "archive" ? "inbox" : "archive" })}
                 >
-                  <Icon name={folder === "archive" ? "inbox" : "archive"} />
+                  <Icon name={place.folder === "archive" ? "inbox" : "archive"} />
                 </Tool>
-                <Tool label={folder === "trash" ? "Borrar" : "Papelera"} onClick={() => void post("delete", [selected.id])}>
+                <Tool label={place.folder === "trash" ? "Borrar" : "Papelera"} onClick={() => void post("delete", [selected.id])}>
                   <Icon name="trash" />
                 </Tool>
                 <Tool
@@ -613,9 +723,10 @@ export function MailDesk() {
                 </Tool>
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-8">
-                <h2 className="font-serif text-2xl leading-tight md:text-3xl">{selected.subject || "(sin asunto)"}</h2>
-                <p className="mt-4 text-sm font-semibold">{displayName(folder === "sent" ? selected.to : selected.from)}</p>
-                <p className="text-sm text-ash">{folder === "sent" ? selected.to : selected.from}</p>
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-ink">{accountLabel(selected.account)}</p>
+                <h2 className="mt-2 font-serif text-2xl leading-tight md:text-3xl">{selected.subject || "(sin asunto)"}</h2>
+                <p className="mt-4 text-sm font-semibold">{displayName(place.folder === "sent" ? selected.to : selected.from)}</p>
+                <p className="text-sm text-ash">{place.folder === "sent" ? selected.to : selected.from}</p>
                 <p className="mt-1 text-[0.72rem] text-ash">Para {selected.to} · {formatWhen(selected.createdAt)}</p>
                 {selected.html ? (
                   <div className="mt-6 text-sm leading-relaxed [&_img]:max-w-full [&_table]:max-w-full" dangerouslySetInnerHTML={{ __html: selected.html }} />
@@ -628,11 +739,11 @@ export function MailDesk() {
                       <a
                         key={file.id}
                         className="block w-36 border border-ink/10 px-3 py-2 text-sm"
-                        href={`/api/admin/mail?account=${account}&id=${selected.id}&file=${file.id}`}
+                        href={`/api/admin/mail?account=${selected.account}&id=${selected.id}&file=${file.id}`}
                       >
                         {file.contentType.startsWith("image/") ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img alt="" className="mb-2 h-20 w-full object-cover" src={`/api/admin/mail?account=${account}&id=${selected.id}&file=${file.id}`} />
+                          <img alt="" className="mb-2 h-20 w-full object-cover" src={`/api/admin/mail?account=${selected.account}&id=${selected.id}&file=${file.id}`} />
                         ) : null}
                         <span className="block truncate">{file.filename}</span>
                         <span className="mt-1 block text-[0.68rem] text-ash">{formatSize(file.size)}</span>

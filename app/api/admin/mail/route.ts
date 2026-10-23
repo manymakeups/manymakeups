@@ -13,7 +13,7 @@ import {
   setMessagesSeen,
   unseenSnapshot,
 } from "@/lib/portal/mail-store";
-import { mailboxByKey, type MailFolder } from "@/lib/portal/mailboxes";
+import { MAILBOXES, mailboxByKey, type MailFolder } from "@/lib/portal/mailboxes";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -31,7 +31,19 @@ export async function GET(req: Request) {
     const snapshot = await unseenSnapshot();
     return NextResponse.json(snapshot);
   }
-  const box = mailboxByKey(url.searchParams.get("account") || "");
+  const accountParam = url.searchParams.get("account") || "";
+  if (accountParam === "all" && !url.searchParams.get("id") && !url.searchParams.get("file")) {
+    try {
+      const folder = parseFolder(url.searchParams.get("folder")) || "inbox";
+      const lists = await Promise.all(MAILBOXES.map((box) => listMailbox(box.key, folder)));
+      const messages = lists.flat().sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 300);
+      return NextResponse.json({ messages });
+    } catch (err) {
+      const pub = publicMailError(err);
+      return NextResponse.json({ error: pub.error }, { status: pub.status });
+    }
+  }
+  const box = mailboxByKey(accountParam);
   if (!box) return NextResponse.json({ error: "Esa cuenta no está en el estudio." }, { status: 400 });
 
   const fileId = url.searchParams.get("file") || "";
