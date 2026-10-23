@@ -1,10 +1,10 @@
 "use client";
 
-import { BINDER_MAILBOX, MAILBOXES, type MailboxKey } from "@/lib/portal/mailboxes";
+import { BINDER_MAILBOX, HOTMAIL_MAILBOX, MAILBOXES, type MailboxKey } from "@/lib/portal/mailboxes";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-type FreshMail = { id: string; account: MailboxKey | "binder"; from: string; subject: string };
+type FreshMail = { id: string; account: MailboxKey | "binder" | "hotmail"; from: string; subject: string };
 
 export function MailAlert() {
   const router = useRouter();
@@ -38,7 +38,7 @@ export function MailAlert() {
           const fresh = items.filter((item) => !known.current?.has(item.id));
           if (fresh.length && typeof Notification !== "undefined" && Notification.permission === "granted") {
             const first = fresh[0];
-            const box = [...MAILBOXES, BINDER_MAILBOX].find((item) => item.key === first.account);
+            const box = [...MAILBOXES, BINDER_MAILBOX, HOTMAIL_MAILBOX].find((item) => item.key === first.account);
             const note = new Notification(
               fresh.length === 1 ? first.subject || "(sin asunto)" : `${fresh.length} correos nuevos`,
               {

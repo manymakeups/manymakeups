@@ -1,9 +1,9 @@
 "use client";
 
-import { BINDER_MAILBOX, MAILBOXES, type MailboxKey, type MailFolder } from "@/lib/portal/mailboxes";
+import { BINDER_MAILBOX, HOTMAIL_MAILBOX, MAILBOXES, type MailboxKey, type MailFolder } from "@/lib/portal/mailboxes";
 
-type DeskKey = MailboxKey | "binder";
-const ACCOUNTS = [...MAILBOXES, BINDER_MAILBOX];
+type DeskKey = MailboxKey | "binder" | "hotmail";
+const ACCOUNTS = [...MAILBOXES, BINDER_MAILBOX, HOTMAIL_MAILBOX];
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type MailSummary = {
@@ -163,10 +163,11 @@ export function MailDesk() {
   const [selected, setSelected] = useState<MailMessage | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
   const [selecting, setSelecting] = useState(false);
-  const [counts, setCounts] = useState<Counts>({ info: 0, accounting: 0, formaciones: 0, comercial: 0, management: 0, binder: 0 });
+  const [counts, setCounts] = useState<Counts>({ info: 0, accounting: 0, formaciones: 0, comercial: 0, management: 0, binder: 0, hotmail: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [compose, setCompose] = useState<{ from: DeskKey; to: string; subject: string; text: string; inReplyTo: string; forwardId: string; forwardFiles: MailFile[] } | null>(null);
+  const [connect, setConnect] = useState("");
+  const [compose, setCompose] = useState<{ from: DeskKey; to: string; subject: string; text: string; inReplyTo: string; forwardId: string; replyId: string; replyAll: boolean; forwardFiles: MailFile[] } | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
   const [phase, setPhase] = useState("");
@@ -180,11 +181,15 @@ export function MailDesk() {
 
   const load = useCallback(async (next = place) => {
     setError("");
+    setConnect("");
     try {
       const params = new URLSearchParams({ account: next.account, folder: next.folder });
       const res = await fetch(`/api/admin/mail?${params}`, { cache: "no-store" });
-      const json = (await res.json()) as { messages?: MailSummary[]; error?: string };
-      if (!res.ok) throw new Error(json.error || "No se ha podido abrir la bandeja.");
+      const json = (await res.json()) as { messages?: MailSummary[]; error?: string; connect?: string };
+      if (!res.ok) {
+        setConnect(json.connect || "");
+        throw new Error(json.error || "No se ha podido abrir la bandeja.");
+      }
       setMessages(json.messages || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se ha podido abrir la bandeja.");
@@ -199,9 +204,13 @@ export function MailDesk() {
       try {
         const params = new URLSearchParams({ account: place.account, folder: place.folder });
         const res = await fetch(`/api/admin/mail?${params}`, { cache: "no-store" });
-        const json = (await res.json()) as { messages?: MailSummary[]; error?: string };
+        const json = (await res.json()) as { messages?: MailSummary[]; error?: string; connect?: string };
         if (dead) return;
-        if (!res.ok) throw new Error(json.error || "No se ha podido abrir la bandeja.");
+        if (!res.ok) {
+          setConnect(json.connect || "");
+          throw new Error(json.error || "No se ha podido abrir la bandeja.");
+        }
+        setConnect("");
         setMessages(json.messages || []);
         setError("");
       } catch (err) {
@@ -337,7 +346,7 @@ export function MailDesk() {
     const box = ACCOUNTS.find((item) => item.key === from) ?? MAILBOXES[0];
     if (kind === "new" || !selected) {
       setSelected(null);
-      setCompose({ from, to: "", subject: "", text: "", inReplyTo: "", forwardId: "", forwardFiles: [] });
+      setCompose({ from, to: "", subject: "", text: "", inReplyTo: "", forwardId: "", replyId: "", replyAll: false, forwardFiles: [] });
       return;
     }
     if (kind === "forward") {
@@ -348,6 +357,8 @@ export function MailDesk() {
         text: quoteForward(selected),
         inReplyTo: "",
         forwardId: selected.id,
+        replyId: "",
+        replyAll: false,
         forwardFiles: selected.attachments,
       });
       return;
@@ -364,6 +375,8 @@ export function MailDesk() {
       text: "",
       inReplyTo: selected.messageId,
       forwardId: "",
+      replyId: selected.account === "hotmail" ? selected.id : "",
+      replyAll: kind === "reply-all",
       forwardFiles: [],
     });
   }
@@ -372,15 +385,16 @@ export function MailDesk() {
     if (!compose || sending) return;
     const chosen = files.slice(0, MAX_FILES);
     const weight = chosen.reduce((sum, file) => sum + file.size, 0) + compose.forwardFiles.reduce((sum, file) => sum + file.size, 0);
-    const binder = compose.from === "binder";
-    if (files.length + compose.forwardFiles.length > MAX_FILES || weight > (binder ? 3_500_000 : MAX_BYTES)) {
-      setError(binder ? "My K-pop Binder admite hasta 8 archivos y 3 MB." : "Cada envío admite hasta 8 archivos y 20 MB.");
+    const outside = compose.from === "binder" || compose.from === "hotmail";
+    const counted = compose.from === "hotmail" ? chosen.reduce((sum, file) => sum + file.size, 0) : weight;
+    if (files.length + compose.forwardFiles.length > MAX_FILES || counted > (outside ? compose.from === "hotmail" ? 3_000_000 : 3_500_000 : MAX_BYTES)) {
+      setError(compose.from === "hotmail" ? "Hotmail admite hasta 8 archivos y 3 MB." : compose.from === "binder" ? "My K-pop Binder admite hasta 8 archivos y 3 MB." : "Cada envío admite hasta 8 archivos y 20 MB.");
       return;
     }
     setSending(true);
     setError("");
     try {
-      const heavy = !binder && (weight > DIRECT_LIMIT || chosen.some((file) => file.size > DIRECT_LIMIT));
+      const heavy = !outside && (weight > DIRECT_LIMIT || chosen.some((file) => file.size > DIRECT_LIMIT));
       setPhase(heavy && chosen.length ? "Subiendo archivos…" : "Enviando…");
       let res: Response;
       if (heavy) {
@@ -419,6 +433,8 @@ export function MailDesk() {
         form.set("text", compose.text);
         form.set("inReplyTo", compose.inReplyTo);
         form.set("forwardId", compose.forwardId);
+        form.set("replyId", compose.replyId);
+        form.set("replyAll", compose.replyAll ? "1" : "");
         chosen.forEach((file) => form.append("files", file));
         res = await fetch("/api/admin/mail", { method: "POST", body: form });
       }
@@ -583,9 +599,10 @@ export function MailDesk() {
             </Tool>
           </div>
           {error ? <p className="px-4 py-2 text-sm text-ash">{error}</p> : null}
+          {connect ? <a href={connect} className="mx-4 mb-2 inline-block rounded-full bg-ink px-4 py-2 text-sm text-porcelain">Conectar Hotmail</a> : null}
           <div className="min-h-0 flex-1 overflow-y-auto">
             {loading && !messages.length ? <p className="px-4 py-6 text-sm text-ash">Abriendo…</p> : null}
-            {!loading && !messages.length ? <p className="px-4 py-6 text-sm text-ash">Esta bandeja está vacía.</p> : null}
+            {!loading && !messages.length && !connect ? <p className="px-4 py-6 text-sm text-ash">Esta bandeja está vacía.</p> : null}
             <ul>
               {messages.map((item) => {
                 const active = selected?.id === item.id;
@@ -708,7 +725,7 @@ export function MailDesk() {
                     ))}
                   </ul>
                 ) : null}
-                <p className="mt-2 text-[0.68rem] text-ash">{box.key === "binder" ? "Sale como STAFF M.K.B. Hasta 8 archivos y 3 MB." : "Hasta 8 archivos y 20 MB. Quien lo reciba verá este fondo y esta firma."}</p>
+                <p className="mt-2 text-[0.68rem] text-ash">{box.key === "binder" ? "Sale como STAFF M.K.B. Hasta 8 archivos y 3 MB." : box.key === "hotmail" ? "Sale como Ana Belén Martínez. Hasta 8 archivos y 3 MB." : "Hasta 8 archivos y 20 MB. Quien lo reciba verá este fondo y esta firma."}</p>
                 {box.signature ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={box.signature} alt="Firma" className="mt-4 w-[193px] max-w-full" />

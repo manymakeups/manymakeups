@@ -14,6 +14,14 @@ export const BINDER_MAILBOX = {
   signature: "",
 } as const;
 
+export const HOTMAIL_MAILBOX = {
+  address: "anabmtnez78@hotmail.com",
+  label: "Hotmail",
+  fromName: "Ana Belén Martínez",
+  key: "hotmail",
+  signature: "",
+} as const;
+
 export const SIGNATURE_BACKGROUND = "#f4f1ea";
 
 export type MailboxKey = (typeof MAILBOXES)[number]["key"];

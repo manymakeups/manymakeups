@@ -14,6 +14,7 @@ import {
   unseenSnapshot,
 } from "@/lib/portal/mail-store";
 import { binderAct, binderMailError, binderUnseen, listBinder, readBinder, readBinderFile } from "@/lib/portal/binder-mail";
+import { hotmailAct, hotmailMailError, hotmailUnseen, listHotmail, readHotmail, readHotmailFile, sendHotmail } from "@/lib/portal/microsoft-mail";
 import { MAILBOXES, mailboxByKey, type MailFolder } from "@/lib/portal/mailboxes";
 
 export const runtime = "nodejs";
@@ -30,12 +31,23 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   if (url.searchParams.get("unseen") === "1") {
     const snapshot = await unseenSnapshot();
+    const counts = { ...snapshot.counts, binder: 0, hotmail: 0 };
+    const items: Array<{ id: string; account: string; from: string; subject: string }> = [...snapshot.items];
     try {
       const extra = await binderUnseen();
-      return NextResponse.json({ counts: { ...snapshot.counts, binder: extra.count }, items: [...snapshot.items, ...extra.items] });
+      counts.binder = extra.count;
+      items.push(...extra.items);
     } catch {
-      return NextResponse.json({ counts: { ...snapshot.counts, binder: 0 }, items: snapshot.items });
+      /* Binder stays quiet */
     }
+    try {
+      const extra = await hotmailUnseen();
+      counts.hotmail = extra.count;
+      items.push(...extra.items);
+    } catch {
+      /* Hotmail stays quiet until it is connected */
+    }
+    return NextResponse.json({ counts, items });
   }
   const accountParam = url.searchParams.get("account") || "";
   if (accountParam === "binder") {
@@ -60,9 +72,32 @@ export async function GET(req: Request) {
       }
       const messages = await listBinder(parseFolder(url.searchParams.get("folder")) || "inbox");
       return NextResponse.json({ messages });
-    } catch (err) {
+      } catch (err) {
       const pub = binderMailError(err);
       return NextResponse.json({ error: pub.error }, { status: pub.status });
+    }
+  }
+  if (accountParam === "hotmail") {
+    try {
+      const fileId = url.searchParams.get("file") || "";
+      const messageId = url.searchParams.get("id") || "";
+      if (fileId && messageId) {
+        const found = await readHotmailFile(messageId, fileId);
+        const filename = encodeURIComponent(found.filename);
+        const inline = found.contentType.startsWith("image/");
+        return new NextResponse(new Uint8Array(found.bytes), {
+          headers: {
+            "Content-Type": found.contentType,
+            "Content-Disposition": `${inline ? "inline" : "attachment"}; filename*=UTF-8''${filename}`,
+            "Cache-Control": "private, no-store",
+          },
+        });
+      }
+      if (messageId) return NextResponse.json({ message: await readHotmail(messageId) });
+      return NextResponse.json({ messages: await listHotmail(parseFolder(url.searchParams.get("folder")) || "inbox") });
+    } catch (err) {
+      const pub = hotmailMailError(err);
+      return NextResponse.json({ error: pub.error, connect: pub.connect }, { status: pub.status });
     }
   }
   if (accountParam === "all" && !url.searchParams.get("id") && !url.searchParams.get("file")) {
@@ -74,6 +109,11 @@ export async function GET(req: Request) {
         messages.push(...(await listBinder(folder)));
       } catch {
         /* atelier mail still opens if Binder is quiet */
+      }
+      try {
+        messages.push(...(await listHotmail(folder)));
+      } catch {
+        /* atelier mail still opens if Hotmail is quiet */
       }
       messages.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
       return NextResponse.json({ messages: messages.slice(0, 300) });
@@ -153,6 +193,29 @@ export async function POST(req: Request) {
         });
         return NextResponse.json({ ok: true });
       }
+      if (accountName === "hotmail") {
+        const uploads = form.getAll("files").filter((item): item is File => item instanceof File && item.size > 0).slice(0, 8);
+        let total = 0;
+        const files = await Promise.all(uploads.map(async (file) => {
+          total += file.size;
+          return {
+            filename: file.name,
+            contentType: file.type || "application/octet-stream",
+            contentBase64: Buffer.from(await file.arrayBuffer()).toString("base64"),
+          };
+        }));
+        if (total > 3_000_000) return NextResponse.json({ error: "Hotmail admite hasta 8 archivos y 3 MB." }, { status: 400 });
+        await sendHotmail({
+          to: String(form.get("to") || ""),
+          subject: String(form.get("subject") || ""),
+          text: String(form.get("text") || ""),
+          replyId: String(form.get("replyId") || ""),
+          replyAll: String(form.get("replyAll") || "") === "1",
+          forwardId: String(form.get("forwardId") || ""),
+          files,
+        });
+        return NextResponse.json({ ok: true });
+      }
       const box = mailboxByKey(accountName);
       if (!box) return NextResponse.json({ error: "Esa cuenta no está en el estudio." }, { status: 400 });
       const uploads = form.getAll("files").filter((item): item is File => item instanceof File && item.size > 0);
@@ -186,6 +249,15 @@ export async function POST(req: Request) {
       forwardId?: string;
       files?: SendFile[];
     };
+    if (body.account === "hotmail") {
+      const folder = parseFolder(body.folder) || "inbox";
+      const ids = Array.isArray(body.ids) ? body.ids : [];
+      if (body.action === "delete" || body.action === "seen" || body.action === "move") {
+        await hotmailAct({ action: body.action, folder, ids, seen: Boolean(body.seen), destination: body.destination || "" });
+        return NextResponse.json({ ok: true });
+      }
+      return NextResponse.json({ error: "Hotmail admite hasta 8 archivos y 3 MB." }, { status: 400 });
+    }
     if (body.account === "binder") {
       const folder = parseFolder(body.folder) || "inbox";
       const ids = Array.isArray(body.ids) ? body.ids : [];
@@ -253,6 +325,10 @@ export async function POST(req: Request) {
     if (err instanceof Error && err.name === "BinderMail") {
       const pub = binderMailError(err);
       return NextResponse.json({ error: pub.error }, { status: pub.status });
+    }
+    if (err instanceof Error && err.name === "HotmailMail") {
+      const pub = hotmailMailError(err);
+      return NextResponse.json({ error: pub.error, connect: pub.connect }, { status: pub.status });
     }
     const pub = publicMailError(err);
     return NextResponse.json({ error: pub.error }, { status: pub.status });
