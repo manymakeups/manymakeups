@@ -148,7 +148,10 @@ async function readList(account: MailboxKey, folder: MailFolder) {
   return Array.isArray(rows) ? rows.filter((row) => row && typeof row.id === "string") : [];
 }
 
+let unseenCache: { at: number; counts: Record<MailboxKey, number>; items: Array<{ id: string; account: MailboxKey; from: string; subject: string }> } | null = null;
+
 async function writeList(account: MailboxKey, folder: MailFolder, rows: MailSummary[]) {
+  unseenCache = null;
   await writeJson(listKey(account, folder), rows);
 }
 
@@ -262,6 +265,9 @@ export async function readAttachment(messageId: string, fileId: string) {
 }
 
 export async function unseenSnapshot() {
+  if (unseenCache && Date.now() - unseenCache.at < 120_000) {
+    return { counts: unseenCache.counts, items: unseenCache.items };
+  }
   const counts = {} as Record<MailboxKey, number>;
   const items: Array<{ id: string; account: MailboxKey; from: string; subject: string }> = [];
   for (const box of MAILBOXES) {
@@ -270,6 +276,7 @@ export async function unseenSnapshot() {
     counts[box.key] = unseen.length;
     for (const row of unseen) items.push({ id: row.id, account: box.key, from: row.from, subject: row.subject });
   }
+  unseenCache = { at: Date.now(), counts, items };
   return { counts, items };
 }
 

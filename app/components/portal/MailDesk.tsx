@@ -258,12 +258,13 @@ export function MailDesk() {
           if (!dead && list.ok) setMessages(body.messages || []);
         }
         seen.ids = ids;
+        window.dispatchEvent(new CustomEvent("mm-unseen", { detail: json }));
       } catch {
         /* the next pass retries */
       }
     }
     void poll();
-    const timer = window.setInterval(() => void poll(), 20000);
+    const timer = window.setInterval(() => void poll(), 180_000);
     return () => {
       dead = true;
       window.clearInterval(timer);

@@ -58,15 +58,29 @@ export function MailAlert() {
       }
     }
 
+    function onUnseen(event: Event) {
+      const json = (event as CustomEvent<{ counts?: Record<string, number>; items?: FreshMail[] }>).detail;
+      if (!json || dead) return;
+      const items = json.items || [];
+      const count = Object.values(json.counts || {}).reduce((sum, value) => sum + value, 0);
+      setTotal(count);
+      const title = baseTitle.current || "Correo";
+      document.title = count ? `(${count}) ${title}` : title;
+      known.current = new Set(items.map((item) => item.id));
+    }
+
     window.addEventListener("pointerdown", arm);
     window.addEventListener("mm-mail", poll);
-    void poll();
-    const timer = window.setInterval(() => void poll(), 25000);
+    window.addEventListener("mm-unseen", onUnseen);
+    const onDesk = window.location.pathname.startsWith("/privado/correo");
+    if (!onDesk) void poll();
+    const timer = onDesk ? 0 : window.setInterval(() => void poll(), 180_000);
     return () => {
       dead = true;
-      window.clearInterval(timer);
+      if (timer) window.clearInterval(timer);
       window.removeEventListener("pointerdown", arm);
       window.removeEventListener("mm-mail", poll);
+      window.removeEventListener("mm-unseen", onUnseen);
       if (baseTitle.current) document.title = baseTitle.current;
     };
   }, [router]);
