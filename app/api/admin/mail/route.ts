@@ -20,6 +20,14 @@ import { MAILBOXES, mailboxByKey, type MailFolder } from "@/lib/portal/mailboxes
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
+function sendResult(stored: boolean) {
+  if (stored) return NextResponse.json({ ok: true });
+  return NextResponse.json({
+    ok: true,
+    warning: "El correo ha salido y lleva la firma dentro. La copia no entra en Enviados: el almacén de Vercel está suspendido. Entra en Vercel, Storage, y reactiva el Blob.",
+  });
+}
+
 function parseFolder(value: string | null | undefined): MailFolder | null {
   if (value === "inbox" || value === "sent" || value === "archive" || value === "trash") return value;
   return null;
@@ -230,7 +238,7 @@ export async function POST(req: Request) {
         contentType: file.type || "application/octet-stream",
         content: Buffer.from(await file.arrayBuffer()),
       })));
-      await sendMail({
+      const sent = await sendMail({
         account: box.key,
         to: String(form.get("to") || ""),
         subject: String(form.get("subject") || ""),
@@ -239,7 +247,7 @@ export async function POST(req: Request) {
         forwardId: String(form.get("forwardId") || ""),
         attachments,
       });
-      return NextResponse.json({ ok: true });
+      return sendResult(sent.stored);
     }
     const body = (await req.json()) as {
       action?: string;
@@ -312,7 +320,7 @@ export async function POST(req: Request) {
           contentType: String(file.contentType || "application/octet-stream"),
           content: await readOutbox(String(file.pathname || "")),
         })));
-        await sendMail({
+        const sent = await sendMail({
           account: box.key,
           to: String(body.to || ""),
           subject: String(body.subject || ""),
@@ -321,10 +329,10 @@ export async function POST(req: Request) {
           forwardId: String(body.forwardId || ""),
           attachments,
         });
+        return sendResult(sent.stored);
       } finally {
         await Promise.all(pathnames.map((pathname) => dropOutbox(pathname)));
       }
-      return NextResponse.json({ ok: true });
     }
     return NextResponse.json({ error: "Acción desconocida." }, { status: 400 });
   } catch (err) {

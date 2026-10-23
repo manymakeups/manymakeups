@@ -172,6 +172,7 @@ export function MailDesk() {
   const [counts, setCounts] = useState<Counts>({ info: 0, accounting: 0, formaciones: 0, comercial: 0, management: 0, binder: 0, hotmail: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [connect, setConnect] = useState("");
   const [compose, setCompose] = useState<{ from: DeskKey; to: string; subject: string; text: string; inReplyTo: string; forwardId: string; replyId: string; replyAll: boolean; forwardFiles: MailFile[] } | null>(null);
   const [files, setFiles] = useState<File[]>([]);
@@ -280,6 +281,7 @@ export function MailDesk() {
     setQuery("");
     setSearchOpen(false);
     setReadFilter("all");
+    setNotice("");
   }
 
   async function openMessage(id: string) {
@@ -455,8 +457,9 @@ export function MailDesk() {
         chosen.forEach((file) => form.append("files", file));
         res = await fetch("/api/admin/mail", { method: "POST", body: form });
       }
-      const json = (await res.json()) as { error?: string };
+      const json = (await res.json()) as { error?: string; warning?: string };
       if (!res.ok) throw new Error(json.error || "No se ha podido enviar.");
+      setNotice(json.warning || "");
       setCompose(null);
       setFiles([]);
       setSelected(null);
@@ -634,6 +637,7 @@ export function MailDesk() {
             </div>
           ) : null}
           {readFilter !== "all" ? <p className="border-b border-ink/10 px-3 py-1 text-[0.68rem] uppercase tracking-[0.14em] text-ash">{readFilter === "unread" ? "No leídos" : "Leídos"}</p> : null}
+          {notice ? <p className="px-4 py-2 text-sm text-ash">{notice}</p> : null}
           {error ? <p className="px-4 py-2 text-sm text-ash">{error}</p> : null}
           {connect ? <a href={connect} className="mx-4 mb-2 inline-block rounded-full bg-ink px-4 py-2 text-sm text-porcelain">Conectar Hotmail</a> : null}
           <div className="min-h-0 flex-1 overflow-y-auto">

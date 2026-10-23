@@ -193,6 +193,21 @@ function sanitizeMailHtml(html: string) {
 const SIGNATURE_WIDTH = 193;
 const SIGNATURE_HEIGHT = 343;
 
+function signaturePath(account: MailboxKey) {
+  switch (account) {
+    case "info":
+      return path.join(process.cwd(), "public/brand/firmas-correo/info.png");
+    case "accounting":
+      return path.join(process.cwd(), "public/brand/firmas-correo/accounting.png");
+    case "formaciones":
+      return path.join(process.cwd(), "public/brand/firmas-correo/formaciones.png");
+    case "comercial":
+      return path.join(process.cwd(), "public/brand/firmas-correo/comercial.png");
+    case "management":
+      return path.join(process.cwd(), "public/brand/firmas-correo/management.png");
+  }
+}
+
 function letterHtml(account: MailboxKey, message: string, src: string) {
   const box = mailboxByKey(account);
   return `<div style="margin:0;padding:20px 0 36px;background:${SIGNATURE_BACKGROUND};text-align:left;"><div style="font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.6;color:#1a1613;text-align:justify;text-align-last:left;white-space:pre-wrap;">${escapeHtml(message)}</div><img src="${src}" alt="Ana Zarza · ${box?.address || "Many Makeups"}" width="${SIGNATURE_WIDTH}" height="${SIGNATURE_HEIGHT}" style="display:block;border:0;width:${SIGNATURE_WIDTH}px;max-width:100%;height:auto;margin:22px 0 0;background:${SIGNATURE_BACKGROUND};" /></div>`;
@@ -469,8 +484,19 @@ export async function sendMail(input: {
   if (!key) throw new Error("MISSING_RESEND");
   const message = text || "Te envío los archivos adjuntos.";
   const publicSrc = `${site.url}${box.signature || "/brand/firmas-correo/info.png"}`;
-  const letter = letterHtml(box.key, message, publicSrc);
+  const signature = await readFile(signaturePath(box.key)).catch(() => null);
+  const letter = letterHtml(box.key, message, signature ? "cid:firma" : publicSrc);
   const inReplyTo = input.inReplyTo?.replace(/[\r\n\0]/g, "").trim().slice(0, 500) || "";
+  const attachments = [
+    ...(signature
+      ? [{ filename: "firma.png", content: signature.toString("base64"), content_type: "image/png", content_id: "firma" }]
+      : []),
+    ...files.map((file) => ({
+      filename: file.filename,
+      content: file.content.toString("base64"),
+      content_type: file.contentType || "application/octet-stream",
+    })),
+  ];
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
@@ -481,15 +507,7 @@ export async function sendMail(input: {
       subject,
       text: `${message}\n\nAna Zarza\nMany Makeups\n${box.address}\n${site.phoneDisplay}`,
       html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:${SIGNATURE_BACKGROUND};">${letter}</body></html>`,
-      ...(files.length
-        ? {
-            attachments: files.map((file) => ({
-              filename: file.filename,
-              content: file.content.toString("base64"),
-              content_type: file.contentType || "application/octet-stream",
-            })),
-          }
-        : {}),
+      ...(attachments.length ? { attachments } : {}),
       ...(inReplyTo ? { headers: { "In-Reply-To": inReplyTo, References: inReplyTo } } : {}),
     }),
   });
@@ -517,11 +535,18 @@ export async function sendMail(input: {
     createdAt: new Date().toISOString(),
     messageId: "",
     text: message,
-    html: letter,
+    html: letterHtml(box.key, message, publicSrc),
     inReplyTo,
     attachments: kept.map(({ id, filename, contentType, bytes }) => ({ id, filename, contentType, size: bytes.length })),
   };
-  await saveRecord(record, kept.map((file) => ({ id: file.id, bytes: file.bytes, contentType: file.contentType })));
+  try {
+    await saveRecord(record, kept.map((file) => ({ id: file.id, bytes: file.bytes, contentType: file.contentType })));
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : "";
+    if (/suspended/i.test(detail)) return { stored: false };
+    throw err;
+  }
+  return { stored: true };
 }
 
 export function publicMailError(err: unknown) {
@@ -539,6 +564,9 @@ export function publicMailError(err: unknown) {
   }
   if (/blob credentials|read-write token/i.test(message)) {
     return { status: 503, error: "Falta el almacén del correo en Vercel." };
+  }
+  if (/suspended/i.test(message)) {
+    return { status: 503, error: "El almacén de Vercel está suspendido. Entra en Vercel, Storage, y reactiva el Blob." };
   }
   const detail = message.replace(/\s+/g, " ").trim().slice(0, 180);
   return { status: 500, error: detail ? `No se ha podido completar el correo. ${detail}` : "No se ha podido completar el correo." };
