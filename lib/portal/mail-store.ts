@@ -53,7 +53,11 @@ async function readJson<T>(key: string): Promise<T | null> {
     const result = await get(key, { access: "private", useCache: false });
     if (!result) return null;
     const text = await new Response(result.stream).text();
-    return JSON.parse(text) as T;
+    try {
+      return JSON.parse(text) as T;
+    } catch {
+      return null;
+    }
   }
   try {
     return JSON.parse(await readFile(localPath(key), "utf8")) as T;
@@ -140,7 +144,8 @@ function fileKey(messageId: string, fileId: string) {
 }
 
 async function readList(account: MailboxKey, folder: MailFolder) {
-  return (await readJson<MailSummary[]>(listKey(account, folder))) ?? [];
+  const rows = await readJson<MailSummary[]>(listKey(account, folder));
+  return Array.isArray(rows) ? rows.filter((row) => row && typeof row.id === "string") : [];
 }
 
 async function writeList(account: MailboxKey, folder: MailFolder, rows: MailSummary[]) {
@@ -210,7 +215,9 @@ export function inboundAuthorized(header: string | null, secret: string) {
 
 export async function listMailbox(account: MailboxKey, folder: MailFolder) {
   const rows = await readList(account, folder);
-  return rows.sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 200);
+  return rows
+    .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))
+    .slice(0, 200);
 }
 
 export async function readMessage(id: string, options?: { seen?: boolean }) {
@@ -474,17 +481,23 @@ export async function sendMail(input: {
       subject,
       text: `${message}\n\nAna Zarza\nMany Makeups\n${box.address}\n${site.phoneDisplay}`,
       html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:${SIGNATURE_BACKGROUND};">${letter}</body></html>`,
-      attachments: files.map((file) => ({
-        filename: file.filename,
-        content: file.content.toString("base64"),
-        content_type: file.contentType || "application/octet-stream",
-      })),
-      headers: inReplyTo ? { "In-Reply-To": inReplyTo, References: inReplyTo } : undefined,
+      ...(files.length
+        ? {
+            attachments: files.map((file) => ({
+              filename: file.filename,
+              content: file.content.toString("base64"),
+              content_type: file.contentType || "application/octet-stream",
+            })),
+          }
+        : {}),
+      ...(inReplyTo ? { headers: { "In-Reply-To": inReplyTo, References: inReplyTo } } : {}),
     }),
   });
   if (!response.ok) {
-    const detail = (await response.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(`RESEND:${detail?.message || "rejected"}`);
+    const detail = (await response.json().catch(() => null)) as { message?: unknown } | null;
+    const raw = detail?.message;
+    const text = typeof raw === "string" ? raw : Array.isArray(raw) ? raw.filter((item) => typeof item === "string").join(" ") : "";
+    throw new Error(`RESEND:${text || "rejected"}`);
   }
   const kept = files.map((file, index) => ({
     id: newId(),
@@ -520,6 +533,13 @@ export function publicMailError(err: unknown) {
   if (message === "BAD_ACCOUNT") return { status: 400, error: "Esa cuenta no está en el estudio." };
   if (message === "MISSING_RESEND") return { status: 503, error: "Falta RESEND_API_KEY en Vercel." };
   if (message === "FOREIGN_RECIPIENT") return { status: 200, error: "" };
-  if (message.startsWith("RESEND:")) return { status: 502, error: "El correo no ha salido. Revisa el dominio en Resend." };
-  return { status: 500, error: "No se ha podido completar el correo." };
+  if (message.startsWith("RESEND:")) {
+    const detail = message.slice("RESEND:".length).replace(/\s+/g, " ").trim().slice(0, 180);
+    return { status: 502, error: detail || "El correo no ha salido. Revisa el dominio en Resend." };
+  }
+  if (/blob credentials|read-write token/i.test(message)) {
+    return { status: 503, error: "Falta el almacén del correo en Vercel." };
+  }
+  const detail = message.replace(/\s+/g, " ").trim().slice(0, 180);
+  return { status: 500, error: detail ? `No se ha podido completar el correo. ${detail}` : "No se ha podido completar el correo." };
 }

@@ -103,8 +103,14 @@ export async function GET(req: Request) {
   if (accountParam === "all" && !url.searchParams.get("id") && !url.searchParams.get("file")) {
     try {
       const folder = parseFolder(url.searchParams.get("folder")) || "inbox";
-      const lists = await Promise.all(MAILBOXES.map((box) => listMailbox(box.key, folder)));
-      const messages = lists.flat().map((row) => row as { createdAt: string });
+      const lists = await Promise.all(MAILBOXES.map(async (box) => {
+        try {
+          return await listMailbox(box.key, folder);
+        } catch {
+          return [];
+        }
+      }));
+      const messages = lists.flat().map((row) => row as { createdAt?: string });
       try {
         messages.push(...(await listBinder(folder)));
       } catch {
@@ -115,7 +121,7 @@ export async function GET(req: Request) {
       } catch {
         /* atelier mail still opens if Hotmail is quiet */
       }
-      messages.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      messages.sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
       return NextResponse.json({ messages: messages.slice(0, 300) });
     } catch (err) {
       const pub = publicMailError(err);
