@@ -19,13 +19,14 @@ export default async function StudioMailPage() {
   return (
     <PortalFrame
       pinned
+      dense
+      wide
       kicker="Estudio"
       title="Correo"
-      lead="Las cinco cuentas del atelier, en una sola bandeja. El correo que ya está en Zoho se queda allí. El nuevo entrará aquí cuando activemos la recepción."
       studio
       aside={<StudioAside />}
     >
-      <div data-portal-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-16">
+      <div data-portal-scroll className="flex min-h-0 flex-1 flex-col pb-4 pt-3">
         <MailDesk />
       </div>
     </PortalFrame>

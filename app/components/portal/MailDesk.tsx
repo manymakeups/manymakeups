@@ -1,7 +1,7 @@
 "use client";
 
 import { MAILBOXES, type MailboxKey, type MailFolder } from "@/lib/portal/mailboxes";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type MailSummary = {
   id: string;
@@ -23,16 +23,30 @@ type MailMessage = MailSummary & {
   attachments: MailFile[];
 };
 
+type Counts = Record<MailboxKey, number>;
+
 const FOLDERS: Array<{ id: MailFolder; label: string }> = [
   { id: "inbox", label: "Entrada" },
   { id: "sent", label: "Enviados" },
-  { id: "trash", label: "Eliminados" },
+  { id: "archive", label: "Archivo" },
+  { id: "trash", label: "Papelera" },
 ];
+
+const MAX_FILES = 8;
+const MAX_BYTES = 20_000_000;
+const DIRECT_LIMIT = 3_200_000;
 
 function formatWhen(iso: string) {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleString("es-ES", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+  const now = new Date();
+  if (date.toDateString() === now.toDateString()) {
+    return date.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+  }
+  if (date.getFullYear() === now.getFullYear()) {
+    return date.toLocaleDateString("es-ES", { day: "numeric", month: "short" });
+  }
+  return date.toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "2-digit" });
 }
 
 function formatSize(bytes: number) {
@@ -41,20 +55,99 @@ function formatSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function addresses(value: string) {
+  return Array.from(value.matchAll(/[^\s<>,;"]+@[^\s<>,;"]+/g)).map((match) => match[0]);
+}
+
+function displayName(value: string) {
+  const name = value.replace(/<[^>]*>/g, "").replace(/"/g, "").trim();
+  return name || value || "(sin remitente)";
+}
+
+function Icon({ name }: { name: string }) {
+  const common = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
+  if (name === "compose") {
+    return <svg {...common}><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>;
+  }
+  if (name === "select") {
+    return <svg {...common}><rect x="4" y="4" width="16" height="16" rx="2" /><path d="m8 12.5 2.5 2.5L16 9" /></svg>;
+  }
+  if (name === "trash") {
+    return <svg {...common}><path d="M4 7h16" /><path d="M9 7V5h6v2" /><path d="M7 7l1 13h8l1-13" /></svg>;
+  }
+  if (name === "archive") {
+    return <svg {...common}><path d="M3 6h18v4H3z" /><path d="M5 10v8h14v-8" /><path d="M10 14h4" /></svg>;
+  }
+  if (name === "reply") {
+    return <svg {...common}><path d="M9 14 4 9l5-5" /><path d="M4 9h10a6 6 0 0 1 6 6v1" /></svg>;
+  }
+  if (name === "reply-all") {
+    return <svg {...common}><path d="M7 14 3 10l4-4" /><path d="M11 14 7 10l4-4" /><path d="M7 10h8a5 5 0 0 1 5 5v1" /></svg>;
+  }
+  if (name === "forward") {
+    return <svg {...common}><path d="m15 14 5-5-5-5" /><path d="M20 9H10a6 6 0 0 0-6 6v1" /></svg>;
+  }
+  if (name === "unread") {
+    return <svg {...common}><path d="M3 7h18v11H3z" /><path d="m3 8 9 6 9-6" /></svg>;
+  }
+  if (name === "read") {
+    return <svg {...common}><path d="M3 10h18v8H3z" /><path d="m3 10 9 6 9-6" /><path d="M7 7h10" /></svg>;
+  }
+  if (name === "send") {
+    return <svg {...common}><path d="m4 12 16-8-6 16-2.5-6.5Z" /><path d="m11.5 13.5 8.5-9.5" /></svg>;
+  }
+  if (name === "close") {
+    return <svg {...common}><path d="M6 6l12 12M18 6 6 18" /></svg>;
+  }
+  if (name === "clip") {
+    return <svg {...common}><path d="m15 7-6.5 6.5a3 3 0 0 0 4.2 4.2L19 11.5" /><path d="m8.5 13.5-2 2a3.5 3.5 0 0 0 5 5L17 15" /></svg>;
+  }
+  if (name === "inbox") {
+    return <svg {...common}><path d="M3 12h5l2 3h4l2-3h5" /><path d="M5 6h14l2 6v7H3v-7Z" /></svg>;
+  }
+  if (name === "sent") {
+    return <svg {...common}><path d="m4 12 16-8-6 16-2.5-6.5Z" /></svg>;
+  }
+  return <svg {...common}><path d="M15 18H5V6h10" /><path d="m12 9 4 3-4 3" /></svg>;
+}
+
+function Tool({ label, onClick, disabled, active, children }: { label: string; onClick?: () => void; disabled?: boolean; active?: boolean; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      disabled={disabled}
+      onClick={onClick}
+      className={`grid size-8 place-items-center rounded-full disabled:opacity-30 ${active ? "bg-ink text-porcelain" : "text-ink hover:bg-ink/5"}`}
+    >
+      {children}
+    </button>
+  );
+}
+
 export function MailDesk() {
   const [account, setAccount] = useState<MailboxKey>("info");
   const [folder, setFolder] = useState<MailFolder>("inbox");
   const [messages, setMessages] = useState<MailSummary[]>([]);
   const [selected, setSelected] = useState<MailMessage | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
+  const [selecting, setSelecting] = useState(false);
+  const [counts, setCounts] = useState<Counts>({ info: 0, accounting: 0, formaciones: 0, comercial: 0, management: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [compose, setCompose] = useState<{ to: string; subject: string; text: string; inReplyTo: string } | null>(null);
+  const [compose, setCompose] = useState<{ to: string; subject: string; text: string; inReplyTo: string; forwardId: string; forwardFiles: MailFile[] } | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
+  const [phase, setPhase] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+  const placeRef = useRef({ account, folder });
+
+  useEffect(() => {
+    placeRef.current = { account, folder };
+  }, [account, folder]);
 
   const load = useCallback(async (nextAccount = account, nextFolder = folder) => {
-    setLoading(true);
     setError("");
     try {
       const params = new URLSearchParams({ account: nextAccount, folder: nextFolder });
@@ -91,26 +184,51 @@ export function MailDesk() {
     };
   }, [account, folder]);
 
-  function chooseAccount(next: MailboxKey) {
-    setLoading(true);
-    setAccount(next);
-    setFolder("inbox");
-    setSelected(null);
-    setPicked([]);
-    setCompose(null);
-  }
+  useEffect(() => {
+    let dead = false;
+    const seen = { ids: null as Set<string> | null };
+    async function poll() {
+      try {
+        const res = await fetch("/api/admin/mail?unseen=1", { cache: "no-store" });
+        const json = (await res.json()) as { counts?: Counts; items?: Array<{ id: string; account: MailboxKey }> };
+        if (dead || !res.ok || !json.counts) return;
+        setCounts(json.counts);
+        const ids = new Set((json.items || []).map((item) => item.id));
+        const place = placeRef.current;
+        if (seen.ids && place.folder === "inbox" && (json.items || []).some((item) => item.account === place.account && !seen.ids?.has(item.id))) {
+          const params = new URLSearchParams({ account: place.account, folder: "inbox" });
+          const list = await fetch(`/api/admin/mail?${params}`, { cache: "no-store" });
+          const body = (await list.json()) as { messages?: MailSummary[] };
+          if (!dead && list.ok) setMessages(body.messages || []);
+        }
+        seen.ids = ids;
+      } catch {
+        /* the next pass retries */
+      }
+    }
+    void poll();
+    const timer = window.setInterval(() => void poll(), 20000);
+    return () => {
+      dead = true;
+      window.clearInterval(timer);
+    };
+  }, []);
 
-  function chooseFolder(next: MailFolder) {
+  function openPlace(nextAccount: MailboxKey, nextFolder: MailFolder) {
+    if (nextAccount === account && nextFolder === folder) return;
     setLoading(true);
-    setFolder(next);
+    setAccount(nextAccount);
+    setFolder(nextFolder);
     setSelected(null);
     setPicked([]);
     setCompose(null);
+    setSelecting(false);
   }
 
   async function openMessage(id: string) {
     setError("");
     setCompose(null);
+    const wasUnseen = messages.some((item) => item.id === id && !item.seen);
     const res = await fetch(`/api/admin/mail?account=${account}&id=${id}`, { cache: "no-store" });
     const json = (await res.json()) as { message?: MailMessage; error?: string };
     if (!res.ok || !json.message) {
@@ -119,18 +237,35 @@ export function MailDesk() {
     }
     setSelected(json.message);
     setMessages((prev) => prev.map((item) => (item.id === id ? { ...item, seen: true } : item)));
+    if (wasUnseen && folder === "inbox") {
+      setCounts((prev) => ({ ...prev, [account]: Math.max(0, (prev[account] || 0) - 1) }));
+      window.dispatchEvent(new Event("mm-mail"));
+    }
   }
 
-  async function removePicked(ids: string[]) {
+  async function post(action: "delete" | "seen" | "move", ids: string[], extra?: { seen?: boolean; destination?: MailFolder }) {
     if (!ids.length) return;
     const res = await fetch("/api/admin/mail", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "delete", account, folder, ids }),
+      body: JSON.stringify({ action, account, folder, ids, ...extra }),
     });
     const json = (await res.json()) as { error?: string };
     if (!res.ok) {
-      setError(json.error || "No se ha podido eliminar.");
+      setError(json.error || "No se ha podido completar.");
+      return;
+    }
+    window.dispatchEvent(new Event("mm-mail"));
+    if (action === "seen") {
+      const seen = Boolean(extra?.seen);
+      if (folder === "inbox") {
+        const delta = seen
+          ? -messages.filter((item) => ids.includes(item.id) && !item.seen).length
+          : messages.filter((item) => ids.includes(item.id) && item.seen).length;
+        setCounts((prev) => ({ ...prev, [account]: Math.max(0, (prev[account] || 0) + delta) }));
+      }
+      setMessages((prev) => prev.map((item) => (ids.includes(item.id) ? { ...item, seen } : item)));
+      setSelected((current) => (current && ids.includes(current.id) ? { ...current, seen } : current));
       return;
     }
     setPicked([]);
@@ -138,202 +273,379 @@ export function MailDesk() {
     await load();
   }
 
-  function startReply() {
-    if (!selected) return;
-    const to = folder === "sent" ? selected.to : selected.from.match(/<([^>]+)>/)?.[1] || selected.from;
+  function quoteForward(message: MailMessage) {
+    return `\n\n---------- Mensaje reenviado ----------\nDe: ${message.from}\nPara: ${message.to}\nAsunto: ${message.subject}\n\n${message.text}`;
+  }
+
+  function startCompose(kind: "new" | "reply" | "reply-all" | "forward") {
+    const box = MAILBOXES.find((item) => item.key === account) ?? MAILBOXES[0];
+    if (kind === "new" || !selected) {
+      setSelected(null);
+      setCompose({ to: "", subject: "", text: "", inReplyTo: "", forwardId: "", forwardFiles: [] });
+      return;
+    }
+    if (kind === "forward") {
+      setCompose({
+        to: "",
+        subject: selected.subject.startsWith("Fwd:") ? selected.subject : `Fwd: ${selected.subject}`,
+        text: quoteForward(selected),
+        inReplyTo: "",
+        forwardId: selected.id,
+        forwardFiles: selected.attachments,
+      });
+      return;
+    }
+    const own = box.address.toLowerCase();
+    const replyTo = folder === "sent"
+      ? selected.to
+      : addresses(selected.from)[0] || selected.from;
+    const everyone = [...new Set([...addresses(selected.from), ...addresses(selected.to)].map((item) => item.toLowerCase()))].filter((item) => item !== own);
     setCompose({
-      to,
+      to: kind === "reply-all" && everyone.length ? everyone.join(", ") : replyTo,
       subject: selected.subject.startsWith("Re:") ? selected.subject : `Re: ${selected.subject}`,
       text: "",
       inReplyTo: selected.messageId,
+      forwardId: "",
+      forwardFiles: [],
     });
   }
 
   async function submitCompose() {
-    if (!compose) return;
+    if (!compose || sending) return;
+    const chosen = files.slice(0, MAX_FILES);
+    const weight = chosen.reduce((sum, file) => sum + file.size, 0) + compose.forwardFiles.reduce((sum, file) => sum + file.size, 0);
+    if (files.length + compose.forwardFiles.length > MAX_FILES || weight > MAX_BYTES) {
+      setError("Cada envío admite hasta 8 archivos y 20 MB.");
+      return;
+    }
     setSending(true);
     setError("");
     try {
-      const form = new FormData();
-      form.set("account", account);
-      form.set("to", compose.to);
-      form.set("subject", compose.subject);
-      form.set("text", compose.text);
-      form.set("inReplyTo", compose.inReplyTo);
-      files.slice(0, 8).forEach((file) => form.append("files", file));
-      const res = await fetch("/api/admin/mail", { method: "POST", body: form });
+      const heavy = weight > DIRECT_LIMIT || chosen.some((file) => file.size > DIRECT_LIMIT);
+      setPhase(heavy && chosen.length ? "Subiendo archivos…" : "Enviando…");
+      let res: Response;
+      if (heavy) {
+        const { upload } = await import("@vercel/blob/client");
+        const sent: Array<{ pathname: string; filename: string; contentType: string }> = [];
+        for (const file of chosen) {
+          const name = file.name.replace(/[\\/]/g, "").slice(0, 100) || "archivo";
+          const blob = await upload(`mail/outbox/${crypto.randomUUID()}/${name}`, file, {
+            access: "private",
+            handleUploadUrl: "/api/admin/mail/upload",
+            contentType: file.type || "application/octet-stream",
+            multipart: file.size > 4_000_000,
+          });
+          sent.push({ pathname: blob.pathname, filename: file.name, contentType: file.type || blob.contentType || "application/octet-stream" });
+        }
+        setPhase("Enviando…");
+        res = await fetch("/api/admin/mail", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "send",
+            account,
+            to: compose.to,
+            subject: compose.subject,
+            text: compose.text,
+            inReplyTo: compose.inReplyTo,
+            forwardId: compose.forwardId,
+            files: sent,
+          }),
+        });
+      } else {
+        const form = new FormData();
+        form.set("account", account);
+        form.set("to", compose.to);
+        form.set("subject", compose.subject);
+        form.set("text", compose.text);
+        form.set("inReplyTo", compose.inReplyTo);
+        form.set("forwardId", compose.forwardId);
+        chosen.forEach((file) => form.append("files", file));
+        res = await fetch("/api/admin/mail", { method: "POST", body: form });
+      }
       const json = (await res.json()) as { error?: string };
       if (!res.ok) throw new Error(json.error || "No se ha podido enviar.");
       setCompose(null);
       setFiles([]);
-      setFolder("sent");
-      await load(account, "sent");
+      setSelected(null);
+      if (folder === "sent") await load(account, "sent");
+      else {
+        setLoading(true);
+        setFolder("sent");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se ha podido enviar.");
     } finally {
       setSending(false);
+      setPhase("");
     }
   }
 
+  function togglePick(id: string) {
+    setPicked((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
+  }
+
   const box = MAILBOXES.find((item) => item.key === account) ?? MAILBOXES[0];
+  const reading = Boolean(selected || compose);
+  const markAsRead = messages.some((item) => picked.includes(item.id) && !item.seen);
+  const allPicked = messages.length > 0 && messages.every((item) => picked.includes(item.id));
 
   return (
-    <div className="grid min-h-[70vh] border border-ink/10 md:grid-cols-[15rem_minmax(0,1fr)]">
-      <aside className="border-b border-ink/10 bg-porcelain/40 p-4 md:border-b-0 md:border-r">
-        <p className="text-[0.68rem] uppercase tracking-[0.18em] text-ash">Bandejas</p>
-        <div className="mt-3 grid gap-1">
-          {MAILBOXES.map((item) => (
-            <button
-              key={item.key}
-              type="button"
-              onClick={() => chooseAccount(item.key)}
-              className={`px-3 py-2 text-left ${item.key === account ? "bg-ink text-porcelain" : "hover:bg-ink/5"}`}
-            >
-              <span className="block text-sm">{item.label}</span>
-              <span className={`block text-[0.68rem] ${item.key === account ? "text-porcelain/70" : "text-ash"}`}>{item.address}</span>
-            </button>
-          ))}
+    <div className="grid min-h-0 flex-1 overflow-hidden rounded-sm border border-ink/10 bg-white md:grid-cols-[17rem_minmax(0,1fr)]">
+      <aside className={`${reading ? "hidden" : "flex"} min-h-0 flex-col overflow-y-auto border-ink/10 bg-porcelain md:flex md:border-r`}>
+        <div className="flex items-center gap-1 px-3 py-3">
+          <Tool label="Mensaje nuevo" onClick={() => startCompose("new")}>
+            <Icon name="compose" />
+          </Tool>
         </div>
-        <p className="mt-6 text-[0.68rem] uppercase tracking-[0.18em] text-ash">{box.label}</p>
-        <div className="mt-3 grid gap-1">
-          {FOLDERS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => chooseFolder(item.id)}
-              className={`px-3 py-2 text-left text-sm ${item.id === folder ? "bg-ink text-porcelain" : "hover:bg-ink/5"}`}
-            >
-              {item.label}
-            </button>
+        <div className="grid gap-2 px-2 pb-4">
+          {MAILBOXES.map((item) => (
+            <section key={item.key}>
+              <button
+                type="button"
+                onClick={() => openPlace(item.key, "inbox")}
+                className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1 text-left"
+              >
+                <span className="truncate text-[0.72rem] uppercase tracking-[0.16em] text-ash">{item.label}</span>
+                {counts[item.key] ? <span className="font-bold tabular-nums text-sm text-ink">{counts[item.key]}</span> : null}
+              </button>
+              <div className="mt-1 grid">
+                {FOLDERS.map((entry) => {
+                  const active = item.key === account && entry.id === folder;
+                  const count = entry.id === "inbox" ? counts[item.key] : 0;
+                  return (
+                    <button
+                      key={entry.id}
+                      type="button"
+                      onClick={() => openPlace(item.key, entry.id)}
+                      className={`flex items-center gap-2 rounded-lg px-2 py-1 text-left text-sm ${active ? "bg-ink/10" : "hover:bg-ink/5"}`}
+                    >
+                      <span className="text-ash"><Icon name={entry.id === "sent" ? "sent" : entry.id === "trash" ? "trash" : entry.id === "archive" ? "archive" : "inbox"} /></span>
+                      <span className={`min-w-0 flex-1 truncate ${count ? "font-semibold" : ""}`}>{entry.label}</span>
+                      {count ? <span className="font-bold tabular-nums">{count}</span> : null}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
           ))}
         </div>
       </aside>
 
-      <section className="grid min-w-0 md:grid-cols-[minmax(16rem,0.85fr)_minmax(0,1.15fr)]">
-        <div className="min-w-0 border-b border-ink/10 md:border-b-0 md:border-r">
-          <div className="flex flex-wrap items-center gap-2 border-b border-ink/10 px-4 py-3">
-            <button
-              type="button"
-              className="btn-atelier-solid btn-atelier"
+      <section className="grid min-h-0 min-w-0 md:grid-cols-[minmax(16rem,22rem)_minmax(0,1fr)]">
+        <div className={`${reading ? "hidden" : "flex"} min-h-0 min-w-0 flex-col border-ink/10 md:flex md:border-r`}>
+          <div className="flex items-center gap-1 border-b border-ink/10 px-2 py-2">
+            <Tool
+              label={selecting ? "Dejar de seleccionar" : "Seleccionar"}
+              active={selecting}
               onClick={() => {
-                setSelected(null);
-                setCompose({ to: "", subject: "", text: "", inReplyTo: "" });
+                setSelecting((value) => !value);
+                setPicked([]);
               }}
             >
-              Redactar
-            </button>
-            <button
-              type="button"
-              className="btn-atelier"
+              <Icon name="select" />
+            </Tool>
+            {selecting ? (
+              <input
+                type="checkbox"
+                className="ml-1 size-4"
+                checked={allPicked}
+                aria-label="Seleccionar todos"
+                onChange={() => setPicked(allPicked ? [] : messages.map((item) => item.id))}
+              />
+            ) : null}
+            <Tool label={folder === "archive" ? "Mover a entrada" : "Archivar"} disabled={!picked.length} onClick={() => void post("move", picked, { destination: folder === "archive" ? "inbox" : "archive" })}>
+              <Icon name={folder === "archive" ? "inbox" : "archive"} />
+            </Tool>
+            <Tool label={folder === "trash" ? "Borrar" : "Papelera"} disabled={!picked.length} onClick={() => void post("delete", picked)}>
+              <Icon name="trash" />
+            </Tool>
+            <Tool
+              label={markAsRead ? "Marcar como leído" : "Marcar como no leído"}
               disabled={!picked.length}
-              onClick={() => void removePicked(picked)}
+              onClick={() => void post("seen", picked, { seen: markAsRead })}
             >
-              {folder === "trash" ? "Borrar" : "Eliminar"}
-            </button>
+              <Icon name={markAsRead ? "read" : "unread"} />
+            </Tool>
           </div>
-          {error ? <p className="px-4 py-3 text-sm text-ash">{error}</p> : null}
-          {loading ? <p className="px-4 py-6 text-sm text-ash">Abriendo…</p> : null}
-          {!loading && !messages.length ? <p className="px-4 py-6 text-sm text-ash">Esta bandeja está vacía.</p> : null}
-          <ul>
-            {messages.map((item) => (
-              <li key={item.id} className="grid grid-cols-[1.5rem_minmax(0,1fr)] items-center border-b border-ink/10">
-                <input
-                  type="checkbox"
-                  className="ml-3"
-                  checked={picked.includes(item.id)}
-                  aria-label="Seleccionar"
-                  onChange={() => setPicked((prev) => prev.includes(item.id) ? prev.filter((id) => id !== item.id) : [...prev, item.id])}
-                />
-                <button type="button" className="min-w-0 px-3 py-3 text-left" onClick={() => void openMessage(item.id)}>
-                  <span className="flex items-baseline justify-between gap-3">
-                    <span className={`truncate text-sm ${item.seen ? "text-ash" : "text-ink"}`}>
-                      {folder === "sent" ? item.to : item.from || box.address}
-                    </span>
-                    <span className="shrink-0 text-[0.68rem] text-ash">{formatWhen(item.createdAt)}</span>
-                  </span>
-                  <span className={`mt-1 block truncate text-sm ${item.seen ? "" : "font-medium"}`}>
-                    {item.subject || "(sin asunto)"}
-                    {item.files > 0 ? " · adjunto" : ""}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
+          {error ? <p className="px-4 py-2 text-sm text-ash">{error}</p> : null}
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {loading && !messages.length ? <p className="px-4 py-6 text-sm text-ash">Abriendo…</p> : null}
+            {!loading && !messages.length ? <p className="px-4 py-6 text-sm text-ash">Esta bandeja está vacía.</p> : null}
+            <ul>
+              {messages.map((item) => {
+                const active = selected?.id === item.id;
+                return (
+                  <li key={item.id} className={`border-b border-ink/5 ${active ? "bg-ink/[0.04]" : ""}`}>
+                    <div className="flex items-start gap-2 px-3 py-2.5">
+                      {selecting ? (
+                        <input
+                          type="checkbox"
+                          className="mt-1 size-4 shrink-0"
+                          checked={picked.includes(item.id)}
+                          aria-label="Seleccionar"
+                          onChange={() => togglePick(item.id)}
+                        />
+                      ) : (
+                        <span className={`mt-2 size-2 shrink-0 rounded-full ${item.seen ? "bg-transparent" : "bg-ink"}`} />
+                      )}
+                      <button type="button" className="min-w-0 flex-1 text-left" onClick={() => void openMessage(item.id)}>
+                        <span className="flex items-baseline justify-between gap-3">
+                          <span className={`truncate text-sm ${item.seen ? "text-ash" : "font-semibold text-ink"}`}>
+                            {folder === "sent" ? displayName(item.to) : displayName(item.from)}
+                          </span>
+                          <span className="shrink-0 text-[0.68rem] text-ash">{formatWhen(item.createdAt)}</span>
+                        </span>
+                        <span className={`mt-0.5 flex items-center gap-1 truncate text-sm ${item.seen ? "text-ink/80" : "font-semibold"}`}>
+                          {item.files > 0 ? <span className="text-ash"><Icon name="clip" /></span> : null}
+                          <span className="truncate">{item.subject || "(sin asunto)"}</span>
+                        </span>
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </div>
 
-        <div className="min-w-0 p-4 md:p-6">
+        <div className={`${reading ? "flex" : "hidden"} min-h-0 min-w-0 flex-col md:flex`}>
           {compose ? (
             <form
-              className="grid gap-4"
+              className="flex min-h-0 flex-1 flex-col"
               onSubmit={(event) => {
                 event.preventDefault();
                 void submitCompose();
               }}
             >
-              <p className="text-[0.68rem] uppercase tracking-[0.18em] text-ash">Desde {box.address}</p>
-              <label className="field-label">
-                Para
-                <input className="field" value={compose.to} onChange={(event) => setCompose({ ...compose, to: event.target.value })} required />
-              </label>
-              <label className="field-label">
-                Asunto
-                <input className="field" value={compose.subject} onChange={(event) => setCompose({ ...compose, subject: event.target.value })} />
-              </label>
-              <label className="field-label">
-                Mensaje
-                <textarea className="field min-h-40" value={compose.text} onChange={(event) => setCompose({ ...compose, text: event.target.value })} />
-              </label>
-              <label className="text-sm text-ash">
-                Adjuntar, hasta 8
-                <input className="mt-2 block text-sm" type="file" multiple onChange={(event) => setFiles(Array.from(event.target.files || []).slice(0, 8))} />
-              </label>
-              <div className="flex gap-2">
-                <button className="btn-atelier-solid btn-atelier" type="submit" disabled={sending}>{sending ? "Enviando…" : "Enviar"}</button>
-                <button className="btn-atelier" type="button" onClick={() => setCompose(null)}>Cancelar</button>
+              <div className="flex items-center gap-1 border-b border-ink/10 px-2 py-2">
+                <Tool label="Cerrar" onClick={() => { setCompose(null); setFiles([]); }}>
+                  <Icon name="close" />
+                </Tool>
+                <Tool label="Adjuntar" onClick={() => fileRef.current?.click()}>
+                  <Icon name="clip" />
+                </Tool>
+                <span className="ml-auto text-[0.68rem] text-ash">{phase}</span>
+                <button type="submit" aria-label="Enviar" title="Enviar" disabled={sending} className="grid size-8 place-items-center rounded-full text-ink hover:bg-ink/5 disabled:opacity-30">
+                  <Icon name="send" />
+                </button>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto bg-porcelain px-4 py-4 md:px-6">
+                <p className="text-[0.68rem] uppercase tracking-[0.16em] text-ash">{box.address}</p>
+                <label className="field-label mt-4">
+                  Para
+                  <input className="field" value={compose.to} onChange={(event) => setCompose({ ...compose, to: event.target.value })} required />
+                </label>
+                <label className="field-label mt-3">
+                  Asunto
+                  <input className="field" value={compose.subject} onChange={(event) => setCompose({ ...compose, subject: event.target.value })} />
+                </label>
+                <textarea
+                  className="field mt-4 min-h-48"
+                  aria-label="Mensaje"
+                  value={compose.text}
+                  onChange={(event) => setCompose({ ...compose, text: event.target.value })}
+                />
+                <input
+                  ref={fileRef}
+                  className="hidden"
+                  type="file"
+                  multiple
+                  onChange={(event) => {
+                    const next = Array.from(event.target.files || []);
+                    setFiles((prev) => [...prev, ...next].slice(0, MAX_FILES));
+                    event.target.value = "";
+                  }}
+                />
+                {compose.forwardFiles.length ? (
+                  <ul className="mt-3 grid gap-1">
+                    {compose.forwardFiles.map((file) => (
+                      <li key={file.id} className="flex items-center justify-between gap-3 text-sm">
+                        <span className="min-w-0 truncate">{file.filename}</span>
+                        <span className="shrink-0 text-[0.68rem] text-ash">{formatSize(file.size)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                {files.length ? (
+                  <ul className="mt-3 grid gap-1">
+                    {files.map((file, index) => (
+                      <li key={`${file.name}-${index}`} className="flex items-center justify-between gap-3 text-sm">
+                        <span className="min-w-0 truncate">{file.name}</span>
+                        <span className="shrink-0 text-[0.68rem] text-ash">{formatSize(file.size)}</span>
+                        <button type="button" aria-label="Quitar adjunto" className="text-ash" onClick={() => setFiles((prev) => prev.filter((_, item) => item !== index))}>
+                          <Icon name="close" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                <p className="mt-2 text-[0.68rem] text-ash">Hasta 8 archivos y 20 MB. Quien lo reciba verá este fondo y esta firma.</p>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={box.signature} alt="Firma" className="mt-4 w-[193px] max-w-full" />
               </div>
             </form>
           ) : selected ? (
-            <article>
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <h2 className="font-serif text-2xl">{selected.subject || "(sin asunto)"}</h2>
-                <button type="button" className="btn-atelier" onClick={startReply}>Responder</button>
+            <article className="flex min-h-0 flex-1 flex-col">
+              <div className="flex flex-wrap items-center gap-1 border-b border-ink/10 px-2 py-2">
+                <span className="md:hidden">
+                  <Tool label="Volver" onClick={() => setSelected(null)}>
+                    <Icon name="back" />
+                  </Tool>
+                </span>
+                <Tool label="Responder" onClick={() => startCompose("reply")}><Icon name="reply" /></Tool>
+                <Tool label="Responder a todos" onClick={() => startCompose("reply-all")}><Icon name="reply-all" /></Tool>
+                <Tool label="Reenviar" onClick={() => startCompose("forward")}><Icon name="forward" /></Tool>
+                <Tool
+                  label={folder === "archive" ? "Mover a entrada" : "Archivar"}
+                  onClick={() => void post("move", [selected.id], { destination: folder === "archive" ? "inbox" : "archive" })}
+                >
+                  <Icon name={folder === "archive" ? "inbox" : "archive"} />
+                </Tool>
+                <Tool label={folder === "trash" ? "Borrar" : "Papelera"} onClick={() => void post("delete", [selected.id])}>
+                  <Icon name="trash" />
+                </Tool>
+                <Tool
+                  label={selected.seen ? "Marcar como no leído" : "Marcar como leído"}
+                  onClick={() => void post("seen", [selected.id], { seen: !selected.seen })}
+                >
+                  <Icon name={selected.seen ? "unread" : "read"} />
+                </Tool>
               </div>
-              <p className="mt-3 text-sm text-ash">
-                {selected.from} → {selected.to} · {formatWhen(selected.createdAt)}
-              </p>
-              {selected.attachments.length ? (
-                <div className="mt-4 flex flex-wrap gap-3">
-                  {selected.attachments.map((file) => (
-                    <a
-                      key={file.id}
-                      className="border border-ink/10 px-3 py-2 text-sm"
-                      href={`/api/admin/mail?account=${account}&id=${selected.id}&file=${file.id}`}
-                    >
-                      {file.contentType.startsWith("image/") ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          alt=""
-                          className="mb-2 h-24 w-20 object-cover"
-                          src={`/api/admin/mail?account=${account}&id=${selected.id}&file=${file.id}`}
-                        />
-                      ) : null}
-                      {file.filename}
-                      <span className="mt-1 block text-[0.68rem] text-ash">{formatSize(file.size)}</span>
-                    </a>
-                  ))}
-                </div>
-              ) : null}
-              {selected.html ? (
-                <div className="mt-6 text-sm leading-relaxed [&_img]:max-w-full" dangerouslySetInnerHTML={{ __html: selected.html }} />
-              ) : (
-                <pre className="mt-6 whitespace-pre-wrap font-sans text-sm leading-relaxed">{selected.text || "(sin texto)"}</pre>
-              )}
-              <button type="button" className="btn-atelier mt-6" onClick={() => void removePicked([selected.id])}>
-                {folder === "trash" ? "Borrar del todo" : "Eliminar"}
-              </button>
+              <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-8">
+                <h2 className="font-serif text-2xl leading-tight md:text-3xl">{selected.subject || "(sin asunto)"}</h2>
+                <p className="mt-4 text-sm font-semibold">{displayName(folder === "sent" ? selected.to : selected.from)}</p>
+                <p className="text-sm text-ash">{folder === "sent" ? selected.to : selected.from}</p>
+                <p className="mt-1 text-[0.72rem] text-ash">Para {selected.to} · {formatWhen(selected.createdAt)}</p>
+                {selected.html ? (
+                  <div className="mt-6 text-sm leading-relaxed [&_img]:max-w-full [&_table]:max-w-full" dangerouslySetInnerHTML={{ __html: selected.html }} />
+                ) : (
+                  <pre className="mt-6 whitespace-pre-wrap font-sans text-sm leading-relaxed">{selected.text || "(sin texto)"}</pre>
+                )}
+                {selected.attachments.length ? (
+                  <div className="mt-6 flex flex-wrap gap-3 border-t border-ink/10 pt-4">
+                    {selected.attachments.map((file) => (
+                      <a
+                        key={file.id}
+                        className="block w-36 border border-ink/10 px-3 py-2 text-sm"
+                        href={`/api/admin/mail?account=${account}&id=${selected.id}&file=${file.id}`}
+                      >
+                        {file.contentType.startsWith("image/") ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img alt="" className="mb-2 h-20 w-full object-cover" src={`/api/admin/mail?account=${account}&id=${selected.id}&file=${file.id}`} />
+                        ) : null}
+                        <span className="block truncate">{file.filename}</span>
+                        <span className="mt-1 block text-[0.68rem] text-ash">{formatSize(file.size)}</span>
+                      </a>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
             </article>
           ) : (
-            <p className="text-sm text-ash">Elige un mensaje de {box.label}, o redacta uno nuevo. Sale desde {box.address}.</p>
+            <div className="hidden flex-1 items-center justify-center px-6 text-sm text-ash md:flex">
+              {box.address}
+            </div>
           )}
         </div>
       </section>

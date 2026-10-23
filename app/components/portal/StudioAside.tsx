@@ -1,4 +1,5 @@
 import { InboxLink } from "@/app/components/portal/InboxLink";
+import { MailAlert } from "@/app/components/portal/MailAlert";
 import { listNotices } from "@/lib/portal/store";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -10,8 +11,9 @@ export async function StudioAside({ extra }: { extra?: ReactNode }) {
       <Link className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink" href="/privado/novias">
         Clientas
       </Link>
-      <Link className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink" href="/privado/correo">
+      <Link className="inline-flex items-center gap-1.5 text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink" href="/privado/correo">
         Correo
+        <MailAlert />
       </Link>
       {extra}
       <Link className="text-[0.68rem] uppercase tracking-[0.18em] text-ash hover:text-ink" href="/privado/calendario">

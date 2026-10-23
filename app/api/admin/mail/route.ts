@@ -2,26 +2,35 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/portal/session";
 import {
   deleteMessages,
+  dropOutbox,
   listMailbox,
+  moveMessages,
   publicMailError,
   readAttachment,
   readMessage,
+  readOutbox,
   sendMail,
+  setMessagesSeen,
+  unseenSnapshot,
 } from "@/lib/portal/mail-store";
 import { mailboxByKey, type MailFolder } from "@/lib/portal/mailboxes";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-function folderFrom(value: string | null): MailFolder {
-  if (value === "sent" || value === "trash") return value;
-  return "inbox";
+function parseFolder(value: string | null | undefined): MailFolder | null {
+  if (value === "inbox" || value === "sent" || value === "archive" || value === "trash") return value;
+  return null;
 }
 
 export async function GET(req: Request) {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   const url = new URL(req.url);
+  if (url.searchParams.get("unseen") === "1") {
+    const snapshot = await unseenSnapshot();
+    return NextResponse.json(snapshot);
+  }
   const box = mailboxByKey(url.searchParams.get("account") || "");
   if (!box) return NextResponse.json({ error: "Esa cuenta no está en el estudio." }, { status: 400 });
 
@@ -29,7 +38,7 @@ export async function GET(req: Request) {
   const messageId = url.searchParams.get("id") || "";
   try {
     if (fileId && messageId) {
-      const owner = await readMessage(messageId);
+      const owner = await readMessage(messageId, { seen: false });
       if (!owner || owner.account !== box.key) {
         return NextResponse.json({ error: "Ese archivo ya no está." }, { status: 404 });
       }
@@ -52,13 +61,15 @@ export async function GET(req: Request) {
       }
       return NextResponse.json({ message });
     }
-    const messages = await listMailbox(box.key, folderFrom(url.searchParams.get("folder")));
+    const messages = await listMailbox(box.key, parseFolder(url.searchParams.get("folder")) || "inbox");
     return NextResponse.json({ messages });
   } catch (err) {
     const pub = publicMailError(err);
     return NextResponse.json({ error: pub.error }, { status: pub.status });
   }
 }
+
+type SendFile = { pathname?: string; filename?: string; contentType?: string };
 
 export async function POST(req: Request) {
   const admin = await requireAdmin();
@@ -81,15 +92,66 @@ export async function POST(req: Request) {
         subject: String(form.get("subject") || ""),
         text: String(form.get("text") || ""),
         inReplyTo: String(form.get("inReplyTo") || ""),
+        forwardId: String(form.get("forwardId") || ""),
         attachments,
       });
       return NextResponse.json({ ok: true });
     }
-    const body = (await req.json()) as { action?: string; account?: string; folder?: string; ids?: string[] };
+    const body = (await req.json()) as {
+      action?: string;
+      account?: string;
+      folder?: string;
+      to?: string;
+      ids?: string[];
+      seen?: boolean;
+      destination?: string;
+      subject?: string;
+      text?: string;
+      inReplyTo?: string;
+      forwardId?: string;
+      files?: SendFile[];
+    };
     const box = mailboxByKey(body.account || "");
     if (!box) return NextResponse.json({ error: "Esa cuenta no está en el estudio." }, { status: 400 });
+    const folder = parseFolder(body.folder) || "inbox";
+    const ids = Array.isArray(body.ids) ? body.ids : [];
     if (body.action === "delete") {
-      await deleteMessages(box.key, folderFrom(body.folder || ""), Array.isArray(body.ids) ? body.ids : []);
+      await deleteMessages(box.key, folder, ids);
+      return NextResponse.json({ ok: true });
+    }
+    if (body.action === "seen") {
+      await setMessagesSeen(box.key, folder, ids, Boolean(body.seen));
+      return NextResponse.json({ ok: true });
+    }
+    if (body.action === "move") {
+      const destination = parseFolder(body.destination);
+      if (!destination || destination === "sent") {
+        return NextResponse.json({ error: "Esa carpeta no existe." }, { status: 400 });
+      }
+      await moveMessages(box.key, folder, ids, destination);
+      return NextResponse.json({ ok: true });
+    }
+    if (body.action === "send") {
+      const listed = Array.isArray(body.files) ? body.files : [];
+      const pathnames = listed.map((file) => String(file.pathname || ""));
+      try {
+        const attachments = await Promise.all(listed.map(async (file) => ({
+          filename: String(file.filename || "archivo"),
+          contentType: String(file.contentType || "application/octet-stream"),
+          content: await readOutbox(String(file.pathname || "")),
+        })));
+        await sendMail({
+          account: box.key,
+          to: String(body.to || ""),
+          subject: String(body.subject || ""),
+          text: String(body.text || ""),
+          inReplyTo: String(body.inReplyTo || ""),
+          forwardId: String(body.forwardId || ""),
+          attachments,
+        });
+      } finally {
+        await Promise.all(pathnames.map((pathname) => dropOutbox(pathname)));
+      }
       return NextResponse.json({ ok: true });
     }
     return NextResponse.json({ error: "Acción desconocida." }, { status: 400 });

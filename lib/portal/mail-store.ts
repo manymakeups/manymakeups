@@ -4,13 +4,14 @@ import path from "node:path";
 import { del, get, list, put } from "@vercel/blob";
 import { simpleParser, type AddressObject } from "mailparser";
 import { newId } from "./crypto";
-import { mailboxByKey, mailboxFromRecipients, type MailFolder, type MailboxKey } from "./mailboxes";
+import { site } from "@/lib/site";
+import { MAILBOXES, SIGNATURE_BACKGROUND, mailboxByKey, mailboxFromRecipients, type MailFolder, type MailboxKey } from "./mailboxes";
 
 const ROOT = path.join(process.cwd(), "data");
 const MAX_STORED_FILES = 12;
 const MAX_STORED_BYTES = 16_000_000;
 const MAX_OUT_FILES = 8;
-const MAX_OUT_BYTES = 3_500_000;
+const MAX_OUT_BYTES = 20_000_000;
 
 export type MailFile = {
   id: string;
@@ -184,6 +185,12 @@ function sanitizeMailHtml(html: string) {
     .slice(0, 500_000);
 }
 
+function letterHtml(account: MailboxKey, message: string) {
+  const box = mailboxByKey(account);
+  const src = `${site.url}${box?.signature || "/brand/firmas-correo/info.jpg"}`;
+  return `<div style="margin:0;padding:0;background:${SIGNATURE_BACKGROUND};"><div style="max-width:640px;margin:0 auto;padding:32px 28px 8px;font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.55;color:#1a1613;white-space:pre-wrap;">${escapeHtml(message)}</div><div style="max-width:640px;margin:0 auto;padding:12px 28px 40px;"><img src="${src}" alt="Ana Zarza · Many Makeups" width="193" style="display:block;border:0;width:193px;max-width:100%;height:auto;background:${SIGNATURE_BACKGROUND};" /></div></div>`;
+}
+
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, "&amp;")
@@ -204,9 +211,10 @@ export async function listMailbox(account: MailboxKey, folder: MailFolder) {
   return rows.sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 200);
 }
 
-export async function readMessage(id: string) {
+export async function readMessage(id: string, options?: { seen?: boolean }) {
   const record = await readJson<MailRecord>(bodyKey(id));
   if (!record) return null;
+  if (options?.seen === false) return record;
   if (!record.seen && record.folder === "inbox") {
     record.seen = true;
     await writeJson(bodyKey(id), record);
@@ -227,6 +235,30 @@ export async function readAttachment(messageId: string, fileId: string) {
   const bytes = await readBytes(fileKey(messageId, fileId));
   if (!bytes) return null;
   return { file, bytes };
+}
+
+export async function unseenSnapshot() {
+  const counts = {} as Record<MailboxKey, number>;
+  const items: Array<{ id: string; account: MailboxKey; from: string; subject: string }> = [];
+  for (const box of MAILBOXES) {
+    const rows = await readList(box.key, "inbox");
+    const unseen = rows.filter((row) => !row.seen);
+    counts[box.key] = unseen.length;
+    for (const row of unseen) items.push({ id: row.id, account: box.key, from: row.from, subject: row.subject });
+  }
+  return { counts, items };
+}
+
+export async function setMessagesSeen(account: MailboxKey, folder: MailFolder, ids: string[], seen: boolean) {
+  const chosen = new Set(ids.slice(0, 40));
+  const rows = await readList(account, folder);
+  await writeList(account, folder, rows.map((row) => (chosen.has(row.id) ? { ...row, seen } : row)));
+  await Promise.all(rows.filter((row) => chosen.has(row.id)).map(async (row) => {
+    const record = await readJson<MailRecord>(bodyKey(row.id));
+    if (!record) return;
+    record.seen = seen;
+    await writeJson(bodyKey(row.id), record);
+  }));
 }
 
 export async function deleteMessages(account: MailboxKey, folder: MailFolder, ids: string[]) {
@@ -252,6 +284,40 @@ export async function deleteMessages(account: MailboxKey, folder: MailFolder, id
     record.folder = "trash";
     await writeJson(bodyKey(row.id), record);
   }));
+}
+
+export async function moveMessages(account: MailboxKey, folder: MailFolder, ids: string[], destination: MailFolder) {
+  if (folder === destination) return;
+  if (destination === "trash") {
+    await deleteMessages(account, folder, ids);
+    return;
+  }
+  const chosen = new Set(ids.slice(0, 40));
+  const rows = await readList(account, folder);
+  const victims = rows.filter((row) => chosen.has(row.id));
+  if (!victims.length) return;
+  const destRows = await readList(account, destination);
+  const moved = victims.map((row) => ({ ...row, folder: destination }));
+  await writeList(account, folder, rows.filter((row) => !chosen.has(row.id)));
+  await writeList(account, destination, [...moved, ...destRows.filter((row) => !chosen.has(row.id))]);
+  await Promise.all(moved.map(async (row) => {
+    const record = await readJson<MailRecord>(bodyKey(row.id));
+    if (!record) return;
+    record.folder = destination;
+    await writeJson(bodyKey(row.id), record);
+  }));
+}
+
+export async function readOutbox(pathname: string) {
+  if (!pathname.startsWith("mail/outbox/") || pathname.includes("..") || pathname.length > 300) throw new Error("BAD_FILE");
+  const bytes = await readBytes(pathname);
+  if (!bytes) throw new Error("BAD_FILE");
+  return bytes;
+}
+
+export async function dropOutbox(pathname: string) {
+  if (!pathname.startsWith("mail/outbox/") || pathname.includes("..")) return;
+  await removeKey(pathname);
 }
 
 async function saveRecord(record: MailRecord, files: Array<{ id: string; bytes: Buffer; contentType: string }>) {
@@ -369,20 +435,31 @@ export async function sendMail(input: {
   subject: string;
   text: string;
   inReplyTo?: string;
+  forwardId?: string;
   attachments?: { filename: string; content: Buffer; contentType?: string }[];
 }) {
   const box = mailboxByKey(input.account);
   if (!box) throw new Error("BAD_ACCOUNT");
   const to = recipients(input.to);
   const subject = input.subject.replace(/[\r\n\0]/g, "").trim().slice(0, 200) || "(sin asunto)";
-  const text = input.text.replace(/\0/g, "").trim().slice(0, 20_000);
-  const files = (input.attachments || []).slice(0, MAX_OUT_FILES);
+  const text = input.text.replace(/\0/g, "").trim().slice(0, 80_000);
+  const files = [...(input.attachments || [])];
+  if (input.forwardId) {
+    const source = await readMessage(input.forwardId, { seen: false });
+    if (source && source.account === input.account) {
+      for (const file of source.attachments) {
+        const found = await readAttachment(source.id, file.id);
+        if (found) files.push({ filename: found.file.filename, content: found.bytes, contentType: found.file.contentType });
+      }
+    }
+  }
   const weight = files.reduce((sum, file) => sum + file.content.length, 0);
   if (files.length > MAX_OUT_FILES || weight > MAX_OUT_BYTES) throw new Error("TOO_BIG");
   if (!text && !files.length) throw new Error("EMPTY_BODY");
   const key = (process.env.RESEND_API_KEY || "").trim();
   if (!key) throw new Error("MISSING_RESEND");
   const message = text || "Te envío los archivos adjuntos.";
+  const letter = letterHtml(box.key, message);
   const inReplyTo = input.inReplyTo?.replace(/[\r\n\0]/g, "").trim().slice(0, 500) || "";
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -392,8 +469,8 @@ export async function sendMail(input: {
       to,
       reply_to: box.address,
       subject,
-      text: message,
-      html: `<div style="font-family:Georgia,serif;white-space:pre-wrap">${escapeHtml(message)}</div>`,
+      text: `${message}\n\nAna Zarza\nMany Makeups\n${box.address}\n${site.phoneDisplay}`,
+      html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:${SIGNATURE_BACKGROUND};">${letter}</body></html>`,
       attachments: files.map((file) => ({
         filename: file.filename,
         content: file.content.toString("base64"),
@@ -424,7 +501,7 @@ export async function sendMail(input: {
     createdAt: new Date().toISOString(),
     messageId: "",
     text: message,
-    html: "",
+    html: letter,
     inReplyTo,
     attachments: kept.map(({ id, filename, contentType, bytes }) => ({ id, filename, contentType, size: bytes.length })),
   };
@@ -435,7 +512,8 @@ export function publicMailError(err: unknown) {
   const message = err instanceof Error ? err.message : "";
   if (message === "BAD_RECIPIENT") return { status: 400, error: "El destinatario no es un correo válido." };
   if (message === "EMPTY_BODY") return { status: 400, error: "Escribe el mensaje antes de enviarlo." };
-  if (message === "TOO_BIG") return { status: 413, error: "Los adjuntos pesan demasiado." };
+  if (message === "TOO_BIG") return { status: 413, error: "Cada envío admite hasta 8 archivos y 20 MB." };
+  if (message === "BAD_FILE") return { status: 400, error: "No se ha podido leer un adjunto." };
   if (message === "BAD_ACCOUNT") return { status: 400, error: "Esa cuenta no está en el estudio." };
   if (message === "MISSING_RESEND") return { status: 503, error: "Falta RESEND_API_KEY en Vercel." };
   if (message === "FOREIGN_RECIPIENT") return { status: 200, error: "" };

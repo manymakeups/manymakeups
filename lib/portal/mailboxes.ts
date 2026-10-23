@@ -1,13 +1,15 @@
 export const MAILBOXES = [
-  { address: "info@manymakeups.com", label: "Info", key: "info" },
-  { address: "accounting@manymakeups.com", label: "Accounting", key: "accounting" },
-  { address: "formaciones@manymakeups.com", label: "Formaciones", key: "formaciones" },
-  { address: "comercial@manymakeups.com", label: "Comercial", key: "comercial" },
-  { address: "management@manymakeups.com", label: "Management", key: "management" },
+  { address: "info@manymakeups.com", label: "Info", key: "info", signature: "/brand/firmas-correo/info.jpg" },
+  { address: "accounting@manymakeups.com", label: "Accounting", key: "accounting", signature: "/brand/firmas-correo/accounting.jpg" },
+  { address: "formaciones@manymakeups.com", label: "Formaciones", key: "formaciones", signature: "/brand/firmas-correo/formaciones.jpg" },
+  { address: "comercial@manymakeups.com", label: "Comercial", key: "comercial", signature: "/brand/firmas-correo/comercial.jpg" },
+  { address: "management@manymakeups.com", label: "Management", key: "management", signature: "/brand/firmas-correo/management.jpg" },
 ] as const;
 
+export const SIGNATURE_BACKGROUND = "#f4f1ea";
+
 export type MailboxKey = (typeof MAILBOXES)[number]["key"];
-export type MailFolder = "inbox" | "sent" | "trash";
+export type MailFolder = "inbox" | "sent" | "archive" | "trash";
 
 export function mailboxByKey(key: string) {
   return MAILBOXES.find((box) => box.key === key) ?? null;

@@ -15,6 +15,7 @@ export async function PortalFrame({
   pinned = false,
   dense = false,
   studio = false,
+  wide = false,
 }: {
   kicker: string;
   title: string;
@@ -25,6 +26,7 @@ export async function PortalFrame({
   pinned?: boolean;
   dense?: boolean;
   studio?: boolean;
+  wide?: boolean;
 }) {
   const locale = localize ? await getLocale() : "es";
   const copy = getPortalCopy(locale);
@@ -32,9 +34,10 @@ export async function PortalFrame({
 
   const backHref = localize ? localePath(locale, "/") : "/";
   const backLabel = localize ? copy.backToSite : "Volver a la web";
+  const width = wide ? "max-w-[1400px]" : "max-w-[960px]";
   const header = (
       <header className="shrink-0 border-b border-ink/5">
-        <div className={`mx-auto flex max-w-[960px] gap-3 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:px-10 md:py-4 ${studio ? "flex-col sm:flex-row sm:items-center sm:justify-between" : "items-center justify-between"}`}>
+        <div className={`mx-auto flex ${width} gap-3 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:px-10 md:py-4 ${studio ? "flex-col sm:flex-row sm:items-center sm:justify-between" : "items-center justify-between"}`}>
           <a
             href={backHref}
             className="flex min-w-0 items-center gap-3"
@@ -96,7 +99,7 @@ export async function PortalFrame({
     return (
       <div className="portal-shell flex h-dvh flex-col overflow-hidden bg-porcelain text-ink">
         {header}
-        <div className="mx-auto flex min-h-0 w-full min-w-0 max-w-[960px] flex-1 flex-col px-4 md:px-10">
+        <div className={`mx-auto flex min-h-0 w-full min-w-0 ${width} flex-1 flex-col px-4 md:px-10`}>
           <div className={dense ? "shrink-0 pt-3 md:pt-5" : "shrink-0 pt-5 md:pt-10"}>{intro}</div>
           {children}
         </div>
