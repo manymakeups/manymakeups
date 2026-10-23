@@ -34,19 +34,22 @@ const FOLDERS: Array<{ id: MailFolder; label: string }> = [
 ];
 
 type View =
+  | { id: "global-inbox" }
   | { id: "all-inbox"; account: MailboxKey }
   | { id: "all-sent" }
   | { id: "all-trash" }
   | { id: "box"; account: MailboxKey; folder: MailFolder };
 
 function describe(next: View): { account: MailboxKey | "all"; folder: MailFolder } {
-  if (next.id === "all-sent") return { account: "all", folder: "sent" as MailFolder };
-  if (next.id === "all-trash") return { account: "all", folder: "trash" as MailFolder };
-  if (next.id === "all-inbox") return { account: next.account, folder: "inbox" as MailFolder };
+  if (next.id === "global-inbox") return { account: "all", folder: "inbox" };
+  if (next.id === "all-sent") return { account: "all", folder: "sent" };
+  if (next.id === "all-trash") return { account: "all", folder: "trash" };
+  if (next.id === "all-inbox") return { account: next.account, folder: "inbox" };
   return { account: next.account, folder: next.folder };
 }
 
 function viewMark(next: View) {
+  if (next.id === "global-inbox") return "global-inbox";
   if (next.id === "all-sent") return "all-sent";
   if (next.id === "all-trash") return "all-trash";
   if (next.id === "all-inbox") return `all-inbox:${next.account}`;
@@ -152,7 +155,7 @@ function Tool({ label, onClick, disabled, active, children }: { label: string; o
 }
 
 export function MailDesk() {
-  const [view, setView] = useState<View>({ id: "all-inbox", account: "info" });
+  const [view, setView] = useState<View>({ id: "global-inbox" });
   const [messages, setMessages] = useState<MailSummary[]>([]);
   const [selected, setSelected] = useState<MailMessage | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
@@ -220,7 +223,8 @@ export function MailDesk() {
         setCounts(json.counts);
         const ids = new Set((json.items || []).map((item) => item.id));
         const here = placeRef.current;
-        if (seen.ids && here.folder === "inbox" && here.account !== "all" && (json.items || []).some((item) => item.account === here.account && !seen.ids?.has(item.id))) {
+        const arrived = (json.items || []).some((item) => !seen.ids?.has(item.id) && (here.account === "all" || item.account === here.account));
+        if (seen.ids && here.folder === "inbox" && arrived) {
           const params = new URLSearchParams({ account: here.account, folder: "inbox" });
           const list = await fetch(`/api/admin/mail?${params}`, { cache: "no-store" });
           const body = (await list.json()) as { messages?: MailSummary[] };
@@ -462,6 +466,15 @@ export function MailDesk() {
               {totalUnread ? <span className="font-bold tabular-nums text-sm text-ink">{totalUnread}</span> : null}
             </p>
             <div className="mt-1 grid">
+              <button
+                type="button"
+                onClick={() => openView({ id: "global-inbox" })}
+                className={`flex items-center gap-2 rounded-lg px-2 py-1 text-left text-sm ${view.id === "global-inbox" ? "bg-ink/10" : "hover:bg-ink/5"}`}
+              >
+                <span className="text-ash"><Icon name="inbox" /></span>
+                <span className={`min-w-0 flex-1 truncate ${totalUnread ? "font-semibold" : ""}`}>Entrada</span>
+                {totalUnread ? <span className="font-bold tabular-nums">{totalUnread}</span> : null}
+              </button>
               {MAILBOXES.map((item) => {
                 const active = view.id === "all-inbox" && view.account === item.key;
                 const count = counts[item.key] || 0;
